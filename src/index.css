@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Motion Tokens ──────────────────────────────────────────────────────── */
+:root {
+  --ag-ease-lift: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ag-ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+  --ag-dur-micro: 80ms;
+  --ag-dur-fast:  160ms;
+  --ag-dur-base:  280ms;
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-8px); }
+  40%     { transform: translateX(8px); }
+  60%     { transform: translateX(-5px); }
+  80%     { transform: translateX(5px); }
+}
+@keyframes ping {
+  0%       { transform: scale(1);   opacity: 0.8; }
+  80%,100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* ─── Utility Classes ────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite ease-in-out;
+  border-radius: 6px;
+}
+
+.anim-slideUp {
+  animation: slideUp 320ms var(--ag-ease-snap) both;
+}
+
+.input-error {
+  animation: shake 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.btn-press {
+  transition: transform var(--ag-dur-micro) ease,
+              box-shadow var(--ag-dur-micro) ease;
+}
+.btn-press:active {
+  transform: scale(0.94);
+}
+
+.ag-lift {
+  transition: transform 220ms var(--ag-ease-lift),
+              box-shadow 220ms ease;
+}
+.ag-lift:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Reduced Motion Override ────────────────────────────────────────────── */
+/* ─── Scrollbars ─────────────────────────────────────────────────────────── */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 20px;
+}
+.scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

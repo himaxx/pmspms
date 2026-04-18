@@ -120,22 +120,25 @@ function StageGroupCard({ stage, jobs, onClick }) {
    )
 }
 
-// ─── Stage Detail Bottom Sheet ────────────────────────────────────────────────
-function StageDetailSheet({ stage, jobs, onClose }) {
+// ─── Generic Detail Bottom Sheet ────────────────────────────────────────────────
+function DetailSheet({ detail, jobs, onClose }) {
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  // Sort jobs: Late first (worst to best), then Latest Job No first
+  // Sort jobs: Late first, then Latest Job No first
   const sortedJobs = [...jobs].sort((a,b) => {
-     const aLate = isDelayed(a, stage.id);
-     const bLate = isDelayed(b, stage.id);
+     // Because this sheet is used for both Stage & Thekedar, we check step individually
+     const stepA = detectStep(a);
+     const stepB = detectStep(b);
+     const aLate = isDelayed(a, stepA);
+     const bLate = isDelayed(b, stepB);
      if (aLate && !bLate) return -1;
      if (!aLate && bLate) return 1;
      if (aLate && bLate) {
-         return (daysInStep(b, stage.id) || 0) - (daysInStep(a, stage.id) || 0);
+         return (daysInStep(b, stepB) || 0) - (daysInStep(a, stepA) || 0);
      }
      return String(b.jobNo).localeCompare(String(a.jobNo), undefined, { numeric: true, sensitivity: 'base' });
   });
@@ -150,11 +153,11 @@ function StageDetailSheet({ stage, jobs, onClose }) {
          {/* Sheet Header */}
          <div className="pt-8 pb-5 px-5 bg-white rounded-t-[2.5rem] border-b border-gray-100 shrink-0 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] relative z-10">
             <div className="flex items-center gap-3.5">
-               <div className={cls('w-[3.5rem] h-[3.5rem] rounded-[1.25rem] flex items-center justify-center text-3xl ring-1 shadow-inner', stage.color)}>
-                 {stage.icon}
+               <div className={cls('w-[3.5rem] h-[3.5rem] rounded-[1.25rem] flex items-center justify-center text-3xl ring-1 shadow-inner', detail.color || 'bg-gray-50 border-gray-200')}>
+                 {detail.icon}
                </div>
                <div>
-                  <h2 className="text-[17px] font-black text-gray-900 leading-tight pr-4">{stage.name}</h2>
+                  <h2 className="text-[17px] font-black text-gray-900 leading-tight pr-4">{detail.name}</h2>
                   <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">{jobs.length} Active Jobs</p>
                </div>
             </div>
@@ -284,7 +287,9 @@ export default function ProductionReport() {
   const [jobs, setJobs]         = useState([]);
   const [loading, setLoading]   = useState(true);
   const [category, setCategory] = useState('All');
-  const [selectedStage, setSelectedStage] = useState(null);
+  const [viewMode, setViewMode] = useState('stage'); // 'stage' | 'thekedar'
+  const [searchThekedar, setSearchThekedar] = useState('');
+  const [selectedDetail, setSelectedDetail] = useState(null);
   const { toasts, addToast, dismiss } = useToast();
 
   const fetchJobs = useCallback(async () => {
@@ -339,11 +344,46 @@ export default function ProductionReport() {
           </div>
         </div>
 
-        {/* Pipeline Stage Summary List */}
-        <div className="px-5 mt-5 space-y-3">
+        {/* View Mode Toggle */}
+        <div className="px-5 mt-4">
+          <div className="flex bg-gray-200/60 rounded-xl p-1 shadow-inner">
+             <button onClick={() => setViewMode('stage')}
+               className={cls("flex-1 py-2 text-xs font-bold rounded-lg transition-all", viewMode === 'stage' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700 bg-transparent')}>
+               Pipeline By Stage
+             </button>
+             <button onClick={() => setViewMode('thekedar')}
+               className={cls("flex-1 py-2 text-xs font-bold rounded-lg transition-all", viewMode === 'thekedar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700 bg-transparent')}>
+               Thekedar Insights
+             </button>
+          </div>
+        </div>
+
+        {/* Thekedar Search Bar */}
+        {viewMode === 'thekedar' && (
+          <div className="px-5 mt-3 animate-[slideDown_200ms_ease-out]">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <input
+                type="search"
+                placeholder="Search Thekedar by name..."
+                value={searchThekedar}
+                onChange={(e) => setSearchThekedar(e.target.value)}
+                className="w-full bg-white border border-gray-200 text-gray-900 text-[13px] font-semibold rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Content Area */}
+        <div className="px-5 mt-4 space-y-3">
           {loading ? (
              [0, 1, 2, 3].map((i) => <JobCardSkeleton key={i} />)
-          ) : (
+          ) : viewMode === 'stage' ? (
+             // PIPELINE BY STAGE
              Object.values(PIPELINE_STAGES).map(stage => {
                 const groupJobs = filtered.filter(j => detectStep(j) === stage.id);
                 return (
@@ -351,20 +391,75 @@ export default function ProductionReport() {
                       key={stage.id} 
                       stage={stage} 
                       jobs={groupJobs} 
-                      onClick={() => setSelectedStage(stage)} 
+                      onClick={() => setSelectedDetail({ ...stage, type: 'stage' })} 
                    />
                 )
              })
+          ) : (
+             // THEKEDAR INSIGHTS
+             (() => {
+                // Group active jobs (steps 4,5,6) by thekedar
+                const thekedarMap = {};
+                filtered.forEach(j => {
+                   const step = detectStep(j);
+                   // Only count jobs currently assigned to a thekedar
+                   if (step >= 4 && step <= 6 && j.s4Thekedar && j.s4Thekedar.trim() !== '') {
+                      const name = j.s4Thekedar.trim();
+                      if (!thekedarMap[name]) thekedarMap[name] = [];
+                      thekedarMap[name].push(j);
+                   }
+                });
+                
+                let thekedarList = Object.keys(thekedarMap).map(name => ({
+                   id: name,
+                   name: name,
+                   short: 'Thekedar',
+                   icon: '👷',
+                   color: 'text-emerald-700 bg-emerald-50 ring-emerald-200 border-emerald-100',
+                   bg: 'bg-emerald-500',
+                   type: 'thekedar'
+                })).sort((a,b) => b.name.localeCompare(a.name)); // Alphabetical
+
+                if (searchThekedar.trim()) {
+                   const q = searchThekedar.toLowerCase();
+                   thekedarList = thekedarList.filter(t => t.name.toLowerCase().includes(q));
+                }
+
+                if (thekedarList.length === 0) {
+                   return (
+                     <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 shadow-sm">
+                       <p className="text-gray-400 font-bold text-sm tracking-wide">
+                         {searchThekedar.trim() ? 'No Thekedars found matching search.' : 'No active jobs assigned to Thekedars.'}
+                       </p>
+                     </div>
+                   );
+                }
+
+                return thekedarList.map(t => (
+                   <StageGroupCard 
+                      key={t.id} 
+                      stage={t} 
+                      jobs={thekedarMap[t.name]} 
+                      onClick={() => setSelectedDetail(t)} 
+                   />
+                ));
+             })()
           )}
         </div>
       </div>
 
-      {/* Render the details bottom sheet popup when a stage is tapped */}
-      {selectedStage && (
-         <StageDetailSheet 
-            stage={selectedStage}
-            jobs={filtered.filter(j => detectStep(j) === selectedStage.id)}
-            onClose={() => setSelectedStage(null)}
+      {/* Render the details bottom sheet popup when a card is tapped */}
+      {selectedDetail && (
+         <DetailSheet 
+            detail={selectedDetail}
+            jobs={selectedDetail.type === 'stage' 
+                ? filtered.filter(j => detectStep(j) === selectedDetail.id)
+                : filtered.filter(j => {
+                    const s = detectStep(j);
+                    return s >= 4 && s <= 6 && j.s4Thekedar?.trim() === selectedDetail.name;
+                  })
+            }
+            onClose={() => setSelectedDetail(null)}
          />
       )}
 

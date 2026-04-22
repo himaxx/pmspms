@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { parseSets, formatSets } from '../utils/helpers';
 import { useNavigate } from 'react-router-dom';
 import { STEP_PEOPLE, STEP_LABELS, ITEM_GROUPS, SHEET_NAMES } from '../utils/constants';
-import { createJob, updateStep2, updateStep3, updateStep4, updateStep5, updateStep6, getJobFromFMS, getAllJobs } from '../utils/db';
+import { getJobFromFMS } from '../utils/db';
 import JobCard from '../components/JobCard';
 import { JobCardSkeleton } from '../components/Skeleton';
 import StepBadge from '../components/StepBadge';
-
+import { getPendingStep as detectStep } from '../utils/jobLogic';
+import { useJobs, useCreateJob, useUpdateStep2, useUpdateStep3, useUpdateStep4, useUpdateStep5, useUpdateStep6 } from '../hooks/useJobs';
 // ─── Step Selector Config ─────────────────────────────────────────────────────
 const STEP_META = [
   { step: 1, hindiName: 'नई आवश्यकता',        englishName: 'New Requirement',       color: 'indigo' },
@@ -191,29 +192,6 @@ function SuccessScreen({ jobNo, item, onNewEntry, onHome }) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function detectStep(job) {
-  if (!job) return 1;
-  const s = (val) => (val && String(val).trim()) ? String(val).trim() : '';
-  const jamaQty   = Number(job.s5JamaQty || 0);
-  const settleQty = Number(job.s6SettleQty || 0);
-  const reqQty    = Number(job.qty || 0);
-
-  // Step 7: Done (Requires both Jama AND Settle entries to be explicitly filled, and total accounted >= Requirement)
-  if (s(job.s5JamaQty) && s(job.s6SettleQty) && (jamaQty + settleQty >= reqQty)) return 7; 
-
-  // Step 6: Settle (When jama exists, it moves here for final settlement even if balance is 0)
-  if (s(job.s5JamaQty) || s(job.s5Status).toLowerCase() === 'complete' || s(job.s6SettleQty)) return 6;
-  if (s(job.s4StartDate)) return 5;
-  if (job.s3Actual && String(job.s3Actual).trim()) return 4; // Naame
-  if (String(job.s2Actual ?? '').trim()) {
-     if (String(job.s2YesNo ?? '').toLowerCase() === 'yes') {
-        return (String(job.s2Inhouse ?? '').toLowerCase() === 'yes') ? 3 : 4;
-     }
-     return 7; // Rejected
-  }
-  return 2; // Approval
-}
-
 function PendingJobCard({ job, onClick }) {
   return (
     <button type="button" onClick={() => onClick(job)}
@@ -241,18 +219,15 @@ function Step1Form({ onSuccess }) {
   const [form, setForm]     = useState(init);
   const [sets, setSets]     = useState([{ size: '', qty: '' }]);
   const [errors, setErrors] = useState({});
-  const [loading, setLoading]           = useState(false);
-  const [existingItems, setExistingItems] = useState([]);
 
-  // Fetch list of unique items for suggestions
-  useEffect(() => {
-    getAllJobs()
-      .then((jobs) => {
-        const items = [...new Set(jobs.map(j => j.item).filter(Boolean))];
-        setExistingItems(items);
-      })
-      .catch(() => {});
-  }, []);
+  // Read existing item names directly from the shared jobs cache — no extra fetch
+  const { data: allJobs = [] } = useJobs();
+  const existingItems = useMemo(() => {
+    return [...new Set(allJobs.map(j => j.item).filter(Boolean))];
+  }, [allJobs]);
+
+  const createJobMutation = useCreateJob();
+  const loading = createJobMutation.isPending;
 
   const set    = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
   const setRaw = (k, v) => setForm((p) => ({ ...p, [k]: v }));
@@ -284,12 +259,11 @@ function Step1Form({ onSuccess }) {
     const e_ = validate();
     if (Object.keys(e_).length) { setErrors(e_); return; }
     setErrors({});
-    setLoading(true);
     try {
       const totalQty = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
       const combinedSize = formatSets(sets);
 
-      const newJob = await createJob({
+      const newJob = await createJobMutation.mutateAsync({
         progBy:             form.name,
         item:               form.item,
         itemGroup:          form.itemGroup,
@@ -301,8 +275,6 @@ function Step1Form({ onSuccess }) {
       onSuccess({ jobNo: newJob.jobNo, item: form.item });
     } catch (err) {
       alert('Submit failed: ' + err.message);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -425,22 +397,22 @@ function Step1Form({ onSuccess }) {
 function Step2Form({ job, onSuccess }) {
   const init = { name: '', yesNo: null, instructions: '', inhouseCutting: null };
   const [form, setForm] = useState(init);
-  const [loading, setLoading] = useState(false);
+  const updateStep2Mutation = useUpdateStep2();
+  const loading = updateStep2Mutation.isPending;
 
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
     try {
-      await updateStep2(job.jobNo, {
+      await updateStep2Mutation.mutateAsync({
+        jobNo:          job.jobNo,
         yesNo:          form.yesNo,
         instructions:   form.instructions,
         inhouseCutting: form.inhouseCutting,
       });
       onSuccess({ jobNo: job.jobNo, item: job.item });
     } catch (err) { alert('Submit failed: ' + err.message); }
-    finally { setLoading(false); }
   }
 
   return (
@@ -477,7 +449,8 @@ function Step2Form({ job, onSuccess }) {
 function Step3Form({ job, onSuccess }) {
   const [sets, setSets] = useState(() => parseSets(job.size, job.qty));
   const [form, setForm] = useState({ name: '' });
-  const [loading, setLoading] = useState(false);
+  const updateStep3Mutation = useUpdateStep3();
+  const loading = updateStep3Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
   const updateSetQty = (i, v) => {
@@ -488,19 +461,18 @@ function Step3Form({ job, onSuccess }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
     try {
       const totalCutting = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
       const combinedDetails = formatSets(sets);
 
-      await updateStep3(job.jobNo, {
+      await updateStep3Mutation.mutateAsync({
+        jobNo:       job.jobNo,
         cuttingPcs:  totalCutting,
         sizeDetails: combinedDetails,
         name:        form.name,
       });
       onSuccess({ jobNo: job.jobNo, item: job.item });
     } catch (err) { alert('Submit failed: ' + err.message); }
-    finally { setLoading(false); }
   }
 
   return (
@@ -539,7 +511,8 @@ function Step3Form({ job, onSuccess }) {
 function Step4Form({ job, onSuccess }) {
   const [sets, setSets] = useState(() => parseSets(job.s3SizeDetails || job.size, job.s3DukanCutting || job.qty));
   const [form, setForm] = useState({ thekedarName: '', cutToPack: null, leadTime: '' });
-  const [loading, setLoading] = useState(false);
+  const updateStep4Mutation = useUpdateStep4();
+  const loading = updateStep4Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
   const updateSetQty = (i, v) => {
@@ -550,12 +523,10 @@ function Step4Form({ job, onSuccess }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
     try {
       const totalCutting = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
-      // Note: We'll store the total in s4_cutting_pcs as before, 
-      // but the UI handled the breakdown for the user's convenience.
-      await updateStep4(job.jobNo, {
+      await updateStep4Mutation.mutateAsync({
+        jobNo:        job.jobNo,
         thekedarName: form.thekedarName,
         cutToPack:    form.cutToPack,
         leadTime:     form.leadTime,
@@ -563,7 +534,6 @@ function Step4Form({ job, onSuccess }) {
       });
       onSuccess({ jobNo: job.jobNo, item: job.item });
     } catch (err) { alert('Submit failed: ' + err.message); }
-    finally { setLoading(false); }
   }
 
   return (
@@ -617,20 +587,20 @@ function Step5Form({ job, onSuccess }) {
     jamaQty: job.s5JamaQty || '', 
     pressHua: job.s5Press ? (job.s5Press === 'Yes') : null 
   });
-  const [loading, setLoading] = useState(false);
+  const updateStep5Mutation = useUpdateStep5();
+  const loading = updateStep5Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
     try {
-      await updateStep5(job.jobNo, {
+      await updateStep5Mutation.mutateAsync({
+        jobNo:    job.jobNo,
         jamaQty:  form.jamaQty,
         pressHua: form.pressHua,
       });
       onSuccess({ jobNo: job.jobNo, item: job.item });
     } catch (err) { alert('Submit failed: ' + err.message); }
-    finally { setLoading(false); }
   }
 
   return (
@@ -658,7 +628,8 @@ function Step6Form({ job, onSuccess }) {
     reason: job.s6Reason || '', 
     yourName: job.s6Name || '' 
   });
-  const [loading, setLoading] = useState(false);
+  const updateStep6Mutation = useUpdateStep6();
+  const loading = updateStep6Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
   const reqQty = Number(job.qty || 0);
@@ -668,16 +639,15 @@ function Step6Form({ job, onSuccess }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
     try {
-      await updateStep6(job.jobNo, {
+      await updateStep6Mutation.mutateAsync({
+        jobNo:     job.jobNo,
         settleQty: form.settleQty,
         reason:    form.reason,
         yourName:  form.yourName,
       });
       onSuccess({ jobNo: job.jobNo, item: job.item });
     } catch (err) { alert('Submit failed: ' + err.message); }
-    finally { setLoading(false); }
   }
 
   return (
@@ -756,24 +726,15 @@ function Step6Form({ job, onSuccess }) {
 const STEP_FORM_MAP = { 2: Step2Form, 3: Step3Form, 4: Step4Form, 5: Step5Form, 6: Step6Form };
 
 function StepFormWithFetch({ step, onSuccess }) {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Use shared cache — no independent getAllJobs() call
+  const { data: allJobs = [], isLoading: loading } = useJobs();
   const [selJob, setSelJob] = useState(null);
   const [search, setSearch] = useState('');
 
-  const fetch = async () => {
-    setLoading(true);
-    try {
-      const all = await getAllJobs();
-      setJobs(all.filter(j => detectStep(j) === step));
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Reset selected job when step changes
+  useState(() => { setSelJob(null); }, [step]);
 
-  useEffect(() => { fetch(); setSelJob(null); }, [step]);
+  const jobs = useMemo(() => allJobs.filter(j => detectStep(j) === step), [allJobs, step]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -813,7 +774,9 @@ function StepFormWithFetch({ step, onSuccess }) {
         <JobCard job={selJob} showSteps />
         <FormSection title={`Logging Step ${step}`} />
         <StepForm job={selJob} onSuccess={(data) => {
-           setJobs(prev => prev.filter(j => j.jobNo !== selJob.jobNo));
+           // After mutation, TanStack Query auto-invalidates the cache
+           // The job list will re-filter automatically when the cache updates
+           setSelJob(null);
            onSuccess(data);
         }} />
       </div>
@@ -830,7 +793,6 @@ function StepFormWithFetch({ step, onSuccess }) {
 
       <div className="flex items-center justify-between px-1">
         <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{loading ? 'Searching...' : `Pending Jobs (${filtered.length})`}</h3>
-        {!loading && <button onClick={fetch} className="text-[10px] font-black text-indigo-500 hover:text-indigo-600">REFRESH</button>}
       </div>
 
       <div className="space-y-3">

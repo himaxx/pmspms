@@ -1,13 +1,13 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { getAllJobs } from '../utils/db';
+import { useState, useMemo } from 'react';
 import { bulkSyncJobs, pullSheetsToDatabase } from '../utils/sync';
 import StepBadge from '../components/StepBadge';
 import { JobCardSkeleton } from '../components/Skeleton';
 import AnalyticsHub from '../components/AnalyticsHub';
 import { useToast, ToastContainer } from '../components/Toast';
 import usePullToRefresh from '../hooks/usePullToRefresh';
-
-const REFRESH_INTERVAL = 60_000;
+import { getPendingStep as detectStep, isJobDelayed as isDelayed, getJobStatus } from '../utils/jobLogic';
+import { useJobs } from '../hooks/useJobs';
+import useUIStore from '../store/useUIStore';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -33,45 +33,7 @@ function isToday(str) {
 
 function cls(...p) { return p.filter(Boolean).join(' '); }
 
-function detectStep(job) {
-  if (!job) return 1;
-  const s = (val) => (val !== null && val !== undefined && String(val).trim()) ? String(val).trim() : '';
-  const jamaQty   = Number(job.s5JamaQty || 0);
-  const settleQty = Number(job.s6SettleQty || 0);
-  const reqQty    = Number(job.qty || 0);
 
-  // Step 7: Done (Requires both Jama AND Settle entries, and total accounted >= Requirement)
-  if (s(job.s5JamaQty) && s(job.s6SettleQty) && (jamaQty + settleQty >= reqQty)) return 7; 
-  
-  if (s(job.s5JamaQty) || s(job.s5Status).toLowerCase() === 'complete' || s(job.s6SettleQty)) return 6;
-  if (s(job.s4StartDate)) return 5;
-  if (s(job.s3Actual))    return 4;
-  if (s(job.s2Actual)) {
-    if (s(job.s2YesNo).toLowerCase() === 'yes') {
-      return (s(job.s2Inhouse).toLowerCase() === 'yes') ? 3 : 4;
-    }
-    return 7; // Rejected is Done
-  }
-  return 2;
-}
-
-const DELAY_THRESHOLDS = { 1: 3, 2: 2, 3: 2, 4: 14, 5: 3 };
-
-function isDelayed(job) {
-  const step = detectStep(job);
-  if (step === 7) return false;
-  const dateFields = { 1: job.date, 2: job.s2Actual, 3: job.s3Actual, 4: job.s4StartDate, 5: job.s5JamaPlanned };
-  const d = parseDate(dateFields[step]);
-  if (!d) return false;
-  return Math.floor((Date.now() - d.getTime()) / 86400000) > (DELAY_THRESHOLDS[step] ?? 7);
-}
-
-function getJobStatus(job) {
-  if (!job) return 'on-track';
-  const step = detectStep(job);
-  if (step === 7) return 'complete';
-  return isDelayed(job) ? 'late' : 'on-track';
-}
 
 // ─── Summary Cards ────────────────────────────────────────────────────────────
 const CARD_CONFIG = [
@@ -400,34 +362,23 @@ function AajKeNaame({ jobs }) {
 }
 
 export default function Dashboard() {
-  const [jobs, setJobs]       = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState(null);
+  // ── Server state via TanStack Query (shared cache with all other pages) ──────
+  const { data: jobs = [], isLoading: loading, dataUpdatedAt, refetch } = useJobs();
+  const lastRefresh = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
+
+  // ── UI state persisted in Zustand (survives page navigation) ────────────────
+  const search          = useUIStore((s) => s.dashSearch);
+  const stepFilter      = useUIStore((s) => s.dashStepFilter);
+  const statusFilter    = useUIStore((s) => s.dashStatusFilter);
+  const setSearch       = useUIStore((s) => s.setDashSearch);
+  const setStepFilter   = useUIStore((s) => s.setDashStepFilter);
+  const setStatusFilter = useUIStore((s) => s.setDashStatusFilter);
+  const clearDashFilters = useUIStore((s) => s.clearDashFilters);
+
   const [selectedJob, setSelectedJob] = useState(null);
-  const [search, setSearch]           = useState('');
-  const [stepFilter, setStepFilter]   = useState('All');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const { toasts, addToast, dismiss }   = useToast();
+  const { toasts, addToast, dismiss } = useToast();
 
-  const fetchJobs = useCallback(async () => {
-    try {
-      const data = await getAllJobs();
-      setJobs(data);
-      setLastRefresh(new Date());
-    } catch (e) {
-      addToast(e.message ?? 'Could not load jobs.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [addToast]);
-
-  useEffect(() => {
-    fetchJobs();
-    const id = setInterval(fetchJobs, REFRESH_INTERVAL);
-    return () => clearInterval(id);
-  }, [fetchJobs]);
-
-  const { containerRef, handlers, pullProgress, isRefreshing } = usePullToRefresh(fetchJobs);
+  const { containerRef, handlers, pullProgress, isRefreshing } = usePullToRefresh(refetch);
 
   // Summary counts
   const counts = useMemo(() => {
@@ -486,7 +437,7 @@ export default function Dashboard() {
               addToast('Pulling from Sheets…', 'info');
               try {
                 const count = await pullSheetsToDatabase();
-                await fetchJobs();
+                await refetch();
                 addToast(`Successfully pulled ${count} jobs from Sheets!`, 'success');
               } catch (e) {
                 addToast('Pull failed: ' + e.message, 'error');
@@ -515,7 +466,7 @@ export default function Dashboard() {
               </svg>
             </button>
 
-            <button onClick={() => { setLoading(true); fetchJobs(); }}
+            <button onClick={() => { refetch(); }}
               className="p-2 rounded-xl hover:bg-gray-100 btn-press text-gray-400" title="Refresh Dashboard">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                 <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.243a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.928a.75.75 0 00-1.5 0v2.43l-.31-.31A7 7 0 003.239 8.188a.75.75 0 101.448.389A5.5 5.5 0 0113.89 6.11l.311.31h-2.432a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clipRule="evenodd" />
@@ -570,7 +521,7 @@ export default function Dashboard() {
               {loading ? 'Loading…' : `${filtered.length} job${filtered.length !== 1 ? 's' : ''}`}
             </p>
             {(search || stepFilter !== 'All' || statusFilter !== 'All') && (
-              <button onClick={() => { setSearch(''); setStepFilter('All'); setStatusFilter('All'); }}
+              <button onClick={clearDashFilters}
                 className="text-xs text-indigo-600 font-semibold hover:underline">Clear filters</button>
             )}
           </div>

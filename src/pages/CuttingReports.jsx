@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { getAllJobs, updateStep3 } from '../utils/db';
+import { useState, useMemo } from 'react';
+import { getPendingStep, getDaysInStep } from '../utils/jobLogic';
 import { STEP_PEOPLE } from '../utils/constants';
 import { JobCardSkeleton } from '../components/Skeleton';
 import { useToast, ToastContainer } from '../components/Toast';
@@ -7,6 +7,8 @@ import usePullToRefresh from '../hooks/usePullToRefresh';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { parseSets, formatSets } from '../utils/helpers';
+import { useJobs, useUpdateStep3 } from '../hooks/useJobs';
+import useUIStore from '../store/useUIStore';
 
 // helper functions
 function parseDate(str) {
@@ -70,9 +72,7 @@ function PendingTab({ jobs, loading, onJobClick }) {
   const pending = useMemo(() => {
     return jobs
       .filter((j) => {
-        const isPending = String(j.s2YesNo ?? '').toLowerCase() === 'yes' &&
-               String(j.s2Inhouse ?? '').toLowerCase() === 'yes' &&
-               !String(j.s3Actual ?? '').trim();
+        const isPending = getPendingStep(j) === 3;
         if (!isPending) return false;
         if (!search) return true;
         const q = search.toLowerCase();
@@ -116,7 +116,7 @@ function PendingTab({ jobs, loading, onJobClick }) {
               <p className="text-[10px] text-gray-400 uppercase font-bold">Job #{job.jobNo}</p>
               <h3 className="font-bold text-gray-900">{job.item}</h3>
             </div>
-            <Chip color="gray">{daysDiff(parseDate(job.s2Actual))}d</Chip>
+            <Chip color="gray">{getDaysInStep(job)}d</Chip>
           </div>
           <div className="text-sm text-gray-500 mt-2 font-medium">Qty: {job.qty} | Size: {job.size}</div>
           <div className="mt-2 flex items-center gap-1.5">
@@ -357,13 +357,14 @@ function HisabTab({ jobs, loading }) {
   );
 }
 
-function CuttingFormSheet({ job, isOpen, onClose, onRefresh }) {
+function CuttingFormSheet({ job, isOpen, onClose }) {
   const [sets, setSets] = useState([{ size: '', qty: '' }]);
   const [name, setName] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const { addToast } = useToast();
+  const updateStep3Mutation = useUpdateStep3();
+  const submitting = updateStep3Mutation.isPending;
 
-  useEffect(() => {
+  useState(() => {
     if (job) {
       setSets(parseSets(job.size, job.qty));
       setName('');
@@ -379,21 +380,18 @@ function CuttingFormSheet({ job, isOpen, onClose, onRefresh }) {
     if (!name) return addToast('Please select cutting person', 'error');
     if (totalPcs <= 0) return addToast('Total pieces must be greater than 0', 'error');
 
-    setSubmitting(true);
+    const sizeDetails = formatSets(sets);
     try {
-      const sizeDetails = formatSets(sets);
-      await updateStep3(job.jobNo, { 
-        cuttingPcs: totalPcs, 
-        name, 
-        sizeDetails 
+      await updateStep3Mutation.mutateAsync({
+        jobNo: job.jobNo,
+        cuttingPcs: totalPcs,
+        name,
+        sizeDetails,
       });
       addToast('Cutting Logged!', 'success');
-      onRefresh();
       onClose();
-    } catch (err) { 
-      addToast(err.message, 'error'); 
-    } finally { 
-      setSubmitting(false); 
+    } catch (err) {
+      addToast(err.message, 'error');
     }
   };
 
@@ -462,19 +460,15 @@ function CuttingFormSheet({ job, isOpen, onClose, onRefresh }) {
 }
 
 export default function CuttingReports() {
-  const [tab, setTab] = useState('pending');
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Tab persisted in Zustand (survives page navigation)
+  const tab    = useUIStore((s) => s.cuttingTab);
+  const setTab = useUIStore((s) => s.setCuttingTab);
+
+  // Shared jobs cache via TanStack Query
+  const { data: jobs = [], isLoading: loading, refetch } = useJobs();
   const [sel, setSel] = useState(null);
   const { toasts, addToast, dismiss } = useToast();
-  const fetch = useCallback(async () => {
-    setLoading(true);
-    const d = await getAllJobs();
-    setJobs(d);
-    setLoading(false);
-  }, []);
-  useEffect(() => { fetch(); }, [fetch]);
-  const { containerRef, handlers } = usePullToRefresh(fetch);
+  const { containerRef, handlers } = usePullToRefresh(refetch);
 
   return (
     <div className="min-h-full bg-gray-50" ref={containerRef} {...handlers}>
@@ -491,7 +485,7 @@ export default function CuttingReports() {
         {tab==='completed' && <CompletedTab jobs={jobs} loading={loading} />}
         {tab==='hisab' && <HisabTab jobs={jobs} loading={loading} />}
       </div>
-      <CuttingFormSheet job={sel} isOpen={!!sel} onClose={()=>setSel(null)} onRefresh={fetch} />
+      <CuttingFormSheet job={sel} isOpen={!!sel} onClose={()=>setSel(null)} />
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   );

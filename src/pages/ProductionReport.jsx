@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { ITEM_GROUPS } from '../utils/constants';
-import { getAllJobs } from '../utils/db';
 import { JobCardSkeleton } from '../components/Skeleton';
 import { useToast, ToastContainer } from '../components/Toast';
 import usePullToRefresh from '../hooks/usePullToRefresh';
+import { getPendingStep as detectStep, isJobDelayed as isDelayed, getDaysInStep } from '../utils/jobLogic';
+import { useJobs } from '../hooks/useJobs';
+import useUIStore from '../store/useUIStore';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -25,57 +27,23 @@ function fmtDate(str) {
 
 function cls(...p) { return p.filter(Boolean).join(' '); }
 
-/** Detect which step (1-5) the job is currently on */
-function detectStep(job) {
-  if (!job) return 1;
-  if (String(job.s6SettleQty ?? '').trim()) return 6;
-  if (String(job.s5Status ?? '').trim().toLowerCase() === 'complete' || 
-      String(job.s5JamaQty ?? '').trim())   return 5;
-  if (String(job.s4StartDate ?? '').trim()) return 4;
-  if (String(job.s3Actual ?? '').trim())    return 3;
-  if (String(job.s2Actual ?? '').trim())    return 2;
-  return 1;
-}
 
-/** How many days has the job been in its current step */
-function daysInStep(job, step) {
-  if (!job) return 0;
-  const dateFields = {
-    1: job.date,
-    2: job.s2Actual,
-    3: job.s3Actual,
-    4: job.s4StartDate,
-    5: job.s5JamaPlanned,
-    6: null,
-  };
-  if (step === 6) return 0;
-  return daysDiff(parseDate(dateFields[step]));
-}
-
-/** Delay thresholds per step (days) */
-const DELAY_THRESHOLDS = { 1: 3, 2: 2, 3: 2, 4: 14, 5: 3 };
-
-function isDelayed(job, step) {
-  const days = daysInStep(job, step);
-  if (days === null) return false;
-  return days > (DELAY_THRESHOLDS[step] ?? 7);
-}
 
 const CATEGORIES = ['All', ...ITEM_GROUPS];
 
 // ─── Pipeline Definitions (NO S1/S2 NOTATION) ──────────────────────────────────
 const PIPELINE_STAGES = {
-  1: { id: 1, name: 'Awaiting Production Approval', short: 'Needs Approval', icon: '📝', color: 'text-amber-700 bg-amber-50 ring-amber-200 border-amber-100', bg: 'bg-amber-500' },
-  2: { id: 2, name: 'Fabric Ready (Awaiting Cut)',  short: 'Needs Cutting',  icon: '🧵', color: 'text-blue-700 bg-blue-50 ring-blue-200 border-blue-100', bg: 'bg-blue-500' },
-  3: { id: 3, name: 'Inhouse Cut (Wait For Naame)', short: 'Needs Naame',    icon: '📦', color: 'text-purple-700 bg-purple-50 ring-purple-200 border-purple-100', bg: 'bg-purple-500' },
-  4: { id: 4, name: 'In Production (Working)',      short: 'In Prod',        icon: '🏭', color: 'text-indigo-700 bg-indigo-50 ring-indigo-200 border-indigo-100', bg: 'bg-indigo-500' },
-  5: { id: 5, name: 'Jama Complete (Unsettled)',    short: 'Needs Settle',   icon: '✅', color: 'text-teal-700 bg-teal-50 ring-teal-200 border-teal-100', bg: 'bg-teal-500' }
+  2: { id: 2, name: 'Awaiting Production Approval', short: 'Needs Approval', icon: '📝', color: 'text-amber-700 bg-amber-50 ring-amber-200 border-amber-100', bg: 'bg-amber-500' },
+  3: { id: 3, name: 'Fabric Ready (Awaiting Cut)',  short: 'Needs Cutting',  icon: '🧵', color: 'text-blue-700 bg-blue-50 ring-blue-200 border-blue-100', bg: 'bg-blue-500' },
+  4: { id: 4, name: 'Inhouse Cut (Wait For Naame)', short: 'Needs Naame',    icon: '📦', color: 'text-purple-700 bg-purple-50 ring-purple-200 border-purple-100', bg: 'bg-purple-500' },
+  5: { id: 5, name: 'In Production (Working)',      short: 'In Prod',        icon: '🏭', color: 'text-indigo-700 bg-indigo-50 ring-indigo-200 border-indigo-100', bg: 'bg-indigo-500' },
+  6: { id: 6, name: 'Jama Complete (Unsettled)',    short: 'Needs Settle',   icon: '✅', color: 'text-teal-700 bg-teal-50 ring-teal-200 border-teal-100', bg: 'bg-teal-500' }
 };
 
 // ─── Stage Group Card ─────────────────────────────────────────────────────────
 function StageGroupCard({ stage, jobs, onClick }) {
    const count = jobs.length;
-   const lateCount = jobs.filter(j => isDelayed(j, stage.id)).length;
+   const lateCount = jobs.filter(j => isDelayed(j)).length;
 
    return (
      <button 
@@ -133,12 +101,12 @@ function DetailSheet({ detail, jobs, onClose }) {
      // Because this sheet is used for both Stage & Thekedar, we check step individually
      const stepA = detectStep(a);
      const stepB = detectStep(b);
-     const aLate = isDelayed(a, stepA);
-     const bLate = isDelayed(b, stepB);
+     const aLate = isDelayed(a);
+     const bLate = isDelayed(b);
      if (aLate && !bLate) return -1;
      if (!aLate && bLate) return 1;
      if (aLate && bLate) {
-         return (daysInStep(b, stepB) || 0) - (daysInStep(a, stepA) || 0);
+         return (getDaysInStep(b) || 0) - (getDaysInStep(a) || 0);
      }
      return String(b.jobNo).localeCompare(String(a.jobNo), undefined, { numeric: true, sensitivity: 'base' });
   });
@@ -189,11 +157,11 @@ function PipelineCard({ job }) {
   const stage = PIPELINE_STAGES[step];
   if (!stage) return null;
 
-  const delayDays = daysInStep(job, step);
-  const isLate = isDelayed(job, step);
+  const delayDays = getDaysInStep(job);
+  const isLate = isDelayed(job);
   
-  // Progress visualization mapping (Total 5 active stages)
-  const progressPercent = ((step - 1) / 5) * 100;
+  // Progress visualization mapping (Total 5 active stages, steps 2 through 6)
+  const progressPercent = ((step - 2) / 4) * 100;
 
   return (
     <article className={cls(
@@ -284,28 +252,19 @@ function PullIndicator({ progress, isRefreshing }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ProductionReport() {
-  const [jobs, setJobs]         = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [category, setCategory] = useState('All');
-  const [viewMode, setViewMode] = useState('stage'); // 'stage' | 'thekedar'
+  const { data: jobs = [], isLoading: loading, refetch } = useJobs();
+
+  // UI state persisted in Zustand
+  const category        = useUIStore((s) => s.productionCategory);
+  const viewMode        = useUIStore((s) => s.productionViewMode);
+  const setCategory     = useUIStore((s) => s.setProductionCategory);
+  const setViewMode     = useUIStore((s) => s.setProductionViewMode);
+
   const [searchThekedar, setSearchThekedar] = useState('');
   const [selectedDetail, setSelectedDetail] = useState(null);
   const { toasts, addToast, dismiss } = useToast();
 
-  const fetchJobs = useCallback(async () => {
-    try {
-      const data = await getAllJobs();
-      setJobs(data);
-    } catch (e) {
-      addToast('Could not load jobs. Check connection.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [addToast]);
-
-  useEffect(() => { fetchJobs(); }, [fetchJobs]);
-
-  const { containerRef, handlers, pullProgress, isRefreshing } = usePullToRefresh(fetchJobs);
+  const { containerRef, handlers, pullProgress, isRefreshing } = usePullToRefresh(refetch);
 
   // Apply category filter
   const filtered = useMemo(() => {

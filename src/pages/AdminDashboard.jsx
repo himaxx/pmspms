@@ -22,9 +22,10 @@ import {
   BarChart, Bar,
   PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer,
+  ResponsiveContainer
 } from 'recharts';
 import { useJobs } from '../hooks/useJobs';
+import { useMasterData, useUpdateMasterData } from '../hooks/useMasterData';
 import useAuthStore from '../store/useAuthStore';
 import { getPendingStep } from '../utils/jobLogic';
 
@@ -748,6 +749,86 @@ function RawDataExplorer({ jobs }) {
   );
 }
 
+// ─── Section 12: Master Data Settings ─────────────────────────────────────────
+
+function MasterDataSettings() {
+  const { data: masterData, isLoading } = useMasterData();
+  const updateMutation = useUpdateMasterData();
+  
+  const [progByInput, setProgByInput] = useState('');
+  const [cuttingInput, setCuttingInput] = useState('');
+
+  if (isLoading) return <div className="text-gray-400 py-4 animate-pulse">Loading settings...</div>;
+
+  const progByList = masterData?.progBy || [];
+  const cuttingNamesList = masterData?.cuttingNames || [];
+
+  const handleAdd = async (category, currentList, input, setInput) => {
+    if (!input.trim()) return;
+    const nameStr = input.trim();
+    if (currentList.includes(nameStr)) return;
+    
+    const newNames = [...currentList, nameStr];
+    await updateMutation.mutateAsync({ category, names: newNames });
+    setInput('');
+  };
+
+  const handleRemove = async (category, currentList, nameToRemove) => {
+    const newNames = currentList.filter(n => n !== nameToRemove);
+    await updateMutation.mutateAsync({ category, names: newNames });
+  };
+
+  const renderListEditor = (title, category, list, input, setInput) => (
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+      <h3 className="text-sm font-bold text-white mb-3">{title}</h3>
+      <div className="flex gap-2 mb-4">
+        <input 
+          type="text" 
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={`Add new ${title}...`}
+          className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500"
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd(category, list, input, setInput)}
+        />
+        <button 
+          onClick={() => handleAdd(category, list, input, setInput)}
+          disabled={updateMutation.isPending || !input.trim()}
+          className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
+        >
+          Add
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
+        {list.map(name => (
+          <div key={name} className="flex items-center gap-1 bg-black/40 rounded-lg px-2 py-1 border border-white/5">
+            <span className="text-xs text-gray-300 font-medium">{name}</span>
+            <button 
+              onClick={() => handleRemove(category, list, name)}
+              className="text-gray-500 hover:text-red-400 p-0.5 rounded transition-colors"
+              title="Remove"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+            </button>
+          </div>
+        ))}
+        {list.length === 0 && <span className="text-xs text-gray-500 italic">No names added yet.</span>}
+      </div>
+    </div>
+  );
+
+  return (
+    <Card className="col-span-full">
+      <SectionTitle sub="Manage drop-down lists used in production forms">
+        ⚙️ Master Data Settings
+      </SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+        {renderListEditor('Prog. By Names (Step 1)', 'prog_by', progByList, progByInput, setProgByInput)}
+        {renderListEditor('Inhouse Cutting Names (Step 3)', 'cutting_names', cuttingNamesList, cuttingInput, setCuttingInput)}
+      </div>
+    </Card>
+  );
+}
+
 // ─── Main Admin Dashboard ─────────────────────────────────────────────────────
 
 function ApprovalFlow({ jobs }) {
@@ -958,6 +1039,9 @@ export default function AdminDashboard() {
 
             {/* Section 9: Bottleneck Table */}
             <BottleneckTable jobs={jobs} />
+
+            {/* Section 12: Master Data Settings */}
+            <MasterDataSettings />
 
             {/* Section 11: Raw Data Explorer */}
             <RawDataExplorer jobs={jobs} />

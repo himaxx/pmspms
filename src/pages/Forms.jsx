@@ -8,6 +8,7 @@ import { JobCardSkeleton } from '../components/Skeleton';
 import StepBadge from '../components/StepBadge';
 import { getPendingStep as detectStep } from '../utils/jobLogic';
 import { useJobs, useCreateJob, useUpdateStep2, useUpdateStep3, useUpdateStep4, useUpdateStep5, useUpdateStep6 } from '../hooks/useJobs';
+import { useMasterData } from '../hooks/useMasterData';
 // ─── Step Selector Config ─────────────────────────────────────────────────────
 const STEP_META = [
   { step: 1, hindiName: 'नई आवश्यकता',        englishName: 'New Requirement',       color: 'indigo' },
@@ -228,6 +229,8 @@ function Step1Form({ onSuccess }) {
 
   const createJobMutation = useCreateJob();
   const loading = createJobMutation.isPending;
+  const { data: masterData } = useMasterData();
+  const progByList = masterData?.progBy?.length > 0 ? masterData.progBy : STEP_PEOPLE[1];
 
   const set    = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
   const setRaw = (k, v) => setForm((p) => ({ ...p, [k]: v }));
@@ -286,7 +289,7 @@ function Step1Form({ onSuccess }) {
         <FieldLabel required>Your Name (Prog. By)</FieldLabel>
         <SelectBase error={errors.name} value={form.name} onChange={set('name')}>
           <option value="">Select your name…</option>
-          {STEP_PEOPLE[1].map((n) => <option key={n}>{n}</option>)}
+          {progByList.map((n) => <option key={n}>{n}</option>)}
         </SelectBase>
       </div>
 
@@ -452,6 +455,8 @@ function Step3Form({ job, onSuccess }) {
   const updateStep3Mutation = useUpdateStep3();
   const loading = updateStep3Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
+  const { data: masterData } = useMasterData();
+  const cuttingNamesList = masterData?.cuttingNames?.length > 0 ? masterData.cuttingNames : STEP_PEOPLE[3];
 
   const updateSetQty = (i, v) => {
     const newSets = [...sets];
@@ -481,7 +486,7 @@ function Step3Form({ job, onSuccess }) {
         <FieldLabel required>Your Name</FieldLabel>
         <SelectBase value={form.name} onChange={set('name')}>
           <option value="">Select…</option>
-          {STEP_PEOPLE[3].map((n) => <option key={n}>{n}</option>)}
+          {cuttingNamesList.map((n) => <option key={n}>{n}</option>)}
         </SelectBase>
       </div>
 

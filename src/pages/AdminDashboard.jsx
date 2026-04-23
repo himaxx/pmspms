@@ -992,7 +992,6 @@ function CatalogSettings() {
     if (cIdx === -1) return;
     const sIdx = catalog[cIdx].subcategories.findIndex(s => s.subcategory === selectedSub);
     if (sIdx === -1) return;
-    
     if (catalog[cIdx].subcategories[sIdx].items.includes(itemName)) return alert('Item already exists!');
     
     const newCatalog = [...catalog];
@@ -1042,85 +1041,87 @@ function CatalogSettings() {
       <SectionTitle sub="Manage hierarchical Categories > Subcategories > Items">
         🗂️ Catalog Master Data
       </SectionTitle>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 h-[400px]">
-        {/* Categories Panel */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-sm font-bold text-white">Categories</h3>
-            <button onClick={handleAddCategory} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded">Add</button>
+
+      {/* 3-column explorer — inline styles guarantee overflow containment  */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', height: '420px', marginTop: '12px' }}>
+
+        {/* ── Categories ── */}
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#a5b4fc', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Categories ({catalog.length})</span>
+            <button onClick={handleAddCategory} style={{ fontSize: '11px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', padding: '4px 10px', cursor: 'pointer', fontWeight: 700 }}>+ Add</button>
           </div>
-          <div className="flex-1 overflow-y-auto pr-1 space-y-1">
+          <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
             {catalog.map(c => (
-              <div 
-                key={c.category} 
-                className={`flex justify-between items-center px-2 py-1.5 rounded cursor-pointer ${selectedCat === c.category ? 'bg-indigo-500/20 border border-indigo-500/30' : 'hover:bg-white/5 border border-transparent'}`}
+              <div
+                key={c.category}
                 onClick={() => { setSelectedCat(c.category); setSelectedSub(null); }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: '10px', cursor: 'pointer', marginBottom: '2px', background: selectedCat === c.category ? 'rgba(99,102,241,0.18)' : 'transparent', border: `1px solid ${selectedCat === c.category ? 'rgba(99,102,241,0.35)' : 'transparent'}` }}
               >
-                <span className="text-xs truncate" title={c.category}>{c.category}</span>
-                <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
-                  <button onClick={(e) => { e.stopPropagation(); handleEditCategory(c.category); }} className="text-blue-400 hover:text-blue-300">✎</button>
-                  <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(c.category); }} className="text-red-400 hover:text-red-300">×</button>
+                <span style={{ fontSize: '11px', color: selectedCat === c.category ? '#c7d2fe' : '#cbd5e1', fontWeight: selectedCat === c.category ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, paddingRight: '6px' }} title={c.category}>{c.category}</span>
+                <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                  <button onClick={e => { e.stopPropagation(); handleEditCategory(c.category); }} style={{ background: 'rgba(96,165,250,0.15)', border: 'none', borderRadius: '6px', color: '#60a5fa', cursor: 'pointer', padding: '2px 7px', fontSize: '12px' }}>✎</button>
+                  <button onClick={e => { e.stopPropagation(); handleDeleteCategory(c.category); }} style={{ background: 'rgba(248,113,113,0.15)', border: 'none', borderRadius: '6px', color: '#f87171', cursor: 'pointer', padding: '2px 7px', fontSize: '12px' }}>✕</button>
                 </div>
               </div>
             ))}
+            {catalog.length === 0 && <div style={{ textAlign: 'center', color: '#4b5563', fontSize: '11px', marginTop: '40px' }}>No categories yet</div>}
           </div>
         </div>
 
-        {/* Subcategories Panel */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-sm font-bold text-white">Subcategories</h3>
-            {selectedCat && <button onClick={handleAddSubcategory} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded">Add</button>}
+        {/* ── Subcategories ── */}
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#a5b4fc', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subcategories {selectedCat ? `(${currentCatObj?.subcategories?.length || 0})` : ''}</span>
+            {selectedCat && <button onClick={handleAddSubcategory} style={{ fontSize: '11px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', padding: '4px 10px', cursor: 'pointer', fontWeight: 700 }}>+ Add</button>}
           </div>
-          <div className="flex-1 overflow-y-auto pr-1 space-y-1">
-            {!selectedCat && <div className="text-xs text-gray-500 text-center mt-10">Select a category first</div>}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
+            {!selectedCat && <div style={{ textAlign: 'center', color: '#374151', fontSize: '11px', marginTop: '40px' }}>← Select a category</div>}
             {currentCatObj?.subcategories.map(s => (
-              <div 
-                key={s.subcategory} 
-                className={`flex justify-between items-center px-2 py-1.5 rounded cursor-pointer ${selectedSub === s.subcategory ? 'bg-indigo-500/20 border border-indigo-500/30' : 'hover:bg-white/5 border border-transparent'}`}
+              <div
+                key={s.subcategory}
                 onClick={() => setSelectedSub(s.subcategory)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: '10px', cursor: 'pointer', marginBottom: '2px', background: selectedSub === s.subcategory ? 'rgba(99,102,241,0.18)' : 'transparent', border: `1px solid ${selectedSub === s.subcategory ? 'rgba(99,102,241,0.35)' : 'transparent'}` }}
               >
-                <span className="text-xs truncate" title={s.subcategory}>{s.subcategory}</span>
-                <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
-                  <button onClick={(e) => { e.stopPropagation(); handleEditSubcategory(s.subcategory); }} className="text-blue-400 hover:text-blue-300">✎</button>
-                  <button onClick={(e) => { e.stopPropagation(); handleDeleteSubcategory(s.subcategory); }} className="text-red-400 hover:text-red-300">×</button>
+                <span style={{ fontSize: '11px', color: selectedSub === s.subcategory ? '#c7d2fe' : '#cbd5e1', fontWeight: selectedSub === s.subcategory ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, paddingRight: '6px' }} title={s.subcategory}>{s.subcategory}</span>
+                <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                  <button onClick={e => { e.stopPropagation(); handleEditSubcategory(s.subcategory); }} style={{ background: 'rgba(96,165,250,0.15)', border: 'none', borderRadius: '6px', color: '#60a5fa', cursor: 'pointer', padding: '2px 7px', fontSize: '12px' }}>✎</button>
+                  <button onClick={e => { e.stopPropagation(); handleDeleteSubcategory(s.subcategory); }} style={{ background: 'rgba(248,113,113,0.15)', border: 'none', borderRadius: '6px', color: '#f87171', cursor: 'pointer', padding: '2px 7px', fontSize: '12px' }}>✕</button>
                 </div>
               </div>
             ))}
+            {selectedCat && currentCatObj?.subcategories?.length === 0 && <div style={{ textAlign: 'center', color: '#4b5563', fontSize: '11px', marginTop: '40px' }}>No subcategories yet</div>}
           </div>
         </div>
 
-        {/* Items Panel */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-sm font-bold text-white">Items</h3>
+        {/* ── Items ── */}
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#a5b4fc', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Items {selectedSub ? `(${currentSubObj?.items?.length || 0})` : ''}</span>
           </div>
           {selectedCat && selectedSub && (
-            <form onSubmit={handleAddItem} className="flex gap-2 mb-3">
-              <input 
-                type="text" 
-                value={newItemInput}
-                onChange={e => setNewItemInput(e.target.value)}
-                placeholder="New item..."
-                className="flex-1 bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-indigo-500"
-              />
-              <button type="submit" disabled={!newItemInput.trim() || updateMutation.isPending} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded disabled:opacity-50">Add</button>
+            <form onSubmit={handleAddItem} style={{ padding: '8px 8px 4px', display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <input type="text" value={newItemInput} onChange={e => setNewItemInput(e.target.value)} placeholder="Type item name & press Add…" style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', color: '#fff', outline: 'none' }} />
+              <button type="submit" disabled={!newItemInput.trim() || updateMutation.isPending} style={{ fontSize: '11px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: '8px', padding: '5px 10px', cursor: 'pointer', fontWeight: 700, opacity: !newItemInput.trim() ? 0.5 : 1 }}>Add</button>
             </form>
           )}
-          <div className="flex-1 overflow-y-auto pr-1 space-y-1">
-            {(!selectedCat || !selectedSub) && <div className="text-xs text-gray-500 text-center mt-10">Select a subcategory first</div>}
-            {currentSubObj?.items.map(i => (
-               <div key={i} className="flex justify-between items-center px-2 py-1.5 hover:bg-white/5 border border-transparent rounded">
-                 <span className="text-xs truncate pr-2" title={i}>{i}</span>
-                 <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
-                  <button onClick={(e) => { e.stopPropagation(); handleEditItem(i); }} className="text-blue-400 hover:text-blue-300">✎</button>
-                  <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(i); }} className="text-red-400 hover:text-red-300">×</button>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '4px 6px 6px' }}>
+            {(!selectedCat || !selectedSub) && <div style={{ textAlign: 'center', color: '#374151', fontSize: '11px', marginTop: '40px' }}>← Select a subcategory</div>}
+            {currentSubObj?.items.map((item, idx) => (
+              <div
+                key={item}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: '8px', marginBottom: '2px', background: idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}
+              >
+                <span style={{ fontSize: '11px', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, paddingRight: '6px' }} title={item}>{item}</span>
+                <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                  <button onClick={() => handleEditItem(item)} style={{ background: 'rgba(96,165,250,0.12)', border: 'none', borderRadius: '6px', color: '#60a5fa', cursor: 'pointer', padding: '2px 7px', fontSize: '12px' }}>✎</button>
+                  <button onClick={() => handleDeleteItem(item)} style={{ background: 'rgba(248,113,113,0.12)', border: 'none', borderRadius: '6px', color: '#f87171', cursor: 'pointer', padding: '2px 7px', fontSize: '12px' }}>✕</button>
                 </div>
-               </div>
+              </div>
             ))}
           </div>
         </div>
+
       </div>
     </Card>
   );

@@ -271,3 +271,25 @@ export async function getNextJobNo() {
   const newJobNo = maxJobNo > 0 ? maxJobNo + 1 : 1;
   return String(newJobNo);
 }
+
+// ─── 10. Admin raw update — Data Correction ──────────────────────────────────
+/**
+ * adminUpdateJob — allows the admin to overwrite any fields on a job.
+ * `updates` should be a plain object with **snake_case** column names.
+ * No cascade recalculation is performed — this is intentional for corrections.
+ */
+export async function adminUpdateJob(jobNo, updates) {
+  if (!jobNo || !updates || Object.keys(updates).length === 0) {
+    throw new Error('adminUpdateJob: jobNo and at least one update field are required.');
+  }
+
+  const { error } = await supabase
+    .from('jobs')
+    .update(updates)
+    .eq('job_no', String(jobNo).trim());
+
+  if (error) throw new Error(`adminUpdateJob: ${error.message}`);
+
+  // Trigger background sync to Google Sheets
+  fetchAndSync(jobNo);
+}

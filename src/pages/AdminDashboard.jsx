@@ -24,7 +24,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer
 } from 'recharts';
-import { useJobs } from '../hooks/useJobs';
+import { useJobs, useAdminUpdateJob } from '../hooks/useJobs';
 import { useMasterData, useUpdateMasterData } from '../hooks/useMasterData';
 import useAuthStore from '../store/useAuthStore';
 import { getPendingStep } from '../utils/jobLogic';
@@ -1146,7 +1146,499 @@ function CatalogSettings() {
   );
 }
 
+// ─── Section 14: Job Data Correction ──────────────────────────────────────────
+
+// camelCase → snake_case helper
+function camelToSnake(str) {
+  return str.replace(/[A-Z]/g, (c) => '_' + c.toLowerCase());
+}
+
+// Field definitions for each step
+const STEP_FIELDS = {
+  1: [
+    { key: 'progBy',             label: 'Prog. By',               type: 'text',     dbCol: 'prog_by' },
+    { key: 'item',               label: 'Item Name',              type: 'text',     dbCol: 'item' },
+    { key: 'itemGroup',          label: 'Item Group',             type: 'text',     dbCol: 'item_group' },
+    { key: 'size',               label: 'Size',                   type: 'text',     dbCol: 'size' },
+    { key: 'qty',                label: 'Quantity',               type: 'number',   dbCol: 'qty' },
+    { key: 'reason',             label: 'Reason',                 type: 'text',     dbCol: 'reason' },
+    { key: 'specialInstruction', label: 'Special Instruction',    type: 'textarea', dbCol: 'special_instruction' },
+    { key: 'date',               label: 'Initiation Date',        type: 'datetime', dbCol: 'date' },
+  ],
+  2: [
+    { key: 's2YesNo',       label: 'Approved?',              type: 'yesno',    dbCol: 's2_yes_no' },
+    { key: 's2Instructions', label: 'Instructions',           type: 'textarea', dbCol: 's2_instructions' },
+    { key: 's2Inhouse',     label: 'Inhouse Cutting?',       type: 'yesno',    dbCol: 's2_inhouse' },
+    { key: 's2Actual',      label: 'Approval Date',          type: 'datetime', dbCol: 's2_actual' },
+  ],
+  3: [
+    { key: 's3CuttingPerson', label: 'Cutting Person',       type: 'text',     dbCol: 's3_cutting_person' },
+    { key: 's3DukanCutting',  label: 'Cutting Pieces',       type: 'number',   dbCol: 's3_dukan_cutting' },
+    { key: 's3SizeDetails',   label: 'Size Details',         type: 'text',     dbCol: 's3_size_details' },
+    { key: 's3Actual',        label: 'Cutting Date',         type: 'datetime', dbCol: 's3_actual' },
+  ],
+  4: [
+    { key: 's4Thekedar',    label: 'Thekedar Name',          type: 'text',     dbCol: 's4_thekedar' },
+    { key: 's4CutToPack',   label: 'Cut to Pack?',           type: 'yesno',    dbCol: 's4_cut_to_pack' },
+    { key: 's4LeadTime',    label: 'Lead Time (hrs)',        type: 'number',   dbCol: 's4_lead_time' },
+    { key: 's4CuttingPcs',  label: 'Cutting Pieces',        type: 'number',   dbCol: 's4_cutting_pcs' },
+    { key: 's4StartDate',   label: 'Start Date',            type: 'datetime', dbCol: 's4_start_date' },
+  ],
+  5: [
+    { key: 's5JamaQty',   label: 'Jama Quantity',           type: 'number',   dbCol: 's5_jama_qty' },
+    { key: 's5Press',     label: 'Press Hua?',              type: 'yesno',    dbCol: 's5_press' },
+    { key: 's5Status',    label: 'Status',                  type: 'text',     dbCol: 's5_status' },
+  ],
+  6: [
+    { key: 's6SettleQty', label: 'Settle Quantity',         type: 'number',   dbCol: 's6_settle_qty' },
+    { key: 's6Reason',    label: 'Reason',                  type: 'textarea', dbCol: 's6_reason' },
+    { key: 's6Name',      label: 'Your Name',               type: 'text',     dbCol: 's6_name' },
+  ],
+};
+
+const STEP_LABELS_ADMIN = {
+  1: { icon: '📝', name: 'New Requirement', color: 'indigo' },
+  2: { icon: '✅', name: 'Production Approval', color: 'blue' },
+  3: { icon: '✂️', name: 'Inhouse Cutting', color: 'orange' },
+  4: { icon: '🏭', name: 'Naame — On Production', color: 'purple' },
+  5: { icon: '📦', name: 'Finished Maal Jama', color: 'green' },
+  6: { icon: '💰', name: 'Settle', color: 'gray' },
+};
+
+const STEP_ACCENT = {
+  indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', text: 'text-indigo-400', dot: 'bg-indigo-500' },
+  blue:   { bg: 'bg-blue-500/10',   border: 'border-blue-500/30',   text: 'text-blue-400',   dot: 'bg-blue-500' },
+  orange: { bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-400', dot: 'bg-orange-500' },
+  purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', dot: 'bg-purple-500' },
+  green:  { bg: 'bg-green-500/10',  border: 'border-green-500/30',  text: 'text-green-400',  dot: 'bg-green-500' },
+  gray:   { bg: 'bg-gray-500/10',   border: 'border-gray-500/30',   text: 'text-gray-400',   dot: 'bg-gray-500' },
+};
+
+function formatDateForInput(val) {
+  if (!val) return '';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return '';
+  // "YYYY-MM-DDTHH:MM" for datetime-local
+  return d.toISOString().slice(0, 16);
+}
+
+function JobDataCorrection() {
+  const { data: allJobs = [], isLoading: jobsLoading } = useJobs();
+  const adminMutation = useAdminUpdateJob();
+
+  const [search, setSearch] = useState('');
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [editValues, setEditValues] = useState({});
+  const [openSteps, setOpenSteps] = useState({ 1: true });
+  const [confirmDiff, setConfirmDiff] = useState(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Search results
+  const searchResults = useMemo(() => {
+    if (!search.trim()) return [];
+    const q = search.trim().toLowerCase();
+    return allJobs
+      .filter(j => 
+        String(j.jobNo).toLowerCase().includes(q) ||
+        String(j.item || '').toLowerCase().includes(q) ||
+        String(j.progBy || '').toLowerCase().includes(q)
+      )
+      .slice(0, 15);
+  }, [search, allJobs]);
+
+  // When a job is selected, populate edit values with current data
+  function selectJob(job) {
+    setSelectedJob(job);
+    const vals = {};
+    Object.values(STEP_FIELDS).flat().forEach(f => {
+      let val = job[f.key];
+      if (f.type === 'datetime') val = formatDateForInput(val);
+      else if (f.type === 'number') val = val === '' || val === null || val === undefined ? '' : String(val);
+      else val = val ?? '';
+      vals[f.key] = String(val);
+    });
+    setEditValues(vals);
+    setOpenSteps({ 1: true });
+    setSaveSuccess(false);
+    setSearch('');
+  }
+
+  // Track which fields have changed
+  const changedFields = useMemo(() => {
+    if (!selectedJob) return {};
+    const changes = {};
+    Object.values(STEP_FIELDS).flat().forEach(f => {
+      const original = f.type === 'datetime' 
+        ? formatDateForInput(selectedJob[f.key])
+        : String(selectedJob[f.key] ?? '');
+      const current = editValues[f.key] ?? '';
+      if (original !== current) {
+        changes[f.key] = { label: f.label, original, current, dbCol: f.dbCol, type: f.type };
+      }
+    });
+    return changes;
+  }, [selectedJob, editValues]);
+
+  const changeCount = Object.keys(changedFields).length;
+
+  function handleFieldChange(key, value) {
+    setEditValues(prev => ({ ...prev, [key]: value }));
+    setSaveSuccess(false);
+  }
+
+  function handleSaveClick() {
+    if (changeCount === 0) return;
+    setConfirmDiff(changedFields);
+  }
+
+  async function executeSave() {
+    if (!selectedJob || changeCount === 0) return;
+    
+    // Build snake_case updates object
+    const updates = {};
+    Object.entries(changedFields).forEach(([key, info]) => {
+      let val = info.current;
+      if (info.type === 'number') val = val === '' ? null : Number(val);
+      else if (info.type === 'datetime') val = val === '' ? null : new Date(val).toISOString();
+      else if (val === '') val = null;
+      updates[info.dbCol] = val;
+    });
+
+    try {
+      await adminMutation.mutateAsync({ jobNo: selectedJob.jobNo, updates });
+      setConfirmDiff(null);
+      setSaveSuccess(true);
+      // Refresh the selected job data
+      setTimeout(() => {
+        const fresh = allJobs.find(j => j.jobNo === selectedJob.jobNo);
+        if (fresh) selectJob(fresh);
+      }, 1500);
+    } catch (err) {
+      alert('Save failed: ' + err.message);
+      setConfirmDiff(null);
+    }
+  }
+
+  function toggleStep(step) {
+    setOpenSteps(prev => ({ ...prev, [step]: !prev[step] }));
+  }
+
+  function renderField(field) {
+    const val = editValues[field.key] ?? '';
+    const isChanged = field.key in changedFields;
+    const baseCls = 'w-full bg-black/40 border rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-indigo-500 transition-all';
+    const borderCls = isChanged ? 'border-amber-500/60 ring-1 ring-amber-500/20' : 'border-white/10';
+
+    if (field.type === 'textarea') {
+      return (
+        <textarea
+          rows={2}
+          value={val}
+          onChange={(e) => handleFieldChange(field.key, e.target.value)}
+          className={cls(baseCls, borderCls, 'resize-none')}
+        />
+      );
+    }
+    if (field.type === 'yesno') {
+      return (
+        <div className="flex gap-2">
+          {['Yes', 'No', ''].map(v => (
+            <button
+              key={v || 'clear'}
+              type="button"
+              onClick={() => handleFieldChange(field.key, v)}
+              className={cls(
+                'flex-1 py-2 rounded-lg text-[11px] font-bold border transition-all',
+                val === v
+                  ? (v === 'Yes' ? 'bg-green-500/20 border-green-500/40 text-green-400'
+                    : v === 'No' ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                    : 'bg-gray-500/20 border-gray-500/40 text-gray-400')
+                  : 'bg-black/20 border-white/5 text-gray-600'
+              )}
+            >
+              {v || 'Clear'}
+            </button>
+          ))}
+        </div>
+      );
+    }
+    if (field.type === 'datetime') {
+      return (
+        <input
+          type="datetime-local"
+          value={val}
+          onChange={(e) => handleFieldChange(field.key, e.target.value)}
+          className={cls(baseCls, borderCls)}
+        />
+      );
+    }
+    return (
+      <input
+        type={field.type === 'number' ? 'number' : 'text'}
+        value={val}
+        onChange={(e) => handleFieldChange(field.key, e.target.value)}
+        className={cls(baseCls, borderCls)}
+      />
+    );
+  }
+
+  const pendingStep = selectedJob ? getPendingStep(selectedJob) : 0;
+
+  return (
+    <Card className="col-span-full">
+      <SectionTitle sub="Search any job, inspect all steps, and correct data entries">
+        🔧 Job Data Correction
+      </SectionTitle>
+
+      {/* ── Search Bar ── */}
+      <div className="relative">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setSelectedJob(null); setSaveSuccess(false); }}
+              placeholder="Search by Job No, Item Name, or Prog By..."
+              className="w-full pl-10 pr-4 py-3 bg-black/40 border border-white/10 rounded-2xl text-sm text-white outline-none focus:border-indigo-500 placeholder:text-gray-600 transition-all"
+            />
+          </div>
+          {selectedJob && (
+            <button
+              onClick={() => { setSelectedJob(null); setSearch(''); setSaveSuccess(false); }}
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-400 text-xs font-bold rounded-xl transition-colors border border-white/5"
+            >
+              ← Back
+            </button>
+          )}
+        </div>
+
+        {/* ── Search Results Dropdown ── */}
+        {search.trim() && !selectedJob && (
+          <div className="mt-2 bg-gray-900 border border-white/10 rounded-2xl overflow-hidden max-h-[300px] overflow-y-auto">
+            {jobsLoading ? (
+              <div className="p-4 text-center text-gray-500 text-xs animate-pulse">Loading...</div>
+            ) : searchResults.length === 0 ? (
+              <div className="p-4 text-center text-gray-600 text-xs">No jobs found for "{search}"</div>
+            ) : (
+              searchResults.map(job => (
+                <button
+                  key={job.jobNo}
+                  onClick={() => selectJob(job)}
+                  className="w-full text-left px-4 py-3 hover:bg-white/5 border-b border-white/5 last:border-0 transition-colors flex items-center justify-between group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black text-indigo-400">#{job.jobNo}</span>
+                      <span className="text-xs font-bold text-white truncate">{job.item}</span>
+                    </div>
+                    <div className="text-[10px] text-gray-500 mt-0.5 font-medium">
+                      {job.progBy} · {job.size} · {job.qty} pcs · Step {getPendingStep(job) === 7 ? '✓ Done' : getPendingStep(job)}
+                    </div>
+                  </div>
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-700 group-hover:text-indigo-400 transition-colors">
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Success Banner ── */}
+      {saveSuccess && (
+        <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-2xl flex items-center gap-2">
+          <span className="text-lg">✅</span>
+          <span className="text-xs font-bold text-green-400">Corrections saved successfully! Data will refresh shortly.</span>
+        </div>
+      )}
+
+      {/* ── Job Inspector ── */}
+      {selectedJob && (
+        <div className="mt-5 space-y-3">
+          {/* Job Header */}
+          <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-indigo-400">Job #{selectedJob.jobNo}</span>
+                  <span className={cls(
+                    'text-[9px] font-black uppercase px-2 py-0.5 rounded-full',
+                    pendingStep === 7 ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'
+                  )}>
+                    {pendingStep === 7 ? 'Completed' : `At Step ${pendingStep}`}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white mt-1">{selectedJob.item}</h3>
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  {selectedJob.size} · {selectedJob.qty} pcs · {selectedJob.progBy}
+                </p>
+              </div>
+              {changeCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                    {changeCount} field{changeCount > 1 ? 's' : ''} modified
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Step Accordions */}
+          {[1, 2, 3, 4, 5, 6].map(step => {
+            const meta = STEP_LABELS_ADMIN[step];
+            const accent = STEP_ACCENT[meta.color];
+            const fields = STEP_FIELDS[step];
+            const isOpen = openSteps[step];
+            const stepChanges = fields.filter(f => f.key in changedFields).length;
+            const hasData = fields.some(f => {
+              const val = selectedJob[f.key];
+              return val !== null && val !== undefined && val !== '';
+            });
+
+            return (
+              <div key={step} className={cls('border rounded-2xl overflow-hidden transition-all', accent.border, accent.bg)}>
+                {/* Step Header */}
+                <button
+                  onClick={() => toggleStep(step)}
+                  className="w-full flex items-center justify-between p-4 transition-colors hover:bg-white/[0.02]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cls('w-8 h-8 rounded-xl flex items-center justify-center text-sm', accent.bg)}>
+                      {meta.icon}
+                    </div>
+                    <div className="text-left">
+                      <div className="flex items-center gap-2">
+                        <span className={cls('text-xs font-black', accent.text)}>Step {step}</span>
+                        {!hasData && <span className="text-[9px] font-bold text-gray-600 bg-gray-800 px-1.5 py-0.5 rounded">Empty</span>}
+                        {stepChanges > 0 && (
+                          <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                            {stepChanges} edit{stepChanges > 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-400 font-medium">{meta.name}</p>
+                    </div>
+                  </div>
+                  <svg
+                    className={cls('w-4 h-4 text-gray-500 transition-transform', isOpen && 'rotate-180')}
+                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                  </svg>
+                </button>
+
+                {/* Step Fields */}
+                {isOpen && (
+                  <div className="px-4 pb-4 space-y-3 border-t border-white/5">
+                    {fields.map(field => {
+                      const isChanged = field.key in changedFields;
+                      return (
+                        <div key={field.key} className="pt-3">
+                          <label className={cls(
+                            'block text-[10px] font-black uppercase tracking-widest mb-1.5',
+                            isChanged ? 'text-amber-400' : 'text-gray-500'
+                          )}>
+                            {field.label}
+                            {isChanged && <span className="ml-1 text-amber-500">• modified</span>}
+                          </label>
+                          {renderField(field)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Save Button */}
+          <div className="pt-2">
+            <button
+              onClick={handleSaveClick}
+              disabled={changeCount === 0 || adminMutation.isPending}
+              className={cls(
+                'w-full py-4 rounded-2xl font-bold text-sm transition-all',
+                changeCount > 0
+                  ? 'bg-gradient-to-r from-amber-600 to-orange-500 text-white shadow-lg shadow-amber-900/30 hover:from-amber-500 hover:to-orange-400'
+                  : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+              )}
+            >
+              {adminMutation.isPending
+                ? 'Saving Corrections...'
+                : changeCount > 0
+                  ? `Save ${changeCount} Correction${changeCount > 1 ? 's' : ''}`
+                  : 'No Changes to Save'
+              }
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm Diff Popup ── */}
+      {confirmDiff && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-gray-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-white/10">
+            <div className="p-5 border-b border-white/5">
+              <h3 className="text-base font-black text-white">Confirm Data Corrections</h3>
+              <p className="text-[11px] text-gray-500 mt-1">
+                Review the changes below for <strong className="text-indigo-400">Job #{selectedJob?.jobNo}</strong>. This will overwrite the database.
+              </p>
+            </div>
+            <div className="p-5 max-h-[55vh] overflow-y-auto space-y-4">
+              {Object.entries(confirmDiff).map(([key, info]) => (
+                <div key={key} className="bg-black/30 rounded-xl p-3 border border-white/5">
+                  <p className="text-[9px] font-black uppercase text-gray-500 tracking-widest">{info.label}</p>
+                  <div className="mt-1.5 grid grid-cols-1 gap-1">
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded shrink-0">OLD</span>
+                      <span className="text-xs text-red-300 break-all">{info.original || '(empty)'}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] font-bold text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded shrink-0">NEW</span>
+                      <span className="text-xs text-green-300 break-all">{info.current || '(empty)'}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 bg-black/20 border-t border-white/5 flex gap-3">
+              <button
+                onClick={() => setConfirmDiff(null)}
+                disabled={adminMutation.isPending}
+                className="flex-1 py-3 rounded-2xl border border-white/10 text-gray-400 font-bold text-xs hover:bg-white/5 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeSave}
+                disabled={adminMutation.isPending}
+                className="flex-1 py-3 rounded-2xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-500 shadow-lg shadow-amber-900/30 transition-all disabled:opacity-50"
+              >
+                {adminMutation.isPending ? 'Saving...' : 'Confirm & Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!selectedJob && !search.trim() && (
+        <div className="mt-6 text-center py-12">
+          <div className="text-4xl mb-3">🔍</div>
+          <p className="text-sm text-gray-500 font-bold">Search for a job to start correcting data</p>
+          <p className="text-[11px] text-gray-700 mt-1">Type a job number, item name, or person name above</p>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // ─── Main Admin Dashboard ─────────────────────────────────────────────────────
+
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -1313,6 +1805,7 @@ export default function AdminDashboard() {
 
         {activeTab === 'system' && (
           <div className="space-y-5">
+            <JobDataCorrection />
             <MasterDataSettings />
             <CatalogSettings />
           </div>

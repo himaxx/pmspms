@@ -21,6 +21,7 @@ import {
   updateStep4,
   updateStep5,
   updateStep6,
+  adminUpdateJob,
 } from '../utils/db';
 
 // ── Stable query key ──────────────────────────────────────────────────────────
@@ -165,5 +166,13 @@ export function useUpdateStep6() {
       s6Reason:    reason || null,
       s6Name:      yourName,
     })
+  );
+}
+
+/** Admin Data Correction — raw field overwrite */
+export function useAdminUpdateJob() {
+  return useStepMutation(
+    ({ jobNo, updates }) => adminUpdateJob(jobNo, updates),
+    null // No optimistic update — full refetch after save for accuracy
   );
 }

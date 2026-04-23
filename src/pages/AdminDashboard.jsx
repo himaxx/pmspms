@@ -888,9 +888,248 @@ function ApprovalFlow({ jobs }) {
   );
 }
 
+function CatalogSettings() {
+  const { data: masterData, isLoading } = useMasterData();
+  const updateMutation = useUpdateMasterData();
+  
+  const [selectedCat, setSelectedCat] = useState(null);
+  const [selectedSub, setSelectedSub] = useState(null);
+  const [newItemInput, setNewItemInput] = useState('');
+
+  if (isLoading) return <div className="text-gray-400 py-4 animate-pulse">Loading catalog...</div>;
+
+  const catalog = masterData?.catalog || [];
+
+  const handleUpdateCatalog = async (newCatalog) => {
+    await updateMutation.mutateAsync({ category: 'catalog', names: newCatalog });
+  };
+
+  const handleAddCategory = () => {
+    const name = prompt('Enter new category name:');
+    if (!name || !name.trim()) return;
+    const catName = name.trim().toUpperCase();
+    if (catalog.some(c => c.category === catName)) return alert('Category already exists!');
+    
+    const newCatalog = [...catalog, { category: catName, subcategories: [] }];
+    handleUpdateCatalog(newCatalog);
+  };
+
+  const handleEditCategory = (oldName) => {
+    const name = prompt('Enter new category name:', oldName);
+    if (!name || !name.trim() || name.trim() === oldName) return;
+    const catName = name.trim().toUpperCase();
+    if (catalog.some(c => c.category === catName)) return alert('Category already exists!');
+    
+    const newCatalog = catalog.map(c => 
+      c.category === oldName ? { ...c, category: catName } : c
+    );
+    handleUpdateCatalog(newCatalog);
+    if (selectedCat === oldName) setSelectedCat(catName);
+  };
+
+  const handleDeleteCategory = (catName) => {
+    if (!window.confirm(`Delete category "${catName}" and all its subcategories/items?`)) return;
+    const newCatalog = catalog.filter(c => c.category !== catName);
+    handleUpdateCatalog(newCatalog);
+    if (selectedCat === catName) {
+      setSelectedCat(null);
+      setSelectedSub(null);
+    }
+  };
+
+  const handleAddSubcategory = () => {
+    if (!selectedCat) return;
+    const name = prompt('Enter new subcategory name:');
+    if (!name || !name.trim()) return;
+    const subName = name.trim().toUpperCase();
+    
+    const cIdx = catalog.findIndex(c => c.category === selectedCat);
+    if (cIdx === -1) return;
+    if (catalog[cIdx].subcategories.some(s => s.subcategory === subName)) return alert('Subcategory already exists!');
+    
+    const newCatalog = [...catalog];
+    newCatalog[cIdx].subcategories = [...newCatalog[cIdx].subcategories, { subcategory: subName, items: [] }];
+    handleUpdateCatalog(newCatalog);
+  };
+
+  const handleEditSubcategory = (oldName) => {
+    if (!selectedCat) return;
+    const name = prompt('Enter new subcategory name:', oldName);
+    if (!name || !name.trim() || name.trim() === oldName) return;
+    const subName = name.trim().toUpperCase();
+    
+    const cIdx = catalog.findIndex(c => c.category === selectedCat);
+    if (cIdx === -1) return;
+    if (catalog[cIdx].subcategories.some(s => s.subcategory === subName)) return alert('Subcategory already exists!');
+    
+    const newCatalog = [...catalog];
+    newCatalog[cIdx].subcategories = newCatalog[cIdx].subcategories.map(s => 
+      s.subcategory === oldName ? { ...s, subcategory: subName } : s
+    );
+    handleUpdateCatalog(newCatalog);
+    if (selectedSub === oldName) setSelectedSub(subName);
+  };
+
+  const handleDeleteSubcategory = (subName) => {
+    if (!selectedCat) return;
+    if (!window.confirm(`Delete subcategory "${subName}" and all its items?`)) return;
+    
+    const cIdx = catalog.findIndex(c => c.category === selectedCat);
+    if (cIdx === -1) return;
+    
+    const newCatalog = [...catalog];
+    newCatalog[cIdx].subcategories = newCatalog[cIdx].subcategories.filter(s => s.subcategory !== subName);
+    handleUpdateCatalog(newCatalog);
+    if (selectedSub === subName) setSelectedSub(null);
+  };
+
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    if (!selectedCat || !selectedSub || !newItemInput.trim()) return;
+    const itemName = newItemInput.trim().toUpperCase();
+    
+    const cIdx = catalog.findIndex(c => c.category === selectedCat);
+    if (cIdx === -1) return;
+    const sIdx = catalog[cIdx].subcategories.findIndex(s => s.subcategory === selectedSub);
+    if (sIdx === -1) return;
+    
+    if (catalog[cIdx].subcategories[sIdx].items.includes(itemName)) return alert('Item already exists!');
+    
+    const newCatalog = [...catalog];
+    newCatalog[cIdx].subcategories[sIdx].items = [...newCatalog[cIdx].subcategories[sIdx].items, itemName];
+    handleUpdateCatalog(newCatalog);
+    setNewItemInput('');
+  };
+
+  const handleEditItem = (oldItemName) => {
+    if (!selectedCat || !selectedSub) return;
+    const name = prompt('Enter new item name:', oldItemName);
+    if (!name || !name.trim() || name.trim() === oldItemName) return;
+    const itemName = name.trim().toUpperCase();
+    
+    const cIdx = catalog.findIndex(c => c.category === selectedCat);
+    if (cIdx === -1) return;
+    const sIdx = catalog[cIdx].subcategories.findIndex(s => s.subcategory === selectedSub);
+    if (sIdx === -1) return;
+    
+    if (catalog[cIdx].subcategories[sIdx].items.includes(itemName)) return alert('Item already exists!');
+    
+    const newCatalog = [...catalog];
+    newCatalog[cIdx].subcategories[sIdx].items = newCatalog[cIdx].subcategories[sIdx].items.map(i => 
+      i === oldItemName ? itemName : i
+    );
+    handleUpdateCatalog(newCatalog);
+  };
+
+  const handleDeleteItem = (itemName) => {
+    if (!selectedCat || !selectedSub) return;
+    
+    const cIdx = catalog.findIndex(c => c.category === selectedCat);
+    if (cIdx === -1) return;
+    const sIdx = catalog[cIdx].subcategories.findIndex(s => s.subcategory === selectedSub);
+    if (sIdx === -1) return;
+    
+    const newCatalog = [...catalog];
+    newCatalog[cIdx].subcategories[sIdx].items = newCatalog[cIdx].subcategories[sIdx].items.filter(i => i !== itemName);
+    handleUpdateCatalog(newCatalog);
+  };
+
+  const currentCatObj = catalog.find(c => c.category === selectedCat);
+  const currentSubObj = currentCatObj?.subcategories?.find(s => s.subcategory === selectedSub);
+
+  return (
+    <Card className="col-span-full">
+      <SectionTitle sub="Manage hierarchical Categories > Subcategories > Items">
+        🗂️ Catalog Master Data
+      </SectionTitle>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 h-[400px]">
+        {/* Categories Panel */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-sm font-bold text-white">Categories</h3>
+            <button onClick={handleAddCategory} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded">Add</button>
+          </div>
+          <div className="flex-1 overflow-y-auto pr-1 space-y-1">
+            {catalog.map(c => (
+              <div 
+                key={c.category} 
+                className={`flex justify-between items-center px-2 py-1.5 rounded cursor-pointer ${selectedCat === c.category ? 'bg-indigo-500/20 border border-indigo-500/30' : 'hover:bg-white/5 border border-transparent'}`}
+                onClick={() => { setSelectedCat(c.category); setSelectedSub(null); }}
+              >
+                <span className="text-xs truncate" title={c.category}>{c.category}</span>
+                <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
+                  <button onClick={(e) => { e.stopPropagation(); handleEditCategory(c.category); }} className="text-blue-400 hover:text-blue-300">✎</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(c.category); }} className="text-red-400 hover:text-red-300">×</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Subcategories Panel */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-sm font-bold text-white">Subcategories</h3>
+            {selectedCat && <button onClick={handleAddSubcategory} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded">Add</button>}
+          </div>
+          <div className="flex-1 overflow-y-auto pr-1 space-y-1">
+            {!selectedCat && <div className="text-xs text-gray-500 text-center mt-10">Select a category first</div>}
+            {currentCatObj?.subcategories.map(s => (
+              <div 
+                key={s.subcategory} 
+                className={`flex justify-between items-center px-2 py-1.5 rounded cursor-pointer ${selectedSub === s.subcategory ? 'bg-indigo-500/20 border border-indigo-500/30' : 'hover:bg-white/5 border border-transparent'}`}
+                onClick={() => setSelectedSub(s.subcategory)}
+              >
+                <span className="text-xs truncate" title={s.subcategory}>{s.subcategory}</span>
+                <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
+                  <button onClick={(e) => { e.stopPropagation(); handleEditSubcategory(s.subcategory); }} className="text-blue-400 hover:text-blue-300">✎</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteSubcategory(s.subcategory); }} className="text-red-400 hover:text-red-300">×</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Items Panel */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-sm font-bold text-white">Items</h3>
+          </div>
+          {selectedCat && selectedSub && (
+            <form onSubmit={handleAddItem} className="flex gap-2 mb-3">
+              <input 
+                type="text" 
+                value={newItemInput}
+                onChange={e => setNewItemInput(e.target.value)}
+                placeholder="New item..."
+                className="flex-1 bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-indigo-500"
+              />
+              <button type="submit" disabled={!newItemInput.trim() || updateMutation.isPending} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded disabled:opacity-50">Add</button>
+            </form>
+          )}
+          <div className="flex-1 overflow-y-auto pr-1 space-y-1">
+            {(!selectedCat || !selectedSub) && <div className="text-xs text-gray-500 text-center mt-10">Select a subcategory first</div>}
+            {currentSubObj?.items.map(i => (
+               <div key={i} className="flex justify-between items-center px-2 py-1.5 hover:bg-white/5 border border-transparent rounded">
+                 <span className="text-xs truncate pr-2" title={i}>{i}</span>
+                 <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
+                  <button onClick={(e) => { e.stopPropagation(); handleEditItem(i); }} className="text-blue-400 hover:text-blue-300">✎</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(i); }} className="text-red-400 hover:text-red-300">×</button>
+                </div>
+               </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 // ─── Main Admin Dashboard ─────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState('dashboard');
   const { data: jobs = [], isLoading, refetch, dataUpdatedAt, error } = useJobs();
   const logout   = useAuthStore((s) => s.logout);
   const user     = useAuthStore((s) => s.user);
@@ -1010,41 +1249,52 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <>
-            {/* Section 1: KPIs */}
-            <KpiBar jobs={jobs} />
-
-            {/* Section 2: Volume Trend */}
-            <VolumeTrend jobs={jobs} />
-
-            {/* S3 + S4 side by side on wider screens */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <PipelineFunnel jobs={jobs} />
-              <DelayHeatmap   jobs={jobs} />
+            {/* ── Tabs ── */}
+            <div className="flex space-x-1 bg-black/40 p-1 rounded-2xl mb-6 border border-white/5 w-fit">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                📊 Dashboard
+              </button>
+              <button
+                onClick={() => setActiveTab('system')}
+                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === 'system' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                ⚙️ System Modifications
+              </button>
             </div>
 
-            {/* Section 5: Thekedar Performance */}
-            <ThekedarPerformance jobs={jobs} />
+            {activeTab === 'dashboard' && (
+              <div className="space-y-5">
+                <KpiBar jobs={jobs} />
+                <VolumeTrend jobs={jobs} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <PipelineFunnel jobs={jobs} />
+                  <DelayHeatmap   jobs={jobs} />
+                </div>
+                <ThekedarPerformance jobs={jobs} />
+                <CuttingStats jobs={jobs} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <ItemGroupChart jobs={jobs} />
+                  <ApprovalFlow   jobs={jobs} />
+                </div>
+                <ActivityHeatmap jobs={jobs} />
+                <BottleneckTable jobs={jobs} />
+                <RawDataExplorer jobs={jobs} />
+              </div>
+            )}
 
-            {/* Section 6: Cutting Stats */}
-            <CuttingStats jobs={jobs} />
-
-            {/* S7 + S10 side by side */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <ItemGroupChart jobs={jobs} />
-              <ApprovalFlow   jobs={jobs} />
-            </div>
-
-            {/* Section 8: Activity Heatmap */}
-            <ActivityHeatmap jobs={jobs} />
-
-            {/* Section 9: Bottleneck Table */}
-            <BottleneckTable jobs={jobs} />
-
-            {/* Section 12: Master Data Settings */}
-            <MasterDataSettings />
-
-            {/* Section 11: Raw Data Explorer */}
-            <RawDataExplorer jobs={jobs} />
+            {activeTab === 'system' && (
+              <div className="space-y-5">
+                <MasterDataSettings />
+                <CatalogSettings />
+              </div>
+            )}
           </>
         )}
       </div>

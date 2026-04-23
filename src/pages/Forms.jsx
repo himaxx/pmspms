@@ -266,8 +266,10 @@ function Step1Form({ onSuccess }) {
   const [errors, setErrors] = useState({});
   const [confirmData, setConfirmData] = useState(null);
 
-  // Derive cascade dropdowns from JSON
-  const availableCategories = useMemo(() => catalogData.categories || [], []);
+  const { data: masterData } = useMasterData();
+  
+  // Derive cascade dropdowns from masterData (falling back to JSON)
+  const availableCategories = useMemo(() => masterData?.catalog?.length > 0 ? masterData.catalog : (catalogData.categories || []), [masterData]);
   
   const availableSubcategories = useMemo(() => {
     const cat = availableCategories.find(c => c.category === form.category);
@@ -281,7 +283,6 @@ function Step1Form({ onSuccess }) {
 
   const createJobMutation = useCreateJob();
   const loading = createJobMutation.isPending;
-  const { data: masterData } = useMasterData();
   const progByList = masterData?.progBy?.length > 0 ? masterData.progBy : STEP_PEOPLE[1];
 
   const set    = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));

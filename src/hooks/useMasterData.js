@@ -10,12 +10,22 @@ export function useMasterData() {
       
       const result = {
         progBy: [],
-        cuttingNames: []
+        cuttingNames: [],
+        catalog: []
       };
       
       data.forEach(row => {
         if (row.category === 'prog_by') result.progBy = row.names || [];
         if (row.category === 'cutting_names') result.cuttingNames = row.names || [];
+        if (row.category === 'catalog') {
+          try {
+            // parse if names is stored as string json, though Supabase JSONB should return as object.
+            // In our previous script, it might be an array directly:
+            result.catalog = Array.isArray(row.names) ? row.names : JSON.parse(row.names || '[]');
+          } catch (e) {
+            result.catalog = [];
+          }
+        }
       });
       
       return result;

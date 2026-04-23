@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { parseSets, formatSets } from '../utils/helpers';
 import { useNavigate } from 'react-router-dom';
 import { STEP_PEOPLE, STEP_LABELS, ITEM_GROUPS, SHEET_NAMES } from '../utils/constants';
@@ -732,7 +732,7 @@ function StepFormWithFetch({ step, onSuccess }) {
   const [search, setSearch] = useState('');
 
   // Reset selected job when step changes
-  useState(() => { setSelJob(null); }, [step]);
+  useEffect(() => { setSelJob(null); }, [step]);
 
   const jobs = useMemo(() => allJobs.filter(j => detectStep(j) === step), [allJobs, step]);
 

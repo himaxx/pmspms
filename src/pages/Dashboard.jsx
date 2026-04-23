@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { bulkSyncJobs, pullSheetsToDatabase } from '../utils/sync';
 import StepBadge from '../components/StepBadge';
 import { JobCardSkeleton } from '../components/Skeleton';

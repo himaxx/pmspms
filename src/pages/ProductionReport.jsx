@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ITEM_GROUPS } from '../utils/constants';
 import { JobCardSkeleton } from '../components/Skeleton';
 import { useToast, ToastContainer } from '../components/Toast';

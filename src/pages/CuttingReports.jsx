@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { getPendingStep, getDaysInStep } from '../utils/jobLogic';
 import { STEP_PEOPLE } from '../utils/constants';
 import { JobCardSkeleton } from '../components/Skeleton';
@@ -364,7 +364,7 @@ function CuttingFormSheet({ job, isOpen, onClose }) {
   const updateStep3Mutation = useUpdateStep3();
   const submitting = updateStep3Mutation.isPending;
 
-  useState(() => {
+  useEffect(() => {
     if (job) {
       setSets(parseSets(job.size, job.qty));
       setName('');

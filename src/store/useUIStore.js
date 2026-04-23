@@ -21,13 +21,19 @@ const useUIStore = create(
         dashSearch: '',
         dashStepFilter: 'All',
         dashStatusFilter: 'All',
+        dashStartDate: '', // '' means no filter
+        dashEndDate: '',
         setDashSearch:       (v) => set({ dashSearch: v },       false, 'setDashSearch'),
         setDashStepFilter:   (v) => set({ dashStepFilter: v },   false, 'setDashStepFilter'),
         setDashStatusFilter: (v) => set({ dashStatusFilter: v }, false, 'setDashStatusFilter'),
+        setDashStartDate:    (v) => set({ dashStartDate: v },    false, 'setDashStartDate'),
+        setDashEndDate:      (v) => set({ dashEndDate: v },      false, 'setDashEndDate'),
         clearDashFilters: () => set({
           dashSearch: '',
           dashStepFilter: 'All',
           dashStatusFilter: 'All',
+          dashStartDate: '',
+          dashEndDate: '',
         }, false, 'clearDashFilters'),
 
         // ── CuttingReports ───────────────────────────────────────────────────
@@ -52,6 +58,8 @@ const useUIStore = create(
           dashSearch:          state.dashSearch,
           dashStepFilter:      state.dashStepFilter,
           dashStatusFilter:    state.dashStatusFilter,
+          dashStartDate:       state.dashStartDate,
+          dashEndDate:         state.dashEndDate,
           cuttingTab:          state.cuttingTab,
           productionCategory:  state.productionCategory,
           productionViewMode:  state.productionViewMode,

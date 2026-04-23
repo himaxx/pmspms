@@ -35,27 +35,6 @@ function cls(...p) { return p.filter(Boolean).join(' '); }
 
 
 
-// ─── Summary Cards ────────────────────────────────────────────────────────────
-const CARD_CONFIG = [
-  { key: 'late',      icon: '🔴', label: 'Late Jobs',    accent: 'border-red-400',   bg: 'bg-red-50',   text: 'text-red-600'  },
-  { key: 'progress',  icon: '🟡', label: 'In Progress',  accent: 'border-amber-400', bg: 'bg-amber-50', text: 'text-amber-600'},
-  { key: 'doneToday', icon: '🟢', label: 'Total Done',   accent: 'border-green-400', bg: 'bg-green-50', text: 'text-green-700'},
-  { key: 'active',    icon: '⚪', label: 'Total Active', accent: 'border-gray-300',  bg: 'bg-gray-50',  text: 'text-gray-600' },
-];
-
-function SummaryCard({ config, value, loading }) {
-  const { icon, label, accent, bg, text } = config;
-  return (
-    <div className={cls('ag-lift rounded-[1.5rem] border-2 border-l-[6px] p-5 flex flex-col gap-1 shadow-md transition-all', accent, bg, 'border-opacity-60')}>
-      <span className="text-2xl leading-none">{icon}</span>
-      {loading
-        ? <div className="skeleton h-8 w-12 mt-1 rounded-lg" />
-        : <span className={cls('text-3xl font-black leading-none mt-1', text)}>{value}</span>
-      }
-      <span className="text-[12px] font-bold text-gray-600 leading-tight uppercase tracking-tight">{label}</span>
-    </div>
-  );
-}
 
 // ─── Status Dot ───────────────────────────────────────────────────────────────
 function StatusDot({ status }) {
@@ -373,6 +352,10 @@ export default function Dashboard() {
   const setSearch       = useUIStore((s) => s.setDashSearch);
   const setStepFilter   = useUIStore((s) => s.setDashStepFilter);
   const setStatusFilter = useUIStore((s) => s.setDashStatusFilter);
+  const dashStartDate   = useUIStore((s) => s.dashStartDate);
+  const dashEndDate     = useUIStore((s) => s.dashEndDate);
+  const setDashStartDate = useUIStore((s) => s.setDashStartDate);
+  const setDashEndDate   = useUIStore((s) => s.setDashEndDate);
   const clearDashFilters = useUIStore((s) => s.clearDashFilters);
 
   const [selectedJob, setSelectedJob] = useState(null);
@@ -380,26 +363,22 @@ export default function Dashboard() {
 
   const { containerRef, handlers, pullProgress, isRefreshing } = usePullToRefresh(refetch);
 
-  // Summary counts
-  const counts = useMemo(() => {
-    let late = 0, progress = 0, doneToday = 0, active = 0;
-    jobs.forEach((j) => {
-      if (!j) return;
-      const s = getJobStatus(j);
-      if (s === 'complete') { 
-        doneToday++; 
-      }
-      else { active++; if (s === 'late') late++; else progress++; }
-    });
-    return { late, progress, doneToday, active };
-  }, [jobs]);
 
   // Filtered list
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
+    const start = dashStartDate ? new Date(dashStartDate) : null;
+    const end   = dashEndDate   ? new Date(dashEndDate)   : null;
+    if (end) end.setHours(23, 59, 59, 999);
+
     return jobs.filter((j) => {
       if (q && !String(j.jobNo).toLowerCase().includes(q) &&
                 !(j.item ?? '').toLowerCase().includes(q)) return false;
+      
+      const jobDate = parseDate(j.date);
+      if (start && (!jobDate || jobDate < start)) return false;
+      if (end   && (!jobDate || jobDate > end))   return false;
+
       if (stepFilter !== 'All' && detectStep(j) !== Number(stepFilter)) return false;
       if (statusFilter !== 'All') {
         const s = getJobStatus(j);
@@ -409,7 +388,7 @@ export default function Dashboard() {
       }
       return true;
     });
-  }, [jobs, search, stepFilter, statusFilter]);
+  }, [jobs, search, stepFilter, statusFilter, dashStartDate, dashEndDate]);
 
   const STEP_OPTS   = ['All', '1', '2', '3', '4', '5', '6', '7'];
   const STATUS_OPTS = ['All', 'On Track', 'Late', 'Complete'];
@@ -420,94 +399,109 @@ export default function Dashboard() {
       <div className="flex-1" ref={containerRef} {...handlers}>
         <PullIndicator progress={pullProgress} isRefreshing={isRefreshing} />
 
-        {/* Header */}
-        <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-extrabold text-gray-900">Dashboard</h1>
-            {lastRefresh && (
-              <p className="text-[10px] text-gray-400 mt-0.5">
-                Updated {lastRefresh.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+        {/* Fancy Heading */}
+        <div className="px-6 pt-10 pb-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
+          <div className="relative">
+            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-2 block">
+              Real-time Production
+            </span>
+            <div className="flex items-center justify-between">
+              <h1 className="text-4xl font-black text-gray-900 tracking-tighter leading-none">
+                Live <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Processes</span>
+              </h1>
+              <div className="flex gap-1">
+                {/* PULL from Sheets */}
+                <button onClick={async () => {
+                  if (!window.confirm('Pull all edits from Google Sheets? This will update the database.')) return;
+                  addToast('Pulling from Sheets…', 'info');
+                  try {
+                    const count = await pullSheetsToDatabase();
+                    await refetch();
+                    addToast(`Successfully pulled ${count} jobs from Sheets!`, 'success');
+                  } catch (e) {
+                    addToast('Pull failed: ' + e.message, 'error');
+                  }
+                }}
+                  className="p-2.5 rounded-2xl bg-white border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition-all text-amber-500" title="Pull from Sheets">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v6.638l1.965-1.903a.75.75 0 111.04 1.08l-3.25 3.146a.75.75 0 01-1.04 0l-3.25-3.147a.75.75 0 111.04-1.08l1.965 1.903V3.75A.75.75 0 0110 3zM3.5 15a.75.75 0 01.75-.75h11.5a.75.75 0 010 1.5H4.25A.75.75 0 013.5 15z" clipRule="evenodd" />
+                  </svg>
+                </button>
+
+                {/* PUSH to Sheets */}
+                <button onClick={async () => {
+                  if (!window.confirm('Sync all jobs to Google Sheets? This might take a moment.')) return;
+                  addToast('Pushing to Sheets…', 'info');
+                  try {
+                    const count = await bulkSyncJobs(jobs);
+                    addToast(`Successfully pushed ${count} jobs to Sheets!`, 'success');
+                  } catch (e) {
+                    addToast('Push failed: ' + e.message, 'error');
+                  }
+                }}
+                  className="p-2.5 rounded-2xl bg-white border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition-all text-indigo-500" title="Push to Sheets">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path fillRule="evenodd" d="M10 17a.75.75 0 01-.75-.75V9.612L7.285 11.515a.75.75 0 11-1.04-1.08l3.25-3.146a.75.75 0 011.04 0l3.25 3.147a.75.75 0 01-1.04 1.08L10.75 9.612v6.638A.75.75 0 0110 17zM3.5 5a.75.75 0 01.75-.75h11.5a.75.75 0 010 1.5H4.25A.75.75 0 013.5 5z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-4">
+              <p className="text-xs text-gray-400 font-medium leading-relaxed max-w-[200px]">
+                Monitoring every step from requirement to settlement.
               </p>
-            )}
+              {lastRefresh && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-50 border border-gray-100 text-[9px] font-bold text-gray-400 ml-auto uppercase tracking-wider">
+                  <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                  {lastRefresh.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex gap-2">
-            {/* PULL from Sheets */}
-            <button onClick={async () => {
-              if (!window.confirm('Pull all edits from Google Sheets? This will update the database.')) return;
-              addToast('Pulling from Sheets…', 'info');
-              try {
-                const count = await pullSheetsToDatabase();
-                await refetch();
-                addToast(`Successfully pulled ${count} jobs from Sheets!`, 'success');
-              } catch (e) {
-                addToast('Pull failed: ' + e.message, 'error');
-              }
-            }}
-              className="p-2 rounded-xl hover:bg-gray-100 btn-press text-amber-500" title="Pull from Sheets">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v6.638l1.965-1.903a.75.75 0 111.04 1.08l-3.25 3.146a.75.75 0 01-1.04 0l-3.25-3.147a.75.75 0 111.04-1.08l1.965 1.903V3.75A.75.75 0 0110 3zM3.5 15a.75.75 0 01.75-.75h11.5a.75.75 0 010 1.5H4.25A.75.75 0 013.5 15z" clipRule="evenodd" />
-              </svg>
-            </button>
-
-            {/* PUSH to Sheets */}
-            <button onClick={async () => {
-              if (!window.confirm('Sync all jobs to Google Sheets? This might take a moment.')) return;
-              addToast('Pushing to Sheets…', 'info');
-              try {
-                const count = await bulkSyncJobs(jobs);
-                addToast(`Successfully pushed ${count} jobs to Sheets!`, 'success');
-              } catch (e) {
-                addToast('Push failed: ' + e.message, 'error');
-              }
-            }}
-              className="p-2 rounded-xl hover:bg-gray-100 btn-press text-indigo-500" title="Push to Sheets">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                <path fillRule="evenodd" d="M10 17a.75.75 0 01-.75-.75V9.612L7.285 11.515a.75.75 0 11-1.04-1.08l3.25-3.146a.75.75 0 011.04 0l3.25 3.147a.75.75 0 01-1.04 1.08L10.75 9.612v6.638A.75.75 0 0110 17zM3.5 5a.75.75 0 01.75-.75h11.5a.75.75 0 010 1.5H4.25A.75.75 0 013.5 5z" clipRule="evenodd" />
-              </svg>
-            </button>
-
-            <button onClick={() => { refetch(); }}
-              className="p-2 rounded-xl hover:bg-gray-100 btn-press text-gray-400" title="Refresh Dashboard">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.243a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.928a.75.75 0 00-1.5 0v2.43l-.31-.31A7 7 0 003.239 8.188a.75.75 0 101.448.389A5.5 5.5 0 0113.89 6.11l.311.31h-2.432a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="px-4 grid grid-cols-2 gap-3">
-          {CARD_CONFIG.map((cfg) => (
-            <SummaryCard key={cfg.key} config={cfg} value={counts[cfg.key]} loading={loading} />
-          ))}
         </div>
 
         {/* Filter Bar */}
-        <div className="px-4 mt-5 space-y-2.5">
-          <div className="relative">
+        <div className="px-4 mt-2 space-y-4">
+          <div className="relative anim-slideUp" style={{ animationDelay: '100ms' }}>
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
                  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
             </svg>
             <input type="search" placeholder="Search job no or item…"
               value={search} onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-3 rounded-2xl border-2 border-gray-300 text-sm bg-white
-                         outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 placeholder:text-gray-400 font-medium transition-all" />
+              className="w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-gray-200 text-sm bg-white
+                         outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 placeholder:text-gray-400 font-medium transition-all shadow-sm" />
           </div>
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+
+          {/* Date Range Filters */}
+          <div className="grid grid-cols-2 gap-2 bg-white/50 p-3 rounded-[1.5rem] border-2 border-gray-200 shadow-sm anim-slideUp" style={{ animationDelay: '150ms' }}>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Start Date</label>
+              <input type="date" value={dashStartDate} onChange={(e) => setDashStartDate(e.target.value)} 
+                     className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">End Date</label>
+              <input type="date" value={dashEndDate} onChange={(e) => setDashEndDate(e.target.value)} 
+                     className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
+            </div>
+          </div>
+
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar anim-slideUp" style={{ animationDelay: '200ms' }}>
             {STEP_OPTS.map((s) => (
               <button key={s} type="button" onClick={() => setStepFilter(s)}
-                className={cls('shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border-2 btn-press transition-all',
-                  stepFilter === s ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-500')}>
-                {s === 'All' ? 'All Steps' : `S${s}`}
+                className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
+                  stepFilter === s ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
+                {s === 'All' ? 'All Steps' : `Step ${s}`}
               </button>
             ))}
           </div>
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap anim-slideUp" style={{ animationDelay: '250ms' }}>
             {STATUS_OPTS.map((s) => (
               <button key={s} type="button" onClick={() => setStatusFilter(s)}
-                className={cls('shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border-2 btn-press transition-all',
-                  statusFilter === s ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-500')}>
+                className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
+                  statusFilter === s ? 'bg-gray-900 border-gray-900 text-white shadow-lg shadow-gray-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
                 {s}
               </button>
             ))}

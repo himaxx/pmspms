@@ -151,6 +151,17 @@ export default function AdminLogin() {
                 </span>
               ) : 'Sign In as Admin'}
             </button>
+
+            {/* Back to Standard Mode */}
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="w-full py-2.5 rounded-xl font-bold text-gray-400 text-xs
+                         bg-white/5 border border-white/5 hover:bg-white/10
+                         hover:text-white transition-all duration-200 uppercase tracking-widest mt-2"
+            >
+              ← Back to Standard Mode
+            </button>
           </form>
         </div>
 

@@ -704,13 +704,16 @@ function Step4Form({ job, onSuccess }) {
     } catch (err) { alert('Submit failed: ' + err.message); setConfirmData(null); }
   }
 
+  const { data: masterData } = useMasterData();
+  const thekedarNamesList = masterData?.thekedarNames?.length > 0 ? masterData.thekedarNames : STEP_PEOPLE[4];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5 anim-slideUp">
       <div>
         <FieldLabel required>Thekedar / Karigar Name</FieldLabel>
         <SelectBase value={form.thekedarName} onChange={set('thekedarName')}>
           <option value="">Select Thekedar…</option>
-          {STEP_PEOPLE[4].map((n) => <option key={n}>{n}</option>)}
+          {thekedarNamesList.map((n) => <option key={n}>{n}</option>)}
         </SelectBase>
       </div>
       <div>

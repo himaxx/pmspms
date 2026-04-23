@@ -149,6 +149,49 @@ function FormSection({ title }) {
   );
 }
 
+function ConfirmationPopup({ title, details, onConfirm, onCancel, loading }) {
+  if (!details) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm anim-fadeIn">
+      <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl anim-slideUp">
+        <div className="p-5 border-b border-gray-100">
+          <h3 className="text-lg font-black text-gray-900">{title}</h3>
+          <p className="text-xs text-gray-500 mt-1">Please review the details below before submitting.</p>
+        </div>
+        <div className="p-5 max-h-[60vh] overflow-y-auto bg-gray-50/50 space-y-3">
+          {Object.entries(details).map(([key, val]) => {
+             if (val === null || val === undefined || val === '') return null;
+             return (
+               <div key={key}>
+                 <p className="text-[10px] font-black uppercase text-gray-400">{key}</p>
+                 <p className="text-sm font-semibold text-gray-900 mt-0.5 whitespace-pre-wrap">{String(val)}</p>
+               </div>
+             )
+          })}
+        </div>
+        <div className="p-4 bg-white border-t border-gray-100 flex gap-3">
+          <button 
+            type="button" 
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 btn-press disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 py-3 rounded-2xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 shadow-md shadow-indigo-200 btn-press disabled:opacity-50"
+          >
+            {loading ? 'Submitting...' : 'Confirm'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Success Screen ───────────────────────────────────────────────────────────
 function SuccessScreen({ jobNo, item, onNewEntry, onHome }) {
   return (
@@ -220,6 +263,7 @@ function Step1Form({ onSuccess }) {
   const [form, setForm]     = useState(init);
   const [sets, setSets]     = useState([{ size: '', qty: '' }]);
   const [errors, setErrors] = useState({});
+  const [confirmData, setConfirmData] = useState(null);
 
   // Read existing item names directly from the shared jobs cache — no extra fetch
   const { data: allJobs = [] } = useJobs();
@@ -257,11 +301,27 @@ function Step1Form({ onSuccess }) {
     return e;
   }
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
     const e_ = validate();
     if (Object.keys(e_).length) { setErrors(e_); return; }
     setErrors({});
+    
+    const totalQty = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
+    const combinedSize = formatSets(sets);
+
+    setConfirmData({
+      'Your Name (Prog. By)': form.name,
+      'Item Name': form.item,
+      'Item Group': form.itemGroup,
+      'Size & Quantity': combinedSize,
+      'Total Quantity': totalQty,
+      'Reason': form.reason,
+      'Special Instruction': form.specialInstruction
+    });
+  }
+
+  async function executeSubmit() {
     try {
       const totalQty = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
       const combinedSize = formatSets(sets);
@@ -275,9 +335,11 @@ function Step1Form({ onSuccess }) {
         reason:             form.reason,
         specialInstruction: form.specialInstruction,
       });
+      setConfirmData(null);
       onSuccess({ jobNo: newJob.jobNo, item: form.item });
     } catch (err) {
       alert('Submit failed: ' + err.message);
+      setConfirmData(null);
     }
   }
 
@@ -392,6 +454,15 @@ function Step1Form({ onSuccess }) {
       </div>
 
       <SubmitButton loading={loading} />
+      
+      {/* Confirmation Popup */}
+      <ConfirmationPopup 
+        title="Confirm New Requirement" 
+        details={confirmData} 
+        onConfirm={executeSubmit} 
+        onCancel={() => setConfirmData(null)} 
+        loading={loading} 
+      />
     </form>
   );
 }
@@ -400,13 +471,29 @@ function Step1Form({ onSuccess }) {
 function Step2Form({ job, onSuccess }) {
   const init = { name: '', yesNo: null, instructions: '', inhouseCutting: null };
   const [form, setForm] = useState(init);
+  const [confirmData, setConfirmData] = useState(null);
+  
   const updateStep2Mutation = useUpdateStep2();
   const loading = updateStep2Mutation.isPending;
 
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
+    if (!form.name) return alert('Name is required!');
+    if (form.yesNo === null) return alert('Please specify if approved for production.');
+
+    setConfirmData({
+      'Job No': job.jobNo,
+      'Item': job.item,
+      'Your Name': form.name,
+      'Approve for Production?': form.yesNo === true ? '✅ Approve' : '❌ Reject',
+      'Instructions / Reason': form.instructions,
+      'Inhouse Cutting?': form.inhouseCutting === true ? 'Yes' : (form.inhouseCutting === false ? 'No' : 'Not specified')
+    });
+  }
+
+  async function executeSubmit() {
     try {
       await updateStep2Mutation.mutateAsync({
         jobNo:          job.jobNo,
@@ -414,8 +501,9 @@ function Step2Form({ job, onSuccess }) {
         instructions:   form.instructions,
         inhouseCutting: form.inhouseCutting,
       });
+      setConfirmData(null);
       onSuccess({ jobNo: job.jobNo, item: job.item });
-    } catch (err) { alert('Submit failed: ' + err.message); }
+    } catch (err) { alert('Submit failed: ' + err.message); setConfirmData(null); }
   }
 
   return (
@@ -444,6 +532,14 @@ function Step2Form({ job, onSuccess }) {
           onChange={(v) => setForm((p) => ({ ...p, inhouseCutting: v }))} />
       </div>
       <SubmitButton loading={loading} />
+
+      <ConfirmationPopup 
+        title="Confirm Production Approval" 
+        details={confirmData} 
+        onConfirm={executeSubmit} 
+        onCancel={() => setConfirmData(null)} 
+        loading={loading} 
+      />
     </form>
   );
 }
@@ -452,6 +548,8 @@ function Step2Form({ job, onSuccess }) {
 function Step3Form({ job, onSuccess }) {
   const [sets, setSets] = useState(() => parseSets(job.size, job.qty));
   const [form, setForm] = useState({ name: '' });
+  const [confirmData, setConfirmData] = useState(null);
+
   const updateStep3Mutation = useUpdateStep3();
   const loading = updateStep3Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
@@ -464,8 +562,22 @@ function Step3Form({ job, onSuccess }) {
     setSets(newSets);
   };
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
+    if (!form.name) return alert('Name is required!');
+    const totalCutting = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
+    const combinedDetails = formatSets(sets);
+
+    setConfirmData({
+      'Job No': job.jobNo,
+      'Item': job.item,
+      'Your Name': form.name,
+      'Total Cutting Pieces': totalCutting,
+      'Size Details': combinedDetails
+    });
+  }
+
+  async function executeSubmit() {
     try {
       const totalCutting = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
       const combinedDetails = formatSets(sets);
@@ -476,8 +588,9 @@ function Step3Form({ job, onSuccess }) {
         sizeDetails: combinedDetails,
         name:        form.name,
       });
+      setConfirmData(null);
       onSuccess({ jobNo: job.jobNo, item: job.item });
-    } catch (err) { alert('Submit failed: ' + err.message); }
+    } catch (err) { alert('Submit failed: ' + err.message); setConfirmData(null); }
   }
 
   return (
@@ -508,6 +621,14 @@ function Step3Form({ job, onSuccess }) {
         ))}
       </div>
       <SubmitButton loading={loading} />
+
+      <ConfirmationPopup 
+        title="Confirm Inhouse Cutting" 
+        details={confirmData} 
+        onConfirm={executeSubmit} 
+        onCancel={() => setConfirmData(null)} 
+        loading={loading} 
+      />
     </form>
   );
 }
@@ -516,6 +637,8 @@ function Step3Form({ job, onSuccess }) {
 function Step4Form({ job, onSuccess }) {
   const [sets, setSets] = useState(() => parseSets(job.s3SizeDetails || job.size, job.s3DukanCutting || job.qty));
   const [form, setForm] = useState({ thekedarName: '', cutToPack: null, leadTime: '' });
+  const [confirmData, setConfirmData] = useState(null);
+
   const updateStep4Mutation = useUpdateStep4();
   const loading = updateStep4Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
@@ -526,8 +649,23 @@ function Step4Form({ job, onSuccess }) {
     setSets(newSets);
   };
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
+    if (!form.thekedarName) return alert('Thekedar / Karigar Name is required!');
+    const totalCutting = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
+
+    setConfirmData({
+      'Job No': job.jobNo,
+      'Item': job.item,
+      'Thekedar / Karigar': form.thekedarName,
+      'Cut to Pack?': form.cutToPack === true ? 'Yes' : (form.cutToPack === false ? 'No' : 'Not specified'),
+      'Lead Time (hrs)': form.leadTime,
+      'Total Cutting Pieces': totalCutting,
+      'Size Details': formatSets(sets)
+    });
+  }
+
+  async function executeSubmit() {
     try {
       const totalCutting = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
       await updateStep4Mutation.mutateAsync({
@@ -537,8 +675,9 @@ function Step4Form({ job, onSuccess }) {
         leadTime:     form.leadTime,
         cuttingPcs:   totalCutting,
       });
+      setConfirmData(null);
       onSuccess({ jobNo: job.jobNo, item: job.item });
-    } catch (err) { alert('Submit failed: ' + err.message); }
+    } catch (err) { alert('Submit failed: ' + err.message); setConfirmData(null); }
   }
 
   return (
@@ -582,6 +721,14 @@ function Step4Form({ job, onSuccess }) {
         ))}
       </div>
       <SubmitButton loading={loading} />
+
+      <ConfirmationPopup 
+        title="Confirm Naame" 
+        details={confirmData} 
+        onConfirm={executeSubmit} 
+        onCancel={() => setConfirmData(null)} 
+        loading={loading} 
+      />
     </form>
   );
 }
@@ -592,20 +739,34 @@ function Step5Form({ job, onSuccess }) {
     jamaQty: job.s5JamaQty || '', 
     pressHua: job.s5Press ? (job.s5Press === 'Yes') : null 
   });
+  const [confirmData, setConfirmData] = useState(null);
+
   const updateStep5Mutation = useUpdateStep5();
   const loading = updateStep5Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
+    if (!form.jamaQty) return alert('Jama Quantity is required!');
+
+    setConfirmData({
+      'Job No': job.jobNo,
+      'Item': job.item,
+      'Jama Quantity': form.jamaQty,
+      'Press Hua?': form.pressHua === true ? '✅ Yes' : (form.pressHua === false ? '❌ No' : 'Not specified')
+    });
+  }
+
+  async function executeSubmit() {
     try {
       await updateStep5Mutation.mutateAsync({
         jobNo:    job.jobNo,
         jamaQty:  form.jamaQty,
         pressHua: form.pressHua,
       });
+      setConfirmData(null);
       onSuccess({ jobNo: job.jobNo, item: job.item });
-    } catch (err) { alert('Submit failed: ' + err.message); }
+    } catch (err) { alert('Submit failed: ' + err.message); setConfirmData(null); }
   }
 
   return (
@@ -622,6 +783,14 @@ function Step5Form({ job, onSuccess }) {
           yesLabel="✅ Press Hua" noLabel="❌ Nahi" />
       </div>
       <SubmitButton loading={loading} />
+
+      <ConfirmationPopup 
+        title="Confirm Finished Maal Jama" 
+        details={confirmData} 
+        onConfirm={executeSubmit} 
+        onCancel={() => setConfirmData(null)} 
+        loading={loading} 
+      />
     </form>
   );
 }
@@ -633,6 +802,8 @@ function Step6Form({ job, onSuccess }) {
     reason: job.s6Reason || '', 
     yourName: job.s6Name || '' 
   });
+  const [confirmData, setConfirmData] = useState(null);
+
   const updateStep6Mutation = useUpdateStep6();
   const loading = updateStep6Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
@@ -642,8 +813,23 @@ function Step6Form({ job, onSuccess }) {
   const curSettle = Number(form.settleQty || 0);
   const balance = reqQty - jamaQty - curSettle;
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
+    if (!form.settleQty) return alert('Settle Quantity is required!');
+
+    setConfirmData({
+      'Job No': job.jobNo,
+      'Item': job.item,
+      'Requirement': reqQty,
+      'Old Jama': jamaQty,
+      'Settle Quantity': form.settleQty,
+      'Remaining Balance': balance,
+      'Reason': form.reason,
+      'Your Name': form.yourName
+    });
+  }
+
+  async function executeSubmit() {
     try {
       await updateStep6Mutation.mutateAsync({
         jobNo:     job.jobNo,
@@ -651,8 +837,9 @@ function Step6Form({ job, onSuccess }) {
         reason:    form.reason,
         yourName:  form.yourName,
       });
+      setConfirmData(null);
       onSuccess({ jobNo: job.jobNo, item: job.item });
-    } catch (err) { alert('Submit failed: ' + err.message); }
+    } catch (err) { alert('Submit failed: ' + err.message); setConfirmData(null); }
   }
 
   return (
@@ -723,6 +910,14 @@ function Step6Form({ job, onSuccess }) {
           value={form.yourName} onChange={set('yourName')} />
       </div>
       <SubmitButton loading={loading} />
+
+      <ConfirmationPopup 
+        title="Confirm Settle" 
+        details={confirmData} 
+        onConfirm={executeSubmit} 
+        onCancel={() => setConfirmData(null)} 
+        loading={loading} 
+      />
     </form>
   );
 }

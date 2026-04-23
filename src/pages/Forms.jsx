@@ -9,6 +9,7 @@ import StepBadge from '../components/StepBadge';
 import { getPendingStep as detectStep } from '../utils/jobLogic';
 import { useJobs, useCreateJob, useUpdateStep2, useUpdateStep3, useUpdateStep4, useUpdateStep5, useUpdateStep6 } from '../hooks/useJobs';
 import { useMasterData } from '../hooks/useMasterData';
+import catalogData from '../../item names according to cat and sub cat.json';
 // ─── Step Selector Config ─────────────────────────────────────────────────────
 const STEP_META = [
   { step: 1, hindiName: 'नई आवश्यकता',        englishName: 'New Requirement',       color: 'indigo' },
@@ -259,17 +260,24 @@ function PendingJobCard({ job, onClick }) {
 
 // ─── Step 1 Form ─────────────────────────────────────────────────────────────
 function Step1Form({ onSuccess }) {
-  const init = { name: '', item: '', itemGroup: '', reason: 'Order', specialInstruction: '' };
+  const init = { name: '', category: '', subcategory: '', item: '', reason: 'Order', specialInstruction: '' };
   const [form, setForm]     = useState(init);
   const [sets, setSets]     = useState([{ size: '', qty: '' }]);
   const [errors, setErrors] = useState({});
   const [confirmData, setConfirmData] = useState(null);
 
-  // Read existing item names directly from the shared jobs cache — no extra fetch
-  const { data: allJobs = [] } = useJobs();
-  const existingItems = useMemo(() => {
-    return [...new Set(allJobs.map(j => j.item).filter(Boolean))];
-  }, [allJobs]);
+  // Derive cascade dropdowns from JSON
+  const availableCategories = useMemo(() => catalogData.categories || [], []);
+  
+  const availableSubcategories = useMemo(() => {
+    const cat = availableCategories.find(c => c.category === form.category);
+    return cat ? cat.subcategories : [];
+  }, [form.category, availableCategories]);
+  
+  const availableItems = useMemo(() => {
+    const sub = availableSubcategories.find(s => s.subcategory === form.subcategory);
+    return sub ? sub.items : [];
+  }, [form.subcategory, availableSubcategories]);
 
   const createJobMutation = useCreateJob();
   const loading = createJobMutation.isPending;
@@ -290,6 +298,8 @@ function Step1Form({ onSuccess }) {
   function validate() {
     const e = {};
     if (!form.name.trim())  e.name  = true;
+    if (!form.category)     e.category = true;
+    if (!form.subcategory)  e.subcategory = true;
     if (!form.item.trim())  e.item  = true;
     
     const setErrors = sets.map(s => ({
@@ -312,8 +322,9 @@ function Step1Form({ onSuccess }) {
 
     setConfirmData({
       'Your Name (Prog. By)': form.name,
+      'Category': form.category,
+      'Subcategory': form.subcategory,
       'Item Name': form.item,
-      'Item Group': form.itemGroup,
       'Size & Quantity': combinedSize,
       'Total Quantity': totalQty,
       'Reason': form.reason,
@@ -329,7 +340,7 @@ function Step1Form({ onSuccess }) {
       const newJob = await createJobMutation.mutateAsync({
         progBy:             form.name,
         item:               form.item,
-        itemGroup:          form.itemGroup,
+        itemGroup:          `${form.category} / ${form.subcategory}`,
         size:               combinedSize,
         qty:                totalQty,
         reason:             form.reason,
@@ -355,31 +366,43 @@ function Step1Form({ onSuccess }) {
         </SelectBase>
       </div>
 
-      {/* Item Name with suggestions */}
-      <div>
-        <FieldLabel required>Item Name</FieldLabel>
-        <InputBase 
-          type="text" 
-          list="existing-items-list"
-          placeholder="e.g. Rib print plajo"
-          value={form.item} 
-          onChange={set('item')} 
-          error={errors.item} 
-        />
-        <datalist id="existing-items-list">
-          {existingItems.map(it => <option key={it} value={it} />)}
-        </datalist>
-        <p className="text-[10px] text-gray-400 mt-1 pl-1">
-          💡 Expert Tip: Using consistent names helps in accurate reporting.
-        </p>
+      {/* Cascade Dropdowns */}
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <FieldLabel required>Category</FieldLabel>
+          <SelectBase 
+            value={form.category} 
+            onChange={(e) => setForm(p => ({ ...p, category: e.target.value, subcategory: '', item: '' }))} 
+            error={errors.category}
+          >
+            <option value="">Select category…</option>
+            {availableCategories.map((c) => <option key={c.category} value={c.category}>{c.category}</option>)}
+          </SelectBase>
+        </div>
+        <div className="flex-1">
+          <FieldLabel required>Subcategory</FieldLabel>
+          <SelectBase 
+            value={form.subcategory} 
+            onChange={(e) => setForm(p => ({ ...p, subcategory: e.target.value, item: '' }))} 
+            disabled={!form.category}
+            error={errors.subcategory}
+          >
+            <option value="">Select subcategory…</option>
+            {availableSubcategories.map((s) => <option key={s.subcategory} value={s.subcategory}>{s.subcategory}</option>)}
+          </SelectBase>
+        </div>
       </div>
 
-      {/* Item Group */}
       <div>
-        <FieldLabel>Item Group</FieldLabel>
-        <SelectBase value={form.itemGroup} onChange={set('itemGroup')}>
-          <option value="">Select group…</option>
-          {ITEM_GROUPS.map((g) => <option key={g}>{g}</option>)}
+        <FieldLabel required>Item Name</FieldLabel>
+        <SelectBase 
+          value={form.item} 
+          onChange={set('item')} 
+          disabled={!form.subcategory}
+          error={errors.item}
+        >
+          <option value="">Select item…</option>
+          {availableItems.map((it) => <option key={it} value={it}>{it}</option>)}
         </SelectBase>
       </div>
 

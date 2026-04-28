@@ -1,49 +1,51 @@
 import { useState } from 'react';
 import { getPurchaseStage } from '../../../utils/purchaseDb';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 /* ─── Stage Metadata ────────────────────────────────────────────────────────── */
 const STAGES = {
-  2: { label: 'Order Pending', short: 'Order',     color: 'bg-amber-100 text-amber-800',    dot: 'bg-amber-400' },
-  3: { label: 'GI Pending',    short: 'GI',        color: 'bg-blue-100 text-blue-800',      dot: 'bg-blue-400' },
-  4: { label: 'Follow-Up',     short: 'Follow-Up', color: 'bg-violet-100 text-violet-800',  dot: 'bg-violet-400' },
-  5: { label: 'Complete',      short: 'Done',      color: 'bg-emerald-100 text-emerald-800',dot: 'bg-emerald-400' },
+  2: { labelKey: 'purchaseFms.stages.orderDone', shortKey: 'purchaseFms.list.order',     color: 'bg-amber-100 text-amber-800',    dot: 'bg-amber-400' },
+  3: { labelKey: 'purchaseFms.stages.goodsInward', shortKey: 'purchaseFms.list.gi',        color: 'bg-blue-100 text-blue-800',      dot: 'bg-blue-400' },
+  4: { labelKey: 'purchaseFms.stages.followUp',     shortKey: 'purchaseFms.list.followUp', color: 'bg-violet-100 text-violet-800',  dot: 'bg-violet-400' },
+  5: { labelKey: 'purchaseFms.stages.complete',      shortKey: 'purchaseFms.list.done',      color: 'bg-emerald-100 text-emerald-800',dot: 'bg-emerald-400' },
 };
 
 const FILTER_TABS = [
-  { id: 'all',      label: 'All',        stages: [2, 3, 4, 5] },
-  { id: 'pending2', label: 'Order',      stages: [2] },
-  { id: 'pending3', label: 'GI',         stages: [3] },
-  { id: 'pending4', label: 'Follow-Up',  stages: [4] },
-  { id: 'complete', label: 'Complete',   stages: [5] },
+  { id: 'all',      labelKey: 'common.all',        stages: [2, 3, 4, 5] },
+  { id: 'pending2', labelKey: 'purchaseFms.list.order',      stages: [2] },
+  { id: 'pending3', labelKey: 'purchaseFms.list.gi',         stages: [3] },
+  { id: 'pending4', labelKey: 'purchaseFms.list.followUp',  stages: [4] },
+  { id: 'complete', labelKey: 'purchaseFms.list.done',   stages: [5] },
 ];
 
-function fmtDate(v) {
+function fmtDate(v, language) {
   if (!v) return '—';
-  return new Date(v).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' });
+  const locale = language === 'hi' ? 'hi-IN' : 'en-IN';
+  return new Date(v).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: '2-digit' });
 }
 
-function DelayBadge({ hours }) {
+function DelayBadge({ hours, t }) {
   if (!hours || hours <= 0) return null;
   const days = (hours / 9).toFixed(1);
   return (
     <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-bold border border-red-100">
-      ⚠️ +{days}d
+      ⚠️ +{days}{t('common.dayShort')}
     </span>
   );
 }
 
-function StagePill({ stage }) {
+function StagePill({ stage, t }) {
   const s = STAGES[stage] || STAGES[5];
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${s.color}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-      {s.short}
+      {t(s.shortKey)}
     </span>
   );
 }
 
 /* ─── Single Row ─────────────────────────────────────────────────────────────── */
-function PurchaseRow({ item, onSelect }) {
+function PurchaseRow({ item, onSelect, t, language }) {
   const stage = getPurchaseStage(item);
   const hasDelay = (item.s2DelayHours > 0) || (item.s3DelayHours > 0) || (item.s4DelayHours > 0);
 
@@ -102,15 +104,15 @@ function PurchaseRow({ item, onSelect }) {
 
       {/* Right: Stage + Date */}
       <div className="flex-shrink-0 flex flex-col items-end gap-1">
-        <StagePill stage={stage} />
+        <StagePill stage={stage} t={t} />
         {stage === 5 ? (
-          <span className="text-[10px] text-gray-400">{fmtDate(item.s4ActualAt)}</span>
+          <span className="text-[10px] text-gray-400">{fmtDate(item.s4ActualAt, language)}</span>
         ) : item.s3PlannedAt && stage === 3 ? (
-          <span className="text-[10px] text-gray-400">Due {fmtDate(item.s3PlannedAt)}</span>
+          <span className="text-[10px] text-gray-400">{t('purchaseFms.list.due')} {fmtDate(item.s3PlannedAt, language)}</span>
         ) : item.s2PlannedAt && stage === 2 ? (
-          <span className="text-[10px] text-gray-400">Due {fmtDate(item.s2PlannedAt)}</span>
+          <span className="text-[10px] text-gray-400">{t('purchaseFms.list.due')} {fmtDate(item.s2PlannedAt, language)}</span>
         ) : (
-          <span className="text-[10px] text-gray-400">{fmtDate(item.createdAt)}</span>
+          <span className="text-[10px] text-gray-400">{fmtDate(item.createdAt, language)}</span>
         )}
       </div>
 
@@ -127,6 +129,7 @@ function PurchaseRow({ item, onSelect }) {
 
 /* ─── Main List ──────────────────────────────────────────────────────────────── */
 export default function PurchaseList({ data = [], onSelect }) {
+  const { t, language } = useLanguage();
   const [activeFilter, setActiveFilter] = useState('all');
   const [search, setSearch]             = useState('');
 
@@ -147,10 +150,10 @@ export default function PurchaseList({ data = [], onSelect }) {
 
   /* tab counts */
   const counts = {};
-  FILTER_TABS.forEach(t => {
-    counts[t.id] = t.id === 'all'
+  FILTER_TABS.forEach(tab => {
+    counts[tab.id] = tab.id === 'all'
       ? data.length
-      : data.filter(d => t.stages.includes(getPurchaseStage(d))).length;
+      : data.filter(d => tab.stages.includes(getPurchaseStage(d))).length;
   });
 
   return (
@@ -167,7 +170,7 @@ export default function PurchaseList({ data = [], onSelect }) {
                           ? 'bg-emerald-600 text-white shadow-sm'
                           : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
           >
-            {tab.label}
+            {t(tab.labelKey)}
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black
                               ${activeFilter === tab.id ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-500'}`}>
               {counts[tab.id]}
@@ -189,7 +192,7 @@ export default function PurchaseList({ data = [], onSelect }) {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search by fabric, item, agent…"
+            placeholder={t('common.search')}
             className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 rounded-xl border border-gray-100
                        outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400
                        placeholder-gray-300 text-gray-800"
@@ -202,12 +205,12 @@ export default function PurchaseList({ data = [], onSelect }) {
         {filtered.length === 0 ? (
           <div className="py-16 text-center">
             <div className="text-4xl mb-3">📦</div>
-            <p className="text-sm font-bold text-gray-400">No entries found</p>
-            <p className="text-xs text-gray-300 mt-1">Try adjusting the filter or search</p>
+            <p className="text-sm font-bold text-gray-400">{t('purchaseFms.list.noEntries')}</p>
+            <p className="text-xs text-gray-300 mt-1">{t('common.noData')}</p>
           </div>
         ) : (
           filtered.map(item => (
-            <PurchaseRow key={item.id} item={item} onSelect={onSelect} />
+            <PurchaseRow key={item.id} item={item} onSelect={onSelect} t={t} language={language} />
           ))
         )}
       </div>
@@ -216,7 +219,7 @@ export default function PurchaseList({ data = [], onSelect }) {
       {filtered.length > 0 && (
         <div className="px-4 py-2.5 border-t border-gray-50 bg-gray-50/50">
           <p className="text-[11px] text-gray-400">
-            Showing <span className="font-bold text-gray-600">{filtered.length}</span> of {data.length} requirements
+            {t('common.showing')} <span className="font-bold text-gray-600">{filtered.length}</span> {t('common.of')} {data.length} {t('purchaseFms.stats.totalRequirements')}
           </p>
         </div>
       )}

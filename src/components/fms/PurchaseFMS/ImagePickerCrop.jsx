@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '../../../utils/imageUtils';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 /* ─── helper ─────────────────────────────────────────────────────────────── */
 function blobToFile(blob, filename) {
@@ -8,7 +9,7 @@ function blobToFile(blob, filename) {
 }
 
 /* ─── Crop Modal ─────────────────────────────────────────────────────────── */
-function CropModal({ imageSrc, filename, onDone, onCancel }) {
+function CropModal({ imageSrc, filename, onDone, onCancel, t }) {
   const [crop,        setCrop]        = useState({ x: 0, y: 0 });
   const [zoom,        setZoom]        = useState(1);
   const [croppedArea, setCroppedArea] = useState(null);
@@ -46,10 +47,10 @@ function CropModal({ imageSrc, filename, onDone, onCancel }) {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
           </svg>
-          Retake
+          {t('purchaseFms.imageUploader.retake')}
         </button>
 
-        <span className="text-white font-bold text-sm">✂️ Crop Photo</span>
+        <span className="text-white font-bold text-sm">✂️ {t('purchaseFms.imageUploader.cropPhoto')}</span>
 
         <button
           onClick={handleDone}
@@ -66,7 +67,7 @@ function CropModal({ imageSrc, filename, onDone, onCancel }) {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                 <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
               </svg>
-              Use Photo
+              {t('purchaseFms.imageUploader.usePhoto')}
             </>
           )}
         </button>
@@ -114,7 +115,7 @@ function CropModal({ imageSrc, filename, onDone, onCancel }) {
           </svg>
         </div>
         <p className="text-white/35 text-[10px] text-center mt-1.5">
-          Drag to reposition · Pinch or slide to zoom
+          {t('purchaseFms.imageUploader.cropHint')}
         </p>
       </div>
     </div>
@@ -124,15 +125,9 @@ function CropModal({ imageSrc, filename, onDone, onCancel }) {
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 /**
  * ImagePickerCrop — camera-only image capture with crop.
- *
- * Props:
- *   previewUrl  {string|null}  – saved DB photo URL (shown as initial preview)
- *   file        {File|null}    – current local File
- *   preview     {string|null}  – current local blob URL preview
- *   onChange    {fn(file, previewBlobUrl)} – called after crop
- *   onClear     {fn()}         – called when photo is removed
  */
 export default function ImagePickerCrop({ previewUrl, file, preview, onChange, onClear }) {
+  const { t } = useLanguage();
   const cameraInputRef = useRef(null);
 
   const [showCrop, setShowCrop] = useState(false);
@@ -180,7 +175,7 @@ export default function ImagePickerCrop({ previewUrl, file, preview, onChange, o
 
   /* ── current display image ─────────────────────────────────────────── */
   const displayUrl  = preview || previewUrl;
-  const displayName = file?.name || (previewUrl ? 'Saved photo' : null);
+  const displayName = file?.name || (previewUrl ? t('purchaseFms.imageUploader.savedPhoto') : null);
 
   return (
     <>
@@ -209,7 +204,7 @@ export default function ImagePickerCrop({ previewUrl, file, preview, onChange, o
             <button
               type="button"
               onClick={openCamera}
-              title="Retake photo"
+              title={t('purchaseFms.imageUploader.retake')}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl
                          bg-black/55 text-white text-[11px] font-bold
                          hover:bg-black/75 active:scale-95 transition-all backdrop-blur-sm"
@@ -217,14 +212,14 @@ export default function ImagePickerCrop({ previewUrl, file, preview, onChange, o
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                 <path fillRule="evenodd" d="M1 8a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 018.07 3h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0016.07 6H17a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V8zm13.5 3a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM10 14a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
               </svg>
-              Retake
+              {t('purchaseFms.imageUploader.retake')}
             </button>
 
             {/* Remove */}
             <button
               type="button"
               onClick={onClear}
-              title="Remove photo"
+              title={t('purchaseFms.imageUploader.removePhoto')}
               className="w-7 h-7 rounded-xl bg-red-500/75 text-white
                          flex items-center justify-center
                          hover:bg-red-600 active:scale-95 transition-all backdrop-blur-sm"
@@ -263,10 +258,10 @@ export default function ImagePickerCrop({ previewUrl, file, preview, onChange, o
           </div>
           <div className="text-center">
             <p className="text-sm font-bold text-blue-700 group-hover:text-blue-800">
-              Take Photo
+              {t('purchaseFms.imageUploader.takePhoto')}
             </p>
             <p className="text-[11px] text-blue-400 mt-0.5">
-              Opens camera · Crop before saving
+              {t('purchaseFms.imageUploader.photoDesc')}
             </p>
           </div>
         </button>
@@ -279,6 +274,7 @@ export default function ImagePickerCrop({ previewUrl, file, preview, onChange, o
           filename={rawName}
           onDone={handleCropDone}
           onCancel={handleCropCancel}
+          t={t}
         />
       )}
     </>

@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import { useLanguage } from '../../../i18n/LanguageContext';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '../../../utils/imageUtils';
 import { supabase } from '../../../utils/supabase';
 
 export default function BiltyImageUploader({ onUploadComplete, currentUrl }) {
+  const { t } = useLanguage();
   const [imageSrc, setImageSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -51,7 +52,7 @@ export default function BiltyImageUploader({ onUploadComplete, currentUrl }) {
       setImageSrc(null);
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Failed to upload image: ' + err.message);
+      alert(t('biltyFms.imageUploader.failed') + err.message);
     } finally {
       setIsUploading(false);
     }
@@ -60,7 +61,7 @@ export default function BiltyImageUploader({ onUploadComplete, currentUrl }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Bilty Photo</label>
+        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('biltyFms.imageUploader.biltyPhoto')}</label>
         {currentUrl && (
           <a 
             href={currentUrl} 
@@ -68,7 +69,7 @@ export default function BiltyImageUploader({ onUploadComplete, currentUrl }) {
             rel="noopener noreferrer" 
             className="text-[10px] font-bold text-indigo-600 hover:underline"
           >
-            View Current
+            {t('biltyFms.imageUploader.viewCurrent')}
           </a>
         )}
       </div>
@@ -88,9 +89,9 @@ export default function BiltyImageUploader({ onUploadComplete, currentUrl }) {
               </svg>
             </div>
             <p className="text-xs font-bold text-gray-500 group-hover:text-indigo-600 transition-colors">
-              {currentUrl ? 'Change Bilty Photo' : 'Upload Bilty Photo'}
+              {currentUrl ? t('biltyFms.imageUploader.changePhoto') : t('biltyFms.imageUploader.uploadPhoto')}
             </p>
-            <p className="text-[10px] text-gray-400">PNG, JPG up to 5MB</p>
+            <p className="text-[10px] text-gray-400">{t('biltyFms.imageUploader.formatInfo')}</p>
           </div>
         </div>
       ) : (
@@ -109,7 +110,7 @@ export default function BiltyImageUploader({ onUploadComplete, currentUrl }) {
           
           <div className="w-full max-w-2xl mt-6 space-y-6">
             <div className="flex items-center gap-4">
-              <span className="text-[10px] font-bold text-white uppercase tracking-widest">Zoom</span>
+              <span className="text-[10px] font-bold text-white uppercase tracking-widest">{t('biltyFms.imageUploader.zoom')}</span>
               <input
                 type="range"
                 value={zoom}
@@ -127,14 +128,14 @@ export default function BiltyImageUploader({ onUploadComplete, currentUrl }) {
                 onClick={() => { setShowCropper(false); setImageSrc(null); }}
                 className="px-8 py-3 rounded-2xl bg-white/10 text-white text-sm font-bold hover:bg-white/20 transition-all"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleUpload}
                 disabled={isUploading}
                 className="px-12 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-bold shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 hover:-translate-y-0.5 transition-all disabled:opacity-50"
               >
-                {isUploading ? 'Uploading...' : 'Crop & Upload'}
+                {isUploading ? t('biltyFms.imageUploader.uploading') : t('biltyFms.imageUploader.cropAndUpload')}
               </button>
             </div>
           </div>

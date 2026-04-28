@@ -1,5 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useLanguage } from '../i18n/LanguageContext';
 
 /* ─── SVG Icons ──────────────────────────────────────────────────────────── */
 const HomeIcon = () => (
@@ -28,18 +30,18 @@ const FMSIcon = () => (
   </svg>
 );
 
-const NAV_ITEMS = [
-  { to: '/',        label: 'Dashboard', Icon: HomeIcon    },
-  { to: '/forms',   label: 'Forms',     Icon: PencilIcon  },
-  { to: '/reports', label: 'Reports',   Icon: ReportsIcon },
-  { to: '/fms',     label: 'FMS',       Icon: FMSIcon     },
-];
-
-/* ─── Layout ─────────────────────────────────────────────────────────────── */
 export default function Layout() {
   const isAdmin = useAuthStore((s) => s.isAdmin);
   const logout  = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const NAV_ITEMS = [
+    { to: '/',        label: t('nav.dashboard'), Icon: HomeIcon    },
+    { to: '/forms',   label: t('nav.forms'),     Icon: PencilIcon  },
+    { to: '/reports', label: t('nav.reports'),   Icon: ReportsIcon },
+    { to: '/fms',     label: t('nav.fms'),       Icon: FMSIcon     },
+  ];
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
 
@@ -51,9 +53,12 @@ export default function Layout() {
           className="h-9 w-auto object-contain select-none"
         />
 
-        {/* Live badge + admin button */}
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher />
+
+          {/* Live badge + admin button */}
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
                     style={{ animation: 'ping 1.2s cubic-bezier(0,0,0.2,1) infinite' }} />
@@ -87,6 +92,7 @@ export default function Layout() {
               </svg>
             </button>
           )}
+          </div>
         </div>
       </header>
 

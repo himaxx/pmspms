@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import CuttingReports from './CuttingReports';
 import ProductionReport from './ProductionReport';
+import { useLanguage } from '../i18n/LanguageContext';
 
 /* ─── Sub-nav icons ───────────────────────────────────────────────────────── */
 const ScissorsIcon = () => (
@@ -17,13 +18,14 @@ const FactoryIcon = () => (
   </svg>
 );
 
-const REPORT_TABS = [
-  { id: 'cutting',    label: 'Cutting Report',    Icon: ScissorsIcon },
-  { id: 'production', label: 'Production Report',  Icon: FactoryIcon  },
-];
-
 export default function Reports() {
+  const { t } = useLanguage();
   const [active, setActive] = useState(null); // null = landing, 'cutting' | 'production' = detail
+
+  const REPORT_TABS = [
+    { id: 'cutting',    label: t('reports.cuttingReport'),    Icon: ScissorsIcon },
+    { id: 'production', label: t('reports.productionReport'),  Icon: FactoryIcon  },
+  ];
 
   /* ── Landing — pick a report ─────────────────────────────────────────── */
   if (active === null) {
@@ -31,8 +33,8 @@ export default function Reports() {
       <div className="flex flex-col min-h-[calc(100vh-136px)]">
         {/* Page header */}
         <div className="px-4 pt-6 pb-2">
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Reports</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Select a report to view</p>
+          <h1 className="text-xl font-black text-gray-900 tracking-tight">{t('nav.reports')}</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{t('reports.selectReportView')}</p>
         </div>
 
         {/* Report cards */}
@@ -55,8 +57,8 @@ export default function Reports() {
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {id === 'cutting'
-                    ? 'View pending & completed cutting jobs'
-                    : 'Track production stages & job status'}
+                    ? t('reports.viewPendingCompleted')
+                    : t('reports.trackProductionStages')}
                 </p>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
@@ -88,11 +90,11 @@ export default function Reports() {
                   d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
                   clipRule="evenodd" />
           </svg>
-          Reports
+          {t('reports.backToReports')}
         </button>
         <span className="text-gray-300 text-xs">/</span>
         <span className="text-xs font-bold text-gray-800 tracking-tight">
-          {active === 'cutting' ? 'Cutting Report' : 'Production Report'}
+          {active === 'cutting' ? t('reports.cuttingReport') : t('reports.productionReport')}
         </span>
       </div>
 

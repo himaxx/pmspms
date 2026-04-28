@@ -8,6 +8,7 @@ import usePullToRefresh from '../hooks/usePullToRefresh';
 import { getPendingStep as detectStep, isJobDelayed as isDelayed, getJobStatus } from '../utils/jobLogic';
 import { useJobs } from '../hooks/useJobs';
 import useUIStore from '../store/useUIStore';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -44,6 +45,7 @@ function StatusDot({ status }) {
 
 // ─── Job Row Card ─────────────────────────────────────────────────────────────
 function JobRowCard({ job, onClick }) {
+  const { t } = useLanguage();
   const step   = detectStep(job);
   const status = getJobStatus(job);
   return (
@@ -64,8 +66,8 @@ function JobRowCard({ job, onClick }) {
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
         <StatusDot status={status} />
-        {status === 'late'     && <span className="text-[9px] font-bold text-red-500   uppercase">Late</span>}
-        {status === 'complete' && <span className="text-[9px] font-bold text-green-600 uppercase">Done</span>}
+        {status === 'late'     && <span className="text-[9px] font-bold text-red-500   uppercase">{t('dashboard.late')}</span>}
+        {status === 'complete' && <span className="text-[9px] font-bold text-green-600 uppercase">{t('dashboard.complete')}</span>}
       </div>
     </button>
   );
@@ -73,6 +75,7 @@ function JobRowCard({ job, onClick }) {
 
 // ─── Timeline Row ─────────────────────────────────────────────────────────────
 function TimelineRow({ step, title, done, active, date, person, extra, isLast }) {
+  const { t } = useLanguage();
   return (
     <div 
       className="relative flex gap-4 pb-3"
@@ -118,7 +121,7 @@ function TimelineRow({ step, title, done, active, date, person, extra, isLast })
                'text-[9px] font-black uppercase tracking-wider mb-0.5',
                active ? 'text-indigo-500' : done ? 'text-green-500' : 'text-gray-400'
             )}>
-               Step {step}
+               {t('dashboard.step')} {step}
             </span>
             <h4 className={cls(
               'text-sm font-bold leading-tight',
@@ -152,7 +155,7 @@ function TimelineRow({ step, title, done, active, date, person, extra, isLast })
         )}
         
         {!done && !active && (
-          <p className="text-[10px] font-bold text-gray-300 mt-1 uppercase tracking-wider">Pending</p>
+          <p className="text-[10px] font-bold text-gray-300 mt-1 uppercase tracking-wider">{t('jobDetail.pending')}</p>
         )}
       </div>
     </div>
@@ -161,6 +164,7 @@ function TimelineRow({ step, title, done, active, date, person, extra, isLast })
 
 // ─── Job Detail Bottom Sheet ──────────────────────────────────────────────────
 function JobDetailSheet({ job, onClose }) {
+  const { t } = useLanguage();
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
@@ -172,13 +176,13 @@ function JobDetailSheet({ job, onClose }) {
   const currentStep = detectStep(job);
 
   const STEPS = [
-    { step: 1, title: 'New Requirement',     done: Boolean(job.date),        date: fmtDate(job.date),        person: job.progBy,           extra: job.reason ? `Reason: ${job.reason}` : null },
-    { step: 2, title: 'Production Approval', done: Boolean(job.s2Actual),    date: fmtDate(job.s2Actual),    person: null,                 extra: job.s2Instructions || null },
-    { step: 3, title: 'Inhouse Cutting',     done: Boolean(job.s3Actual),    date: fmtDate(job.s3Actual),    person: job.s3CuttingPerson,  extra: job.s3DukanCutting ? `${job.s3DukanCutting} pcs cut` : null },
-    { step: 4, title: 'Naame (Prod.)',       done: Boolean(job.s4StartDate), date: fmtDate(job.s4StartDate), person: job.s4Thekedar,       extra: job.s4LeadTime ? `Lead: ${job.s4LeadTime} days` : null },
-    { step: 5, title: 'Jama',                done: Boolean(job.s5JamaQty),   date: null,                     person: null,                 extra: job.s5JamaQty ? `Jama: ${job.s5JamaQty} pcs` : null },
-    { step: 6, title: 'Settle',              done: Boolean(job.s6SettleQty), date: null,                     person: job.s6Name,           extra: job.s6SettleQty ? `Settled: ${job.s6SettleQty}` : null },
-    { step: 7, title: 'Complete',            done: detectStep(job) === 7,    date: null,                     person: null,                 extra: null },
+    { step: 1, title: t('steps.1'), done: Boolean(job.date),        date: fmtDate(job.date),        person: job.progBy,           extra: job.reason ? `${t('common.reason')}: ${job.reason}` : null },
+    { step: 2, title: t('steps.2'), done: Boolean(job.s2Actual),    date: fmtDate(job.s2Actual),    person: null,                 extra: job.s2Instructions || null },
+    { step: 3, title: t('steps.3'), done: Boolean(job.s3Actual),    date: fmtDate(job.s3Actual),    person: job.s3CuttingPerson,  extra: job.s3DukanCutting ? `${job.s3DukanCutting} ${t('common.pcs')} cut` : null },
+    { step: 4, title: t('steps.4'), done: Boolean(job.s4StartDate), date: fmtDate(job.s4StartDate), person: job.s4Thekedar,       extra: job.s4LeadTime ? `Lead: ${job.s4LeadTime} days` : null },
+    { step: 5, title: t('steps.5'), done: Boolean(job.s5JamaQty),   date: null,                     person: null,                 extra: job.s5JamaQty ? `Jama: ${job.s5JamaQty} ${t('common.pcs')}` : null },
+    { step: 6, title: t('steps.6'), done: Boolean(job.s6SettleQty), date: null,                     person: job.s6Name,           extra: job.s6SettleQty ? `Settled: ${job.s6SettleQty}` : null },
+    { step: 7, title: t('steps.7'), done: detectStep(job) === 7,    date: null,                     person: null,                 extra: null },
   ];
 
   return (
@@ -192,11 +196,11 @@ function JobDetailSheet({ job, onClose }) {
         {/* Header */}
         <div className="flex items-start justify-between px-5 pb-4 pt-2 border-b border-gray-100 shrink-0">
           <div>
-            <p className="text-[11px] font-black text-indigo-500 uppercase tracking-widest">Job #{job.jobNo}</p>
+            <p className="text-[11px] font-black text-indigo-500 uppercase tracking-widest">{t('common.jobNo')} #{job.jobNo}</p>
             <h2 className="text-xl font-extrabold text-gray-900 leading-tight mt-0.5">{job.item || '—'}</h2>
             <div className="flex flex-wrap gap-2 mt-2 text-xs text-gray-500">
               {job.size      && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-bold">{job.size}</span>}
-              {job.qty       && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-bold">{job.qty} pcs</span>}
+              {job.qty       && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-bold">{job.qty} {t('common.pcs')}</span>}
               {job.itemGroup && <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md font-bold">{job.itemGroup}</span>}
             </div>
           </div>
@@ -209,7 +213,7 @@ function JobDetailSheet({ job, onClose }) {
         </div>
         {/* Content */}
         <div className="overflow-y-auto flex-1 px-5 py-4">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">Production Timeline</p>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">{t('jobDetail.timeline')}</p>
           <div className="pl-1">
             {STEPS.map(({ step, title, done, date, person, extra }, index) => (
               <TimelineRow 
@@ -228,11 +232,11 @@ function JobDetailSheet({ job, onClose }) {
           <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-3"
                style={{ animation: 'slideUp 400ms cubic-bezier(0.22,1,0.36,1) both', animationDelay: '500ms' }}>
             <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Balance Qty</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('jobDetail.balanceQty')}</p>
               <p className="text-xl font-black text-gray-900 mt-1">{job.s5Balance || '—'}</p>
             </div>
             <div className={cls('rounded-2xl p-4 border', hasDelay ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-100')}>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Time Delay</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('jobDetail.timeDelay')}</p>
               <p className={cls('text-xl font-black mt-1', hasDelay ? 'text-red-600' : 'text-gray-400')}>
                 {timeDelay || '—'}
               </p>
@@ -242,7 +246,7 @@ function JobDetailSheet({ job, onClose }) {
             <div className="mt-3 bg-amber-50 border border-amber-200 rounded-2xl p-4"
                  style={{ animation: 'slideUp 400ms cubic-bezier(0.22,1,0.36,1) both', animationDelay: '600ms' }}>
               <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                 <span className="text-sm">⚠️</span> Special Instruction
+                 <span className="text-sm">⚠️</span> {t('jobDetail.specialInstruction')}
               </p>
               <p className="text-sm text-amber-900 font-medium leading-snug">{job.specialInstruction}</p>
             </div>
@@ -279,6 +283,7 @@ function PullIndicator({ progress, isRefreshing }) {
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 function AajKeNaame({ jobs }) {
+  const { t } = useLanguage();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
 
   const naameRecords = useMemo(() => {
@@ -293,8 +298,8 @@ function AajKeNaame({ jobs }) {
       <div className="flex flex-col gap-4 bg-white rounded-[2rem] border-2 border-gray-200 p-6 shadow-md shadow-gray-100/50">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-black text-gray-900 leading-none">Aaj Ke Naame</h2>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Production Dispatch Logs</p>
+            <h2 className="text-xl font-black text-gray-900 leading-none">{t('dashboard.aajKeNaame')}</h2>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{t('dashboard.dispatchLogs')}</p>
           </div>
           <input 
             type="date" 
@@ -308,7 +313,7 @@ function AajKeNaame({ jobs }) {
           {naameRecords.length === 0 ? (
             <div className="py-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
               <span className="text-2xl opacity-50">🚚</span>
-              <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-tight">No dispatch on this date</p>
+              <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-tight">{t('dashboard.noDispatch')}</p>
             </div>
           ) : (
             naameRecords.map(record => (
@@ -320,7 +325,7 @@ function AajKeNaame({ jobs }) {
                 </div>
                 <div className="text-right">
                   <span className="text-lg font-black text-gray-900 leading-none">{record.s4CuttingPcs || 0}</span>
-                  <span className="block text-[9px] font-black text-gray-400 uppercase">Pieces</span>
+                  <span className="block text-[9px] font-black text-gray-400 uppercase">{t('dashboard.pieces')}</span>
                 </div>
               </div>
             ))
@@ -329,9 +334,9 @@ function AajKeNaame({ jobs }) {
         
         {naameRecords.length > 0 && (
           <div className="pt-2 border-t-2 border-gray-50 flex justify-between items-center px-1">
-            <span className="text-[11px] font-black text-gray-400 uppercase">Total Dispatch</span>
+            <span className="text-[11px] font-black text-gray-400 uppercase">{t('dashboard.totalDispatch')}</span>
             <span className="text-sm font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">
-              {naameRecords.reduce((acc, r) => acc + (Number(r.s4CuttingPcs) || 0), 0)} Pcs
+              {naameRecords.reduce((acc, r) => acc + (Number(r.s4CuttingPcs) || 0), 0)} {t('common.pcs')}
             </span>
           </div>
         )}
@@ -341,6 +346,7 @@ function AajKeNaame({ jobs }) {
 }
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   // ── Server state via TanStack Query (shared cache with all other pages) ──────
   const { data: jobs = [], isLoading: loading, dataUpdatedAt, refetch } = useJobs();
   const lastRefresh = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
@@ -392,7 +398,7 @@ export default function Dashboard() {
   }, [jobs, search, stepFilter, statusFilter, dashStartDate, dashEndDate]);
 
   const STEP_OPTS   = ['All', '1', '2', '3', '4', '5', '6', '7'];
-  const STATUS_OPTS = ['All', 'On Track', 'Late', 'Complete'];
+  const STATUS_OPTS = [t('common.all'), t('dashboard.onTrack'), t('dashboard.late'), t('dashboard.complete')];
 
   return (
     <div className="flex flex-col min-h-screen pb-8 bg-gray-100/30">
@@ -405,11 +411,11 @@ export default function Dashboard() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
           <div className="relative">
             <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-2 block">
-              Real-time Production
+              {t('dashboard.subtitle')}
             </span>
             <div className="flex items-center justify-between">
               <h1 className="text-4xl font-black text-gray-900 tracking-tighter leading-none">
-                Live <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Processes</span>
+                Live <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">{t('dashboard.title').split(' ')[1]}</span>
               </h1>
               <div className="flex gap-1">
                 {/* PULL from Sheets */}
@@ -450,7 +456,7 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-2 mt-4">
               <p className="text-xs text-gray-400 font-medium leading-relaxed max-w-[200px]">
-                Monitoring every step from requirement to settlement.
+                {t('dashboard.description')}
               </p>
               {lastRefresh && (
                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-50 border border-gray-100 text-[9px] font-bold text-gray-400 ml-auto uppercase tracking-wider">
@@ -471,7 +477,7 @@ export default function Dashboard() {
                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
               </svg>
-              <input type="search" placeholder="Search job no or item…"
+              <input type="search" placeholder={t('dashboard.searchPlaceholder')}
                 value={search} onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-gray-200 text-sm bg-white
                            outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 placeholder:text-gray-400 font-medium transition-all shadow-sm" />
@@ -499,7 +505,7 @@ export default function Dashboard() {
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                     <path fillRule="evenodd" d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clipRule="evenodd" />
                   </svg>
-                  Filters
+                  {t('dashboard.filters')}
                   {activeCount > 0 && (
                     <span className={cls(
                       'text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center',
@@ -524,12 +530,12 @@ export default function Dashboard() {
                 {/* Date Range */}
                 <div className="grid grid-cols-2 gap-2 bg-white/50 p-3 rounded-[1.5rem] border-2 border-gray-200 shadow-sm">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Start Date</label>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('common.startDate')}</label>
                     <input type="date" value={dashStartDate} onChange={(e) => setDashStartDate(e.target.value)}
                            className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">End Date</label>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('common.endDate')}</label>
                     <input type="date" value={dashEndDate} onChange={(e) => setDashEndDate(e.target.value)}
                            className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
                   </div>
@@ -541,7 +547,7 @@ export default function Dashboard() {
                     <button key={s} type="button" onClick={() => setStepFilter(s)}
                       className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
                         stepFilter === s ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
-                      {s === 'All' ? 'All Steps' : `Step ${s}`}
+                      {s === 'All' ? t('dashboard.allSteps') : `${t('dashboard.step')} ${s}`}
                     </button>
                   ))}
                 </div>
@@ -565,11 +571,11 @@ export default function Dashboard() {
         <div className="px-4 mt-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-gray-500">
-              {loading ? 'Loading…' : `${filtered.length} job${filtered.length !== 1 ? 's' : ''}`}
+              {loading ? t('common.loading') : `${filtered.length} job${filtered.length !== 1 ? 's' : ''}`}
             </p>
             {(search || stepFilter !== 'All' || statusFilter !== 'All') && (
               <button onClick={clearDashFilters}
-                className="text-xs text-indigo-600 font-semibold hover:underline">Clear filters</button>
+                className="text-xs text-indigo-600 font-semibold hover:underline">{t('dashboard.clearFilters')}</button>
             )}
           </div>
 
@@ -580,8 +586,8 @@ export default function Dashboard() {
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center py-16 gap-2 text-center">
                   <span className="text-4xl">🔍</span>
-                  <p className="text-gray-500 text-sm font-medium">No jobs match your filters.</p>
-                  <p className="text-gray-400 text-xs">Try adjusting the step or status filter.</p>
+                  <p className="text-gray-500 text-sm font-medium">{t('dashboard.noJobsFound')}</p>
+                  <p className="text-gray-400 text-xs">{t('dashboard.tryAdjusting')}</p>
                 </div>
               ) : (
                 filtered.map((job) => <JobRowCard key={job.jobNo} job={job} onClick={setSelectedJob} />)
@@ -596,8 +602,8 @@ export default function Dashboard() {
         {/* Interactive Analytics Hub */}
         <div className="mt-8 mb-4 border-t border-gray-100 pt-6">
            <div className="px-6 mb-3">
-              <h2 className="text-lg font-black text-gray-900 tracking-tight">Live Insights</h2>
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Real-time system health</p>
+              <h2 className="text-lg font-black text-gray-900 tracking-tight">{t('dashboard.liveInsights')}</h2>
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{t('dashboard.systemHealth')}</p>
            </div>
            {!loading && <AnalyticsHub jobs={filtered} />}
         </div>

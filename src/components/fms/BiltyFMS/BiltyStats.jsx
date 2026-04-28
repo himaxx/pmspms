@@ -33,7 +33,10 @@ const CheckIcon = () => (
   </svg>
 );
 
+import { useLanguage } from '../../../i18n/LanguageContext';
+
 export default function BiltyStats({ data = [] }) {
+  const { t } = useLanguage();
   const pendingReceiving = data.filter(d => d.receivingStatus === 'Pending').length;
   const pendingPhotos = data.filter(d => d.receivingStatus !== 'Pending' && d.photoSendStatus === 'Pending').length;
   const completed = data.filter(d => d.deliveryStatus === 'Delivered').length;
@@ -41,19 +44,19 @@ export default function BiltyStats({ data = [] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <StatCard 
-        label="Pending Receiving" 
+        label={t('biltyFms.stats.pendingReceiving')} 
         value={pendingReceiving} 
         color="bg-amber-50 text-amber-600" 
         icon={PendingIcon} 
       />
       <StatCard 
-        label="Awaiting Photos" 
+        label={t('biltyFms.stats.pendingPhoto')} 
         value={pendingPhotos} 
         color="bg-blue-50 text-blue-600" 
         icon={CameraIcon} 
       />
       <StatCard 
-        label="Total Delivered" 
+        label={t('biltyFms.stats.delivered')} 
         value={completed} 
         color="bg-emerald-50 text-emerald-600" 
         icon={CheckIcon} 

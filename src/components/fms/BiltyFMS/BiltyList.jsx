@@ -1,14 +1,15 @@
-import React from 'react';
+import { useLanguage } from '../../../i18n/LanguageContext';
 import { fmtWorkingDateTime } from '../../../utils/workingHours';
 
 const StatusBadge = ({ status, delay }) => {
+  const { t } = useLanguage();
   const isPending = status === 'Pending';
   const isDelayed = delay > 0;
 
   if (isPending) {
     return (
       <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-wider">
-        Pending
+        {t('jobDetail.pending')}
       </span>
     );
   }
@@ -21,7 +22,7 @@ const StatusBadge = ({ status, delay }) => {
       </span>
       {isDelayed && (
         <span className="text-[9px] font-medium text-red-400 text-center">
-          +{delay}h delay
+          +{t('biltyFms.list.delay').replace('{delay}', delay)}
         </span>
       )}
     </div>
@@ -29,17 +30,18 @@ const StatusBadge = ({ status, delay }) => {
 };
 
 export default function BiltyList({ data = [], onSelect }) {
+  const { t } = useLanguage();
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50/50 border-b border-gray-100">
-              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Dispatch Details</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Receiving</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Bilty & Photo</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Delivery</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Action</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('biltyFms.list.dispatchDetails')}</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('biltyFms.list.receiving')}</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('biltyFms.list.biltyAndPhoto')}</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('biltyFms.list.delivery')}</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">{t('biltyFms.list.action')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -49,7 +51,7 @@ export default function BiltyList({ data = [], onSelect }) {
                 <td className="px-6 py-4">
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-gray-900">{item.transport}</span>
-                    <span className="text-xs text-gray-400 mt-0.5">{item.dispatcherName} • {item.parcelCount} Parcels</span>
+                    <span className="text-xs text-gray-400 mt-0.5">{item.dispatcherName} • {item.parcelCount} {t('biltyFms.list.parcels')}</span>
                     <span className="text-[10px] text-gray-300 mt-1">{fmtWorkingDateTime(item.dispatchTimestamp)}</span>
                   </div>
                 </td>
@@ -59,7 +61,7 @@ export default function BiltyList({ data = [], onSelect }) {
                   <div className="flex flex-col gap-1.5">
                     <StatusBadge status={item.receivingStatus} delay={item.receivingDelayHours} />
                     <span className="text-[10px] text-gray-400">
-                      Pl: {fmtWorkingDateTime(item.receivingPlannedAt)}
+                      {t('biltyFms.list.planned')}: {fmtWorkingDateTime(item.receivingPlannedAt)}
                     </span>
                   </div>
                 </td>
@@ -71,7 +73,7 @@ export default function BiltyList({ data = [], onSelect }) {
                     
                     {item.biltyNumber && (
                       <span className="text-[10px] font-black text-indigo-700 bg-indigo-100/50 px-2 py-0.5 rounded-md self-start border border-indigo-100">
-                        LR: {item.biltyNumber}
+                        {t('biltyFms.list.lr')}: {item.biltyNumber}
                       </span>
                     )}
 
@@ -79,7 +81,7 @@ export default function BiltyList({ data = [], onSelect }) {
                       <div className="flex flex-wrap gap-1 mt-1">
                         {item.billNumbers.map((bill, idx) => (
                           <span key={idx} className="text-[9px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
-                            Bill {bill}
+                            {t('biltyFms.list.bill')} {bill}
                           </span>
                         ))}
                       </div>
@@ -96,7 +98,7 @@ export default function BiltyList({ data = [], onSelect }) {
                            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
                            <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                          </svg>
-                         View Photo
+                         {t('biltyFms.list.viewPhoto')}
                        </a>
                     )}
                   </div>
@@ -107,7 +109,7 @@ export default function BiltyList({ data = [], onSelect }) {
                   <div className="flex flex-col gap-1.5">
                     <StatusBadge status={item.deliveryStatus} delay={item.deliveryDelayHours} />
                     <span className="text-[10px] text-gray-400">
-                      Pl: {fmtWorkingDateTime(item.deliveryPlannedAt)}
+                      {t('biltyFms.list.planned')}: {fmtWorkingDateTime(item.deliveryPlannedAt)}
                     </span>
                   </div>
                 </td>
@@ -129,7 +131,7 @@ export default function BiltyList({ data = [], onSelect }) {
             {data.length === 0 && (
               <tr>
                 <td colSpan="5" className="px-6 py-12 text-center text-gray-400 text-sm">
-                  No Bilty entries found. Start by dispatching a parcel.
+                  {t('biltyFms.list.noEntries')}
                 </td>
               </tr>
             )}

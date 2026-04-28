@@ -9,6 +9,7 @@ import autoTable from 'jspdf-autotable';
 import { parseSets, formatSets } from '../utils/helpers';
 import { useJobs, useUpdateStep3 } from '../hooks/useJobs';
 import useUIStore from '../store/useUIStore';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // helper functions
 function parseDate(str) {
@@ -67,6 +68,7 @@ function EmptyState({ icon, message }) {
 }
 
 function PendingTab({ jobs, loading, onJobClick }) {
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
 
   const pending = useMemo(() => {
@@ -100,29 +102,29 @@ function PendingTab({ jobs, loading, onJobClick }) {
       <div className="sticky top-[145px] z-10 bg-gray-50 pb-2">
         <input 
           type="text" 
-          placeholder="Search pending jobs..." 
+          placeholder={t('cuttingReport.searchPending')} 
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="w-full border-gray-200 border-2 p-3 rounded-xl bg-white focus:border-indigo-400 outline-none text-sm transition-colors"
         />
       </div>
 
-      {!pending.length && search && <div className="text-center text-sm text-gray-500 py-8">No matching jobs found.</div>}
-      {!pending.length && !search && <EmptyState icon="S" message="No pending cutting jobs." />}
+      {!pending.length && search && <div className="text-center text-sm text-gray-500 py-8">{t('cuttingReport.noMatchingJobs')}</div>}
+      {!pending.length && !search && <EmptyState icon="S" message={t('cuttingReport.noPending')} />}
 
       {pending.map((job) => (
         <article key={job.jobNo} onClick={() => onJobClick(job)} className="bg-white rounded-2xl border-2 border-gray-100 p-4 shadow-sm cursor-pointer hover:border-indigo-200 animate-slideUp">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] text-gray-400 uppercase font-bold">Job #{job.jobNo}</p>
+              <p className="text-[10px] text-gray-400 uppercase font-bold">{t('common.jobNo')} #{job.jobNo}</p>
               <h3 className="font-bold text-gray-900">{job.item}</h3>
             </div>
             <Chip color="gray">{getDaysInStep(job)}d</Chip>
           </div>
-          <div className="text-sm text-gray-500 mt-2 font-medium">Qty: {job.qty} | Size: {job.size}</div>
+          <div className="text-sm text-gray-500 mt-2 font-medium">{t('common.qty')}: {job.qty} | {t('common.size')}: {job.size}</div>
           <div className="mt-2 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-            <span className="text-[10px] font-bold text-orange-500 uppercase">Awaiting Cutting</span>
+            <span className="text-[10px] font-bold text-orange-500 uppercase">{t('cuttingReport.awaitingCutting')}</span>
           </div>
         </article>
       ))}
@@ -131,6 +133,7 @@ function PendingTab({ jobs, loading, onJobClick }) {
 }
 
 function CompletedTab({ jobs, loading }) {
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [showAll, setShowAll] = useState(false);
 
@@ -172,14 +175,14 @@ function CompletedTab({ jobs, loading }) {
       <div className="sticky top-[145px] z-10 bg-gray-50 pb-2 space-y-3">
         <input 
           type="text" 
-          placeholder="Search by Job #, Item, or Person..." 
+          placeholder={t('cuttingReport.searchPlaceholderLong')} 
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="w-full border-gray-200 border-2 p-3 rounded-xl bg-white focus:border-indigo-400 outline-none text-sm transition-colors"
         />
         <div className="flex justify-between items-center px-1">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {showAll ? 'Showing All Records' : 'Showing Last 10 Days'}
+            {showAll ? t('cuttingReport.showingAllRecords') : t('cuttingReport.showingLast10Days')}
           </p>
           <button 
             onClick={() => setShowAll(!showAll)}
@@ -188,7 +191,7 @@ function CompletedTab({ jobs, loading }) {
               showAll ? "bg-indigo-600 border-indigo-600 text-white" : "text-indigo-600 border-indigo-100 hover:border-indigo-200"
             )}
           >
-            {showAll ? 'View Recent only' : 'View All Data'}
+            {showAll ? t('cuttingReport.viewRecentOnly') : t('cuttingReport.viewAllData')}
           </button>
         </div>
       </div>
@@ -196,28 +199,28 @@ function CompletedTab({ jobs, loading }) {
       {!completed.length && (search || !showAll) && (
         <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-100">
           <p className="text-sm font-bold text-gray-500 italic">
-            {search ? `No results found for "${search}"` : 'No records in the last 10 days.'}
+            {search ? t('cuttingReport.noResultsFound').replace('{query}', search) : t('cuttingReport.noRecords10Days')}
           </p>
           {!showAll && !search && (
-            <button onClick={() => setShowAll(true)} className="mt-2 text-xs text-indigo-600 font-bold hover:underline">Check all time data →</button>
+            <button onClick={() => setShowAll(true)} className="mt-2 text-xs text-indigo-600 font-bold hover:underline">{t('cuttingReport.checkAllTime')}</button>
           )}
         </div>
       )}
-      {!completed.length && !search && showAll && <EmptyState icon="C" message="No completed jobs found." />}
+      {!completed.length && !search && showAll && <EmptyState icon="C" message={t('cuttingReport.noCompleted')} />}
 
       {completed.map(job => (
         <article key={job.jobNo} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm animate-slideUp">
           <div className="flex justify-between">
             <div>
-              <p className="text-[10px] text-gray-400 font-bold">Job #{job.jobNo}</p>
+              <p className="text-[10px] text-gray-400 font-bold">{t('common.jobNo')} #{job.jobNo}</p>
               <h3 className="font-bold text-gray-900">{job.item}</h3>
             </div>
             <div className="text-right">
-              <Chip color="green">Done</Chip>
+              <Chip color="green">{t('common.done')}</Chip>
               <p className="text-[9px] text-gray-400 mt-0.5 font-bold">{fmtDate(job.s3Actual)}</p>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-1">Cut: <span className="font-bold text-gray-700">{job.s3DukanCutting} pcs</span> by {job.s3CuttingPerson}</p>
+          <p className="text-xs text-gray-500 mt-1">{t('cuttingReport.actualQty')}: <span className="font-bold text-gray-700">{job.s3DukanCutting} {t('common.pcs')}</span> {t('common.by')} {job.s3CuttingPerson}</p>
         </article>
       ))}
     </div>
@@ -225,6 +228,7 @@ function CompletedTab({ jobs, loading }) {
 }
 
 function HisabTab({ jobs, loading }) {
+  const { t } = useLanguage();
   const [rates, setRates] = useState({});
   const [start, setStart] = useState(new Date(Date.now() - 7*864e5).toISOString().slice(0,10));
   const [end, setEnd]     = useState(new Date().toISOString().slice(0,10));
@@ -300,22 +304,22 @@ function HisabTab({ jobs, loading }) {
     <div className="p-4 space-y-4">
       <div className="flex flex-col gap-3 mb-4">
         <div className="flex gap-2">
-          <input type="date" value={start} onChange={e=>setStart(e.target.value)} className="flex-1 border p-2 rounded-xl text-xs bg-white" title="Start Date" />
-          <input type="date" value={end} onChange={e=>setEnd(e.target.value)} className="flex-1 border p-2 rounded-xl text-xs bg-white" title="End Date" />
+          <input type="date" value={start} onChange={e=>setStart(e.target.value)} className="flex-1 border p-2 rounded-xl text-xs bg-white" title={t('common.startDate')} />
+          <input type="date" value={end} onChange={e=>setEnd(e.target.value)} className="flex-1 border p-2 rounded-xl text-xs bg-white" title={t('common.endDate')} />
         </div>
         <select 
           value={personFilter} 
           onChange={e=>setPersonFilter(e.target.value)} 
           className="w-full border p-2.5 rounded-xl text-sm bg-white"
         >
-          <option value="">All Cutting Persons</option>
+          <option value="">{t('cuttingReport.allCuttingPersons')}</option>
           {uniquePeople.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm overflow-hidden">
         <div className="grid grid-cols-[1fr_3rem_4rem_4rem] gap-2 text-[10px] uppercase font-bold text-gray-400 border-b pb-2 mb-2">
-          <span>Item</span><span className="text-right">Pcs</span><span className="text-right">Rate</span><span className="text-right">Amt</span>
+          <span>{t('common.item')}</span><span className="text-right">{t('common.pcs')}</span><span className="text-right">{t('cuttingReport.rate')}</span><span className="text-right">{t('cuttingReport.amt')}</span>
         </div>
         {filtered.map(j => (
           <div key={j.jobNo} className="grid grid-cols-[1fr_3rem_4rem_4rem] gap-2 items-center py-2 border-b border-gray-50 text-sm">
@@ -331,11 +335,11 @@ function HisabTab({ jobs, loading }) {
             <span className="text-right font-bold text-indigo-600">{(Number(j.s3DukanCutting)||0)*(Number(rates[j.jobNo])||0)}</span>
           </div>
         ))}
-        {filtered.length === 0 && <p className="text-center py-8 text-gray-400 text-sm italic">No cut records in this range</p>}
+        {filtered.length === 0 && <p className="text-center py-8 text-gray-400 text-sm italic">{t('cuttingReport.noCutRecordsRange')}</p>}
         {filtered.length > 0 && (
           <div className="mt-4 pt-4 border-t-2 flex flex-col gap-4">
             <div className="flex justify-between font-black text-indigo-700 text-base">
-              <span>Total: {total.p} pcs</span>
+              <span>{t('common.total')}: {total.p} {t('common.pcs')}</span>
               <span>Rs {total.a}</span>
             </div>
             
@@ -348,9 +352,9 @@ function HisabTab({ jobs, loading }) {
               )}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              { !personFilter ? 'Select Person to Download' : 
-                !allRatesFilled ? 'Fill All Rates to Download' : 
-                'Download Hisab PDF' }
+              { !personFilter ? t('cuttingReport.selectPersonDownload') : 
+                !allRatesFilled ? t('cuttingReport.fillAllRates') : 
+                t('cuttingReport.downloadHisabPdf') }
             </button>
           </div>
         )}
@@ -360,6 +364,7 @@ function HisabTab({ jobs, loading }) {
 }
 
 function CuttingFormSheet({ job, isOpen, onClose }) {
+  const { t } = useLanguage();
   const [sets, setSets] = useState([{ size: '', qty: '' }]);
   const [name, setName] = useState('');
   const { addToast } = useToast();
@@ -379,8 +384,8 @@ function CuttingFormSheet({ job, isOpen, onClose }) {
 
   const handleSub = async (e) => {
     e.preventDefault();
-    if (!name) return addToast('Please select cutting person', 'error');
-    if (totalPcs <= 0) return addToast('Total pieces must be greater than 0', 'error');
+    if (!name) return addToast(t('cuttingReport.pleaseSelectPerson'), 'error');
+    if (totalPcs <= 0) return addToast(t('cuttingReport.totalPcsGreaterZero'), 'error');
 
     const sizeDetails = formatSets(sets);
     try {
@@ -390,7 +395,7 @@ function CuttingFormSheet({ job, isOpen, onClose }) {
         name,
         sizeDetails,
       });
-      addToast('Cutting Logged!', 'success');
+      addToast(t('cuttingReport.cuttingLogged'), 'success');
       onClose();
     } catch (err) {
       addToast(err.message, 'error');
@@ -407,7 +412,7 @@ function CuttingFormSheet({ job, isOpen, onClose }) {
       <div className="relative bg-white w-full max-w-md rounded-t-[2.5rem] p-8 pb-12 space-y-6 animate-slideUp shadow-2xl border-t-4 border-indigo-500">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-black text-gray-900 leading-none">Log Cutting</h2>
+            <h2 className="text-2xl font-black text-gray-900 leading-none">{t('cuttingReport.logCutting')}</h2>
             <p className="text-xs text-gray-400 font-bold mt-2 uppercase tracking-widest">#{job.jobNo} | {job.item}</p>
           </div>
           <button onClick={onClose} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
@@ -418,33 +423,33 @@ function CuttingFormSheet({ job, isOpen, onClose }) {
         <form onSubmit={handleSub} className="space-y-5">
           {/* Multi-set input */}
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider ml-1">Size & Quantity Breakdown</label>
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider ml-1">{t('forms.sizeQtyDetails')}</label>
             {sets.map((set, idx) => (
               <div key={idx} className="flex gap-3 animate-slideUp" style={{ animationDelay: `${idx * 50}ms` }}>
                 <div className="flex-1">
-                  <input type="text" placeholder="Size" value={set.size} onChange={e => updateSet(idx, 'size', e.target.value)}
+                  <input type="text" placeholder={t('common.size')} value={set.size} onChange={e => updateSet(idx, 'size', e.target.value)}
                     className="w-full border-gray-200 border-2 p-3.5 rounded-2xl bg-gray-50/50 focus:bg-white focus:border-indigo-400 outline-none transition-all font-bold" />
                 </div>
                 <div className="flex-1">
-                  <input type="number" placeholder="Qty" value={set.qty} onChange={e => updateSet(idx, 'qty', e.target.value)}
+                  <input type="number" placeholder={t('common.qty')} value={set.qty} onChange={e => updateSet(idx, 'qty', e.target.value)}
                     className="w-full border-gray-200 border-2 p-3.5 rounded-2xl bg-gray-50/50 focus:bg-white focus:border-indigo-400 outline-none transition-all font-bold" />
                 </div>
               </div>
             ))}
             <div className="flex justify-between items-center px-1">
-              <p className="text-sm font-black text-indigo-600">Total: {totalPcs} pcs</p>
+              <p className="text-sm font-black text-indigo-600">{t('common.total')}: {totalPcs} {t('common.pcs')}</p>
               {sets.length < 3 && (
                 <button type="button" onClick={() => setSets([...sets, { size: '', qty: '' }])}
-                        className="text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-700">+ Add Set</button>
+                        className="text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-700">+ {t('forms.addSet')}</button>
               )}
             </div>
           </div>
 
           <div>
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5 block ml-1">Cutting Person *</label>
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5 block ml-1">{t('cuttingReport.cuttingBy')} *</label>
             <select required value={name} onChange={e=>setName(e.target.value)} 
                     className="w-full border-gray-200 border-2 p-3.5 rounded-2xl bg-gray-50/50 focus:bg-white focus:border-indigo-400 outline-none transition-all font-bold">
-              <option value="">Select Person</option>
+              <option value="">{t('forms.select')}</option>
               {STEP_PEOPLE[3].map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
@@ -452,7 +457,7 @@ function CuttingFormSheet({ job, isOpen, onClose }) {
           <div className="pt-2">
             <button disabled={submitting} 
                     className="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-[0.97] transition-all text-white p-4.5 rounded-[1.5rem] font-black shadow-xl shadow-indigo-100 disabled:opacity-50">
-              {submitting ? 'Updating Data...' : 'Confirm Cutting Entry'}
+              {submitting ? t('cuttingReport.updatingData') : t('cuttingReport.confirmCuttingEntry')}
             </button>
           </div>
         </form>
@@ -462,6 +467,7 @@ function CuttingFormSheet({ job, isOpen, onClose }) {
 }
 
 export default function CuttingReports() {
+  const { t } = useLanguage();
   // Tab persisted in Zustand (survives page navigation)
   const tab    = useUIStore((s) => s.cuttingTab);
   const setTab = useUIStore((s) => s.setCuttingTab);
@@ -477,16 +483,16 @@ export default function CuttingReports() {
       {/* Tabs bar - sticky below the Reports back-bar */}
       <div className="bg-white/95 backdrop-blur-md border-b sticky top-[101px] z-20 px-5 py-3">
         <div className="flex gap-6">
-          {['pending', 'completed', 'hisab'].map(t => (
+          {['pending', 'completed', 'hisab'].map(tabId => (
             <button 
-              key={t} 
-              onClick={() => setTab(t)} 
+              key={tabId} 
+              onClick={() => setTab(tabId)} 
               className={cls(
                 'capitalize font-black text-xs pb-1 border-b-2 transition-all tracking-wider', 
-                tab === t ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-transparent'
+                tab === tabId ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-transparent'
               )}
             >
-              {t}
+              {tabId === 'pending' ? t('cuttingReport.pending') : tabId === 'completed' ? t('cuttingReport.completed') : t('cuttingReport.hisab')}
             </button>
           ))}
         </div>

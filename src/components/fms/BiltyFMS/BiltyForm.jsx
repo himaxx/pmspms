@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import BiltyImageUploader from './BiltyImageUploader';
 import { fetchBiltyBills } from '../../../utils/biltyDb';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     dispatcherName: '',
     transport: '',
@@ -54,7 +56,7 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
       <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden anim-scaleIn">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
           <h2 className="text-xl font-black text-gray-900 tracking-tight">
-            {isNew ? 'New Parcel Dispatch' : `Update Bilty Flow`}
+            {isNew ? t('biltyFms.form.newDispatch') : t('biltyFms.form.updateFlow')}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
@@ -69,31 +71,31 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
             <div className="space-y-4">
                <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Your Name</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('biltyFms.form.yourName')}</label>
                   <input
                     required
                     type="text"
                     value={formData.dispatcherName}
                     onChange={e => setFormData({ ...formData, dispatcherName: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-sm font-medium"
-                    placeholder="e.g. Rahul Sharma"
+                    placeholder={t('biltyFms.form.yourNamePlaceholder')}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Transport Name</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('biltyFms.form.transportName')}</label>
                   <input
                     required
                     type="text"
                     value={formData.transport}
                     onChange={e => setFormData({ ...formData, transport: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-sm font-medium"
-                    placeholder="e.g. VRL Logistics"
+                    placeholder={t('biltyFms.form.transportNamePlaceholder')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Parcel Count</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('biltyFms.form.parcelCount')}</label>
                   <input
                     required
                     type="number"
@@ -104,13 +106,13 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Bearer Name</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('biltyFms.form.bearerName')}</label>
                   <input
                     type="text"
                     value={formData.parcelBearerName}
                     onChange={e => setFormData({ ...formData, parcelBearerName: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-sm font-medium"
-                    placeholder="Who is carrying it?"
+                    placeholder={t('biltyFms.form.bearerNamePlaceholder')}
                   />
                 </div>
               </div>
@@ -121,16 +123,16 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
           {!isNew && currentStep === 2 && (
             <div className="space-y-4 anim-slideUp">
                <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100">
-                 <p className="text-xs font-bold text-amber-700">Step 2: Bilty Receiving</p>
-                 <p className="text-[10px] text-amber-600/70 mt-0.5">Please confirm if the Bilty has been received from the transport.</p>
+                 <p className="text-xs font-bold text-amber-700">{t('biltyFms.form.step2Title')}</p>
+                 <p className="text-[10px] text-amber-600/70 mt-0.5">{t('biltyFms.form.step2Desc')}</p>
                </div>
                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Remark</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('biltyFms.form.remark')}</label>
                   <textarea
                     value={formData.receivingRemark}
                     onChange={e => setFormData({ ...formData, receivingRemark: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-sm font-medium min-h-[80px]"
-                    placeholder="Any comments about receiving..."
+                    placeholder={t('biltyFms.form.receivingRemarkPlaceholder')}
                   />
                 </div>
             </div>
@@ -140,23 +142,23 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
           {!isNew && currentStep === 3 && (
             <div className="space-y-4 anim-slideUp">
                <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
-                 <p className="text-xs font-bold text-blue-700">Step 3: Bilty & Bill Photo Send</p>
-                 <p className="text-[10px] text-blue-600/70 mt-0.5">Enter the Bilty number and attach the photo link.</p>
+                 <p className="text-xs font-bold text-blue-700">{t('biltyFms.form.step3Title')}</p>
+                 <p className="text-[10px] text-blue-600/70 mt-0.5">{t('biltyFms.form.step3Desc')}</p>
                </div>
                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Bilty Number</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('biltyFms.form.biltyNumber')}</label>
                   <input
                     required
                     type="text"
                     value={formData.biltyNumber}
                     onChange={e => setFormData({ ...formData, biltyNumber: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-sm font-medium"
-                    placeholder="Enter LR/Bilty No."
+                    placeholder={t('biltyFms.form.biltyNumberPlaceholder')}
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Linked Bills (Multiple)</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('biltyFms.form.linkedBills')}</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -172,7 +174,7 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
                         }
                       }}
                       className="flex-1 px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 transition-all outline-none text-sm font-medium"
-                      placeholder="Add Bill No. (Press Enter)"
+                      placeholder={t('biltyFms.form.addBillPlaceholder')}
                     />
                     <button
                       type="button"
@@ -184,7 +186,7 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
                       }}
                       className="px-4 py-3 rounded-2xl bg-gray-900 text-white text-xs font-bold"
                     >
-                      Add
+                      {t('biltyFms.form.add')}
                     </button>
                   </div>
                   
@@ -213,12 +215,12 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
                   onUploadComplete={(url) => setFormData({ ...formData, photoUrl: url })}
                 />
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Remark</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('biltyFms.form.remark')}</label>
                   <textarea
                     value={formData.photoSendRemark}
                     onChange={e => setFormData({ ...formData, photoSendRemark: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-sm font-medium min-h-[80px]"
-                    placeholder="Any comments..."
+                    placeholder={t('biltyFms.form.photoRemarkPlaceholder')}
                   />
                 </div>
             </div>
@@ -228,16 +230,16 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
           {!isNew && currentStep === 4 && (
             <div className="space-y-4 anim-slideUp">
                <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100">
-                 <p className="text-xs font-bold text-emerald-700">Step 4: Bilty Delivered to Agent</p>
-                 <p className="text-[10px] text-emerald-600/70 mt-0.5">Final step: confirm delivery to the agent.</p>
+                 <p className="text-xs font-bold text-emerald-700">{t('biltyFms.form.step4Title')}</p>
+                 <p className="text-[10px] text-emerald-600/70 mt-0.5">{t('biltyFms.form.step4Desc')}</p>
                </div>
                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Remark</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('biltyFms.form.remark')}</label>
                   <textarea
                     value={formData.deliveryRemark}
                     onChange={e => setFormData({ ...formData, deliveryRemark: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-sm font-medium min-h-[80px]"
-                    placeholder="Delivery notes..."
+                    placeholder={t('biltyFms.form.deliveryRemarkPlaceholder')}
                   />
                 </div>
             </div>
@@ -250,14 +252,14 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
             onClick={onClose}
             className="px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
             className="px-8 py-2.5 rounded-2xl bg-gray-900 text-white text-sm font-bold shadow-lg shadow-gray-900/10 hover:shadow-gray-900/20 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Saving...' : (isNew ? 'Create Dispatch' : 'Complete Step')}
+            {isSubmitting ? t('biltyFms.form.saving') : (isNew ? t('biltyFms.form.createDispatch') : t('biltyFms.form.completeStep'))}
           </button>
         </div>
       </div>

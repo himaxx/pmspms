@@ -6,6 +6,7 @@ import usePullToRefresh from '../hooks/usePullToRefresh';
 import { getPendingStep as detectStep, isJobDelayed as isDelayed, getDaysInStep } from '../utils/jobLogic';
 import { useJobs } from '../hooks/useJobs';
 import useUIStore from '../store/useUIStore';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -32,16 +33,10 @@ function cls(...p) { return p.filter(Boolean).join(' '); }
 const CATEGORIES = ['All', ...ITEM_GROUPS];
 
 // ─── Pipeline Definitions (NO S1/S2 NOTATION) ──────────────────────────────────
-const PIPELINE_STAGES = {
-  2: { id: 2, name: 'Awaiting Production Approval', short: 'Needs Approval', icon: '📝', color: 'text-amber-700 bg-amber-50 ring-amber-200 border-amber-100', bg: 'bg-amber-500' },
-  3: { id: 3, name: 'Fabric Ready (Awaiting Cut)',  short: 'Needs Cutting',  icon: '🧵', color: 'text-blue-700 bg-blue-50 ring-blue-200 border-blue-100', bg: 'bg-blue-500' },
-  4: { id: 4, name: 'Inhouse Cut (Wait For Naame)', short: 'Needs Naame',    icon: '📦', color: 'text-purple-700 bg-purple-50 ring-purple-200 border-purple-100', bg: 'bg-purple-500' },
-  5: { id: 5, name: 'In Production (Working)',      short: 'In Prod',        icon: '🏭', color: 'text-indigo-700 bg-indigo-50 ring-indigo-200 border-indigo-100', bg: 'bg-indigo-500' },
-  6: { id: 6, name: 'Jama Complete (Unsettled)',    short: 'Needs Settle',   icon: '✅', color: 'text-teal-700 bg-teal-50 ring-teal-200 border-teal-100', bg: 'bg-teal-500' }
-};
 
 // ─── Stage Group Card ─────────────────────────────────────────────────────────
 function StageGroupCard({ stage, jobs, onClick }) {
+   const { t } = useLanguage();
    const count = jobs.length;
    const lateCount = jobs.filter(j => isDelayed(j)).length;
 
@@ -63,16 +58,16 @@ function StageGroupCard({ stage, jobs, onClick }) {
             <h3 className="text-[17px] font-black text-gray-900 leading-tight tracking-tight">{stage.name}</h3>
             {count > 0 ? (
                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                 <span className="text-xs font-bold text-gray-500">{count} Active</span>
+                 <span className="text-xs font-bold text-gray-500">{count} {t('productionReport.active')}</span>
                  {lateCount > 0 && (
                    <span className="flex items-center gap-1.5 text-[10px] font-black text-white bg-red-500 px-2.5 py-0.5 rounded-full shadow-sm ring-2 ring-red-50">
                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"/>
-                     {lateCount} Late
+                     {lateCount} {t('productionReport.late')}
                    </span>
                  )}
                </div>
             ) : (
-               <span className="text-[11px] font-bold text-gray-400 mt-1 block tracking-wide uppercase">Empty Stage</span>
+               <span className="text-[11px] font-bold text-gray-400 mt-1 block tracking-wide uppercase">{t('productionReport.emptyStage')}</span>
             )}
          </div>
        </div>
@@ -90,6 +85,7 @@ function StageGroupCard({ stage, jobs, onClick }) {
 
 // ─── Generic Detail Bottom Sheet ────────────────────────────────────────────────
 function DetailSheet({ detail, jobs, onClose }) {
+  const { t } = useLanguage();
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
@@ -126,7 +122,7 @@ function DetailSheet({ detail, jobs, onClose }) {
                </div>
                <div>
                   <h2 className="text-[17px] font-black text-gray-900 leading-tight pr-4">{detail.name}</h2>
-                  <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">{jobs.length} Active Jobs</p>
+                  <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">{jobs.length} {t('productionReport.activeJobs')}</p>
                </div>
             </div>
             <button onClick={onClose} aria-label="Close"
@@ -148,12 +144,23 @@ function DetailSheet({ detail, jobs, onClose }) {
          </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Unified Detailed Pipeline Card ───────────────────────────────────────────
 function PipelineCard({ job }) {
+  const { t } = useLanguage();
   const step = detectStep(job);
+  
+  // Dynamic Pipeline Stages with translations
+  const PIPELINE_STAGES = {
+    2: { id: 2, name: t('productionReport.stages.2.name'), short: t('productionReport.stages.2.short'), icon: '📝', color: 'text-amber-700 bg-amber-50 ring-amber-200 border-amber-100', bg: 'bg-amber-500' },
+    3: { id: 3, name: t('productionReport.stages.3.name'), short: t('productionReport.stages.3.short'),  icon: '🧵', color: 'text-blue-700 bg-blue-50 ring-blue-200 border-blue-100', bg: 'bg-blue-500' },
+    4: { id: 4, name: t('productionReport.stages.4.name'), short: t('productionReport.stages.4.short'), icon: '📦', color: 'text-purple-700 bg-purple-50 ring-purple-200 border-purple-100', bg: 'bg-purple-500' },
+    5: { id: 5, name: t('productionReport.stages.5.name'), short: t('productionReport.stages.5.short'), icon: '🏭', color: 'text-indigo-700 bg-indigo-50 ring-indigo-200 border-indigo-100', bg: 'bg-indigo-500' },
+    6: { id: 6, name: t('productionReport.stages.6.name'), short: t('productionReport.stages.6.short'), icon: '✅', color: 'text-teal-700 bg-teal-50 ring-teal-200 border-teal-100', bg: 'bg-teal-500' }
+  };
+
   const stage = PIPELINE_STAGES[step];
   if (!stage) return null;
 
@@ -181,7 +188,7 @@ function PipelineCard({ job }) {
             <div className="flex items-center gap-1.5 mb-1.5">
                <span className="text-[10px] font-black tracking-widest text-indigo-500 uppercase">#{job.jobNo}</span>
                <span className="text-gray-300">•</span>
-               <span className="text-[10px] font-bold text-gray-400">{fmtDate(job.date)} <span className="font-medium opacity-60">Started</span></span>
+               <span className="text-[10px] font-bold text-gray-400">{fmtDate(job.date)} <span className="font-medium opacity-60">{t('productionReport.started')}</span></span>
             </div>
             <h3 className="text-base font-extrabold text-gray-900 leading-tight block pr-2">{job.item || '—'}</h3>
           </div>
@@ -198,7 +205,7 @@ function PipelineCard({ job }) {
        {/* Tags */}
        <div className="flex flex-wrap gap-2 mb-4">
           {job.size && <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-xl text-[10px] font-black">{job.size}</span>}
-          {job.qty  && <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-xl text-[10px] font-black">{job.qty} pcs</span>}
+          {job.qty  && <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-xl text-[10px] font-black">{job.qty} {t('common.pcs')}</span>}
           {job.itemGroup && <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider">{job.itemGroup}</span>}
        </div>
 
@@ -212,23 +219,23 @@ function PipelineCard({ job }) {
        {/* Dynamic Status Footer */}
        <div className="bg-gray-50 rounded-2xl p-3.5 flex justify-between items-center border border-gray-100/80">
            <div className="flex flex-col flex-1 min-w-0 pr-3">
-              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Assigned / Info</span>
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">{t('productionReport.assignedInfo')}</span>
               <span className="text-[11px] font-bold text-gray-800 flex items-center gap-1.5 truncate">
                  {step >= 4 && job.s4Thekedar ? (
                      <span className="text-indigo-600 font-extrabold flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded-md"><span className="text-[10px]">👷</span> {job.s4Thekedar}</span>
                  ) : (
-                     <span className="text-gray-500 italic">No direct owner</span>
+                     <span className="text-gray-500 italic">{t('productionReport.noDirectOwner')}</span>
                  )}
               </span>
            </div>
            
            <div className="flex flex-col items-end shrink-0 pl-4 border-l-2 border-gray-200">
-              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Time Elapsed</span>
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">{t('productionReport.timeElapsed')}</span>
               <span className={cls(
                  'text-[14px] font-black tracking-tight',
                  isLate ? 'text-red-500' : 'text-gray-700'
               )}>
-                 {delayDays !== null ? (isLate ? `⚠️ ${delayDays}d LATE` : `${delayDays} Days`) : '—'}
+                 {delayDays !== null ? (isLate ? `⚠️ ${delayDays}d ${t('productionReport.lateWarn')}` : `${delayDays} ${t('productionReport.days')}`) : '—'}
               </span>
            </div>
        </div>
@@ -252,7 +259,17 @@ function PullIndicator({ progress, isRefreshing }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ProductionReport() {
+  const { t } = useLanguage();
   const { data: jobs = [], isLoading: loading, refetch } = useJobs();
+
+  // Dynamic Pipeline Stages with translations
+  const PIPELINE_STAGES = {
+    2: { id: 2, name: t('productionReport.stages.2.name'), short: t('productionReport.stages.2.short'), icon: '📝', color: 'text-amber-700 bg-amber-50 ring-amber-200 border-amber-100', bg: 'bg-amber-500' },
+    3: { id: 3, name: t('productionReport.stages.3.name'), short: t('productionReport.stages.3.short'),  icon: '🧵', color: 'text-blue-700 bg-blue-50 ring-blue-200 border-blue-100', bg: 'bg-blue-500' },
+    4: { id: 4, name: t('productionReport.stages.4.name'), short: t('productionReport.stages.4.short'), icon: '📦', color: 'text-purple-700 bg-purple-50 ring-purple-200 border-purple-100', bg: 'bg-purple-500' },
+    5: { id: 5, name: t('productionReport.stages.5.name'), short: t('productionReport.stages.5.short'), icon: '🏭', color: 'text-indigo-700 bg-indigo-50 ring-indigo-200 border-indigo-100', bg: 'bg-indigo-500' },
+    6: { id: 6, name: t('productionReport.stages.6.name'), short: t('productionReport.stages.6.short'), icon: '✅', color: 'text-teal-700 bg-teal-50 ring-teal-200 border-teal-100', bg: 'bg-teal-500' }
+  };
 
   // UI state persisted in Zustand
   const category        = useUIStore((s) => s.productionCategory);
@@ -291,7 +308,7 @@ export default function ProductionReport() {
                     ? 'bg-gray-900 border-gray-900 text-white shadow-md'
                     : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 btn-press'
                 )}>
-                {cat}
+                {cat === 'All' ? t('common.all') : cat}
               </button>
             ))}
           </div>
@@ -302,11 +319,11 @@ export default function ProductionReport() {
           <div className="flex bg-gray-200/60 rounded-xl p-1 shadow-inner">
              <button onClick={() => setViewMode('stage')}
                className={cls("flex-1 py-2 text-xs font-bold rounded-lg transition-all", viewMode === 'stage' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700 bg-transparent')}>
-               Pipeline By Stage
+               {t('productionReport.viewStage')}
              </button>
              <button onClick={() => setViewMode('thekedar')}
                className={cls("flex-1 py-2 text-xs font-bold rounded-lg transition-all", viewMode === 'thekedar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700 bg-transparent')}>
-               Thekedar Insights
+               {t('productionReport.viewThekedar')}
              </button>
           </div>
         </div>
@@ -322,7 +339,7 @@ export default function ProductionReport() {
               </div>
               <input
                 type="search"
-                placeholder="Search Thekedar by name..."
+                placeholder={t('productionReport.searchThekedar')}
                 value={searchThekedar}
                 onChange={(e) => setSearchThekedar(e.target.value)}
                 className="w-full bg-white border border-gray-200 text-gray-900 text-[13px] font-semibold rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all shadow-sm"
@@ -382,7 +399,7 @@ export default function ProductionReport() {
                    return (
                      <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 shadow-sm">
                        <p className="text-gray-400 font-bold text-sm tracking-wide">
-                         {searchThekedar.trim() ? 'No Thekedars found matching search.' : 'No active jobs assigned to Thekedars.'}
+                         {searchThekedar.trim() ? t('productionReport.noThekedarsFound') : t('productionReport.noActiveJobsAssigned')}
                        </p>
                      </div>
                    );

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import BiltyFMSPage    from './fms/BiltyFMSPage';
 import PurchaseFMSPage from './fms/PurchaseFMSPage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 /* ─── FMS Icons ─────────────────────────────────────────────────────────── */
 const BiltyIcon = () => (
@@ -22,32 +23,33 @@ const BoxIcon = () => (
   </svg>
 );
 
-const FMS_TABS = [
-  { 
-    id: 'bilty', 
-    label: 'Bilty FMS', 
-    Icon: BiltyIcon, 
-    desc: 'Manage transit documents and logistics tracking',
-    color: 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100/50'
-  },
-  { 
-    id: 'purchase', 
-    label: 'Purchase FMS', 
-    Icon: PurchaseIcon, 
-    desc: 'Streamline procurement and vendor management',
-    color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/50'
-  },
-  { 
-    id: 'order2delivery', 
-    label: 'Order 2 Delivery FMS', 
-    Icon: BoxIcon, 
-    desc: 'End-to-end order tracking from placement to door',
-    color: 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100/50'
-  },
-];
-
 export default function FMS() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState(null);
+
+  const FMS_TABS = [
+    { 
+      id: 'bilty', 
+      label: t('reports.biltyFms'), 
+      Icon: BiltyIcon, 
+      desc: t('reports.biltyFmsDesc'),
+      color: 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100/50'
+    },
+    { 
+      id: 'purchase', 
+      label: t('reports.purchaseFms'), 
+      Icon: PurchaseIcon, 
+      desc: t('reports.purchaseFmsDesc'),
+      color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/50'
+    },
+    { 
+      id: 'order2delivery', 
+      label: t('reports.orderToDelivery'), 
+      Icon: BoxIcon, 
+      desc: t('reports.order2DeliveryDesc'),
+      color: 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100/50'
+    },
+  ];
 
   if (activeTab) {
     return (
@@ -64,7 +66,7 @@ export default function FMS() {
                     d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
                     clipRule="evenodd" />
             </svg>
-            FMS
+            {t('nav.fms')}
           </button>
           <span className="text-gray-300 text-xs">/</span>
           <span className="text-xs font-bold text-gray-800 tracking-tight">
@@ -81,14 +83,14 @@ export default function FMS() {
                     <BoxIcon />
                   </div>
                   <h2 className="text-2xl font-black text-gray-900 tracking-tight anim-slideUp" style={{ animationDelay: '100ms' }}>
-                    Order 2 Delivery FMS
+                    {t('reports.orderToDelivery')}
                   </h2>
                   <p className="text-gray-400 mt-2 max-w-xs mx-auto anim-slideUp" style={{ animationDelay: '200ms' }}>
-                    This module is currently being configured for your workflow.
+                    {t('reports.beingConfigured')}
                   </p>
                   <div className="mt-8 anim-slideUp" style={{ animationDelay: '300ms' }}>
                     <span className="px-4 py-2 rounded-full bg-amber-50 text-amber-600 text-xs font-bold tracking-wider uppercase border border-amber-100">
-                      Coming Soon
+                      {t('reports.comingSoon')}
                     </span>
                   </div>
                 </div>
@@ -102,8 +104,8 @@ export default function FMS() {
   return (
     <div className="flex flex-col min-h-[calc(100vh-136px)] p-6 bg-gray-50/30">
       <div className="mb-8 anim-slideUp">
-        <h1 className="text-2xl font-black text-gray-900 tracking-tight">FMS</h1>
-        <p className="text-sm text-gray-400 mt-1">Flow Management System</p>
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight">{t('nav.fms')}</h1>
+        <p className="text-sm text-gray-400 mt-1">{t('reports.fmsSubtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 max-w-2xl">

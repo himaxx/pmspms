@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../../i18n/LanguageContext';
 import BiltyStats from '../../components/fms/BiltyFMS/BiltyStats';
 import BiltyList from '../../components/fms/BiltyFMS/BiltyList';
 import BiltyForm from '../../components/fms/BiltyFMS/BiltyForm';
@@ -11,6 +12,7 @@ import {
 } from '../../hooks/useBiltyFMS';
 
 export default function BiltyFMSPage() {
+  const { t } = useLanguage();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -54,7 +56,7 @@ export default function BiltyFMSPage() {
       handleCloseForm();
     } catch (err) {
       console.error('Bilty form submission error:', err);
-      alert('Failed to save. Please try again.');
+      alert(t('biltyFms.failedToSave'));
     }
   };
 
@@ -69,8 +71,8 @@ export default function BiltyFMSPage() {
   if (isError) {
     return (
       <div className="p-8 text-center bg-red-50 rounded-3xl border border-red-100">
-        <p className="text-red-600 font-bold">Error loading Bilty data.</p>
-        <button onClick={() => window.location.reload()} className="mt-4 text-sm text-red-500 underline">Try refreshing</button>
+        <p className="text-red-600 font-bold">{t('biltyFms.errorLoading')}</p>
+        <button onClick={() => window.location.reload()} className="mt-4 text-sm text-red-500 underline">{t('biltyFms.tryRefreshing')}</button>
       </div>
     );
   }
@@ -80,8 +82,8 @@ export default function BiltyFMSPage() {
       {/* Header Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-gray-900 tracking-tight">Logistics Overview</h2>
-          <p className="text-xs text-gray-400 mt-1">Track your parcels and bilty documentation in real-time.</p>
+          <h2 className="text-xl font-black text-gray-900 tracking-tight">{t('biltyFms.title')}</h2>
+          <p className="text-xs text-gray-400 mt-1">{t('biltyFms.subtitle')}</p>
         </div>
         <button
           onClick={() => handleOpenForm()}
@@ -90,7 +92,7 @@ export default function BiltyFMSPage() {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
           </svg>
-          New Dispatch
+          {t('biltyFms.newDispatch')}
         </button>
       </div>
 

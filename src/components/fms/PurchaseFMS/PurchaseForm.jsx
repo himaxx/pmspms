@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { getPurchaseStage } from '../../../utils/purchaseDb';
 import ImagePickerCrop from './ImagePickerCrop';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
-function fmtDate(v) {
+function fmtDate(v, language) {
   if (!v) return '—';
-  return new Date(v).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' });
+  const locale = language === 'hi' ? 'hi-IN' : 'en-IN';
+  return new Date(v).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: '2-digit' });
 }
-function fmtDelay(hours) {
+function fmtDelay(hours, t) {
   if (!hours || hours <= 0) return null;
   const days = (hours / 9).toFixed(1);
-  return `${days} day(s) late`;
+  return `${days} ${t('purchaseFms.form.late')}`;
 }
 
 /* ─── Shared UI Atoms ─────────────────────────────────────────────────────── */
@@ -54,7 +56,7 @@ const Textarea = (props) => (
 );
 
 /* ─── History Card — completed stage summary ──────────────────────────────── */
-function CompletedStageCard({ stepNum, title, color, children }) {
+function CompletedStageCard({ stepNum, title, color, children, t }) {
   return (
     <div className={`rounded-2xl border p-3.5 ${color}`}>
       <div className="flex items-center gap-2 mb-2">
@@ -62,7 +64,7 @@ function CompletedStageCard({ stepNum, title, color, children }) {
           {stepNum}
         </span>
         <span className="text-xs font-bold text-gray-700">{title}</span>
-        <span className="ml-auto text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Done ✓</span>
+        <span className="ml-auto text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">{t('purchaseFms.form.done')}</span>
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-gray-600">
         {children}
@@ -81,20 +83,20 @@ function InfoRow({ label, value }) {
 }
 
 /* ─── Step Forms ──────────────────────────────────────────────────────────── */
-function Step1Form({ form, setForm }) {
+function Step1Form({ form, setForm, t }) {
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
-          <Label required>Fabric Name</Label>
+          <Label required>{t('purchaseFms.form.fabricName')}</Label>
           <Input
-            placeholder="e.g. लाईकरा, रिप चेकस..."
+            placeholder={t('purchaseFms.form.fabricNamePlaceholder')}
             value={form.fabricName}
             onChange={e => setForm(f => ({ ...f, fabricName: e.target.value }))}
           />
         </div>
         <div>
-          <Label>Fabric Quantity</Label>
+          <Label>{t('purchaseFms.form.fabricQuantity')}</Label>
           <Input
             type="number"
             placeholder="0"
@@ -103,21 +105,21 @@ function Step1Form({ form, setForm }) {
           />
         </div>
         <div>
-          <Label>Unit</Label>
+          <Label>{t('purchaseFms.form.unit')}</Label>
           <Select
             value={form.unit}
             onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
           >
-            <option value="">Select unit</option>
-            <option value="Meter">Meter</option>
-            <option value="Kilo">Kilo</option>
-            <option value="Piece">Piece</option>
+            <option value="">{t('purchaseFms.form.selectUnit')}</option>
+            <option value="Meter">{t('purchaseFms.form.meter')}</option>
+            <option value="Kilo">{t('purchaseFms.form.kilo')}</option>
+            <option value="Piece">{t('purchaseFms.form.piece')}</option>
           </Select>
         </div>
         <div className="col-span-2">
-          <Label required>Required Item</Label>
+          <Label required>{t('purchaseFms.form.requiredItem')}</Label>
           <Input
-            placeholder="What is needed?"
+            placeholder={t('purchaseFms.form.requiredItemPlaceholder')}
             value={form.requiredItem}
             onChange={e => setForm(f => ({ ...f, requiredItem: e.target.value }))}
           />
@@ -125,7 +127,7 @@ function Step1Form({ form, setForm }) {
 
         {/* ── Fabric Photo (upload + camera + crop) ── */}
         <div className="col-span-2">
-          <Label>Fabric Photo</Label>
+          <Label>{t('purchaseFms.form.fabricPhoto')}</Label>
           <ImagePickerCrop
             previewUrl={null}
             file={form.fabricPhotoFile}
@@ -144,49 +146,49 @@ function Step1Form({ form, setForm }) {
   );
 }
 
-function Step2Form({ form, setForm, item }) {
+function Step2Form({ form, setForm, item, t, language }) {
   return (
     <div className="space-y-3">
       {/* Planned info */}
       <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl">
         <span className="text-amber-500 text-sm">📅</span>
         <span className="text-xs text-amber-700">
-          <span className="font-bold">Planned By:</span> {fmtDate(item?.s2PlannedAt)}
+          <span className="font-bold">{t('purchaseFms.form.plannedBy')}:</span> {fmtDate(item?.s2PlannedAt, language)}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label required>Order Status</Label>
+          <Label required>{t('purchaseFms.form.orderStatus')}</Label>
           <Select
             value={form.orderStatus}
             onChange={e => setForm(f => ({ ...f, orderStatus: e.target.value }))}
           >
-            <option value="">Select</option>
-            <option value="Yes">Yes — Ordered</option>
-            <option value="No">No — Not Ordered</option>
-            <option value="Partial">Partial</option>
+            <option value="">{t('purchaseFms.form.select')}</option>
+            <option value="Yes">{t('purchaseFms.form.yesOrdered')}</option>
+            <option value="No">{t('purchaseFms.form.noNotOrdered')}</option>
+            <option value="Partial">{t('purchaseFms.form.partial')}</option>
           </Select>
         </div>
         <div>
-          <Label required>Lead Time (days)</Label>
+          <Label required>{t('purchaseFms.form.leadTime')}</Label>
           <Input
             type="number"
-            placeholder="e.g. 7"
+            placeholder={t('purchaseFms.form.leadTimePlaceholder')}
             value={form.leadTimeDays}
             onChange={e => setForm(f => ({ ...f, leadTimeDays: e.target.value }))}
           />
         </div>
         <div>
-          <Label>Agent Name</Label>
+          <Label>{t('purchaseFms.form.agentName')}</Label>
           <Input
-            placeholder="Agent / Vendor"
+            placeholder={t('purchaseFms.form.agentNamePlaceholder')}
             value={form.agentName}
             onChange={e => setForm(f => ({ ...f, agentName: e.target.value }))}
           />
         </div>
         <div>
-          <Label>Rate (₹)</Label>
+          <Label>{t('purchaseFms.form.rate')}</Label>
           <Input
             type="number"
             placeholder="0.00"
@@ -195,7 +197,7 @@ function Step2Form({ form, setForm, item }) {
           />
         </div>
         <div>
-          <Label>Discount %</Label>
+          <Label>{t('purchaseFms.form.discount')}</Label>
           <Input
             type="number"
             placeholder="0"
@@ -204,9 +206,9 @@ function Step2Form({ form, setForm, item }) {
           />
         </div>
         <div className="col-span-2">
-          <Label>Remark</Label>
+          <Label>{t('purchaseFms.form.remark')}</Label>
           <Textarea
-            placeholder="Any notes..."
+            placeholder={t('purchaseFms.form.remarkPlaceholder')}
             value={form.remark}
             onChange={e => setForm(f => ({ ...f, remark: e.target.value }))}
           />
@@ -216,34 +218,34 @@ function Step2Form({ form, setForm, item }) {
   );
 }
 
-function Step3Form({ form, setForm, item }) {
+function Step3Form({ form, setForm, item, t, language }) {
   return (
     <div className="space-y-3">
       {/* Planned info from lead time */}
       <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl">
         <span className="text-blue-500 text-sm">📅</span>
         <span className="text-xs text-blue-700">
-          <span className="font-bold">Expected Arrival:</span> {fmtDate(item?.s3PlannedAt)}
-          {item?.leadTimeDays && <span className="ml-1 text-blue-500">(Lead: {item.leadTimeDays}d)</span>}
+          <span className="font-bold">{t('purchaseFms.form.expectedArrival')}:</span> {fmtDate(item?.s3PlannedAt, language)}
+          {item?.leadTimeDays && <span className="ml-1 text-blue-500">({t('purchaseFms.form.leadTime')}: {item.leadTimeDays}d)</span>}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label required>GI Status</Label>
+          <Label required>{t('purchaseFms.form.giStatus')}</Label>
           <Select
             value={form.giStatus}
             onChange={e => setForm(f => ({ ...f, giStatus: e.target.value }))}
           >
-            <option value="">Select</option>
-            <option value="Received">Received</option>
-            <option value="Partial">Partial Receipt</option>
-            <option value="Pending">Still Pending</option>
-            <option value="Rejected">Rejected</option>
+            <option value="">{t('purchaseFms.form.select')}</option>
+            <option value="Received">{t('purchaseFms.form.received')}</option>
+            <option value="Partial">{t('purchaseFms.form.partialReceipt')}</option>
+            <option value="Pending">{t('purchaseFms.form.stillPending')}</option>
+            <option value="Rejected">{t('purchaseFms.form.rejected')}</option>
           </Select>
         </div>
         <div>
-          <Label>Received Quantity</Label>
+          <Label>{t('purchaseFms.form.receivedQuantity')}</Label>
           <Input
             type="number"
             placeholder="0"
@@ -252,7 +254,7 @@ function Step3Form({ form, setForm, item }) {
           />
         </div>
         <div className="col-span-2">
-          <Label>Maal Aa Gaya?</Label>
+          <Label>{t('purchaseFms.form.maalAaGaya')}</Label>
           <div className="flex gap-3 mt-1">
             {[true, false].map(val => (
               <button
@@ -264,15 +266,15 @@ function Step3Form({ form, setForm, item }) {
                               ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
                               : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'}`}
               >
-                {val ? '✅ हाँ (Yes)' : '❌ नहीं (No)'}
+                {val ? t('purchaseFms.form.yes') : t('purchaseFms.form.no')}
               </button>
             ))}
           </div>
         </div>
         <div className="col-span-2">
-          <Label>GI Remark</Label>
+          <Label>{t('purchaseFms.form.remark')}</Label>
           <Textarea
-            placeholder="Condition, quality notes..."
+            placeholder={t('purchaseFms.form.giRemarkPlaceholder')}
             value={form.giRemark}
             onChange={e => setForm(f => ({ ...f, giRemark: e.target.value }))}
           />
@@ -282,30 +284,30 @@ function Step3Form({ form, setForm, item }) {
   );
 }
 
-function Step4Form({ form, setForm, item }) {
+function Step4Form({ form, setForm, item, t, language }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 px-3 py-2 bg-violet-50 border border-violet-100 rounded-xl">
         <span className="text-violet-500 text-sm">📅</span>
         <span className="text-xs text-violet-700">
-          <span className="font-bold">Follow-Up Planned:</span> {fmtDate(item?.s4PlannedAt)}
+          <span className="font-bold">{t('purchaseFms.form.followUpPlanned')}:</span> {fmtDate(item?.s4PlannedAt, language)}
         </span>
       </div>
 
       <div>
-        <Label required>Order Follow-Up Status</Label>
+        <Label required>{t('purchaseFms.form.followUpStatus')}</Label>
         <Select
           value={form.followUpStatus}
           onChange={e => setForm(f => ({ ...f, followUpStatus: e.target.value }))}
         >
-          <option value="">Select</option>
-          <option value="Done">Done — Closed</option>
-          <option value="Pending">Pending</option>
-          <option value="Issue Raised">Issue Raised</option>
+          <option value="">{t('purchaseFms.form.select')}</option>
+          <option value="Done">{t('purchaseFms.form.doneClosed')}</option>
+          <option value="Pending">{t('purchaseFms.list.pending')}</option>
+          <option value="Issue Raised">{t('purchaseFms.form.issueRaised')}</option>
         </Select>
       </div>
       <p className="text-xs text-gray-400 mt-1">
-        Mark this follow-up to close the procurement cycle for this requirement.
+        {t('purchaseFms.form.followUpDesc')}
       </p>
     </div>
   );
@@ -313,6 +315,7 @@ function Step4Form({ form, setForm, item }) {
 
 /* ─── Main PurchaseForm Modal ─────────────────────────────────────────────── */
 export default function PurchaseForm({ item, onClose, onSubmit, isSubmitting }) {
+  const { t, language } = useLanguage();
   const stage = item ? getPurchaseStage(item) : 1;
 
   // Determine which step form to show
@@ -343,20 +346,20 @@ export default function PurchaseForm({ item, onClose, onSubmit, isSubmitting }) 
   });
 
   const STEP_CONFIG = [
-    { num: 1, label: 'Requirement',    color: 'bg-gray-50 border-gray-200',     icon: '📋' },
-    { num: 2, label: 'Order Done',     color: 'bg-amber-50 border-amber-200',   icon: '🛒' },
-    { num: 3, label: 'Goods Inward',   color: 'bg-blue-50 border-blue-200',     icon: '📦' },
-    { num: 4, label: 'Party Follow-Up',color: 'bg-violet-50 border-violet-200', icon: '📞' },
+    { num: 1, labelKey: 'purchaseFms.stages.requirement',    color: 'bg-gray-50 border-gray-200',     icon: '📋' },
+    { num: 2, labelKey: 'purchaseFms.stages.orderDone',     color: 'bg-amber-50 border-amber-200',   icon: '🛒' },
+    { num: 3, labelKey: 'purchaseFms.stages.goodsInward',   color: 'bg-blue-50 border-blue-200',     icon: '📦' },
+    { num: 4, labelKey: 'purchaseFms.stages.followUp',color: 'bg-violet-50 border-violet-200', icon: '📞' },
   ];
 
   const isNew = !item;
   const isComplete = stage === 5;
 
   const modalTitle = isNew
-    ? 'New Requirement'
+    ? t('purchaseFms.form.newRequirement')
     : isComplete
-    ? `Req #${item.requirementNumber} — Complete`
-    : `Req #${item?.requirementNumber} — ${STEP_CONFIG.find(s => s.num === activeStep)?.label}`;
+    ? `Req #${item.requirementNumber} — ${t('purchaseFms.form.complete')}`
+    : `Req #${item?.requirementNumber} — ${t(STEP_CONFIG.find(s => s.num === activeStep)?.labelKey)}`;
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -438,45 +441,45 @@ export default function PurchaseForm({ item, onClose, onSubmit, isSubmitting }) 
 
             {/* ── Completed steps history (when viewing existing item) ── */}
             {item && stage >= 3 && (
-              <CompletedStageCard stepNum={2} title="Order Done" color="bg-emerald-50 border-emerald-100">
-                <InfoRow label="Status"  value={item.orderStatus} />
-                <InfoRow label="Agent"   value={item.agentName} />
-                <InfoRow label="Rate"    value={item.rate ? `₹${item.rate}` : null} />
-                <InfoRow label="Lead"    value={item.leadTimeDays ? `${item.leadTimeDays} days` : null} />
-                <InfoRow label="Done on" value={fmtDate(item.s2ActualAt)} />
+              <CompletedStageCard stepNum={2} title={t('purchaseFms.stages.orderDone')} color="bg-emerald-50 border-emerald-100" t={t}>
+                <InfoRow label={t('purchaseFms.form.status')}  value={item.orderStatus} />
+                <InfoRow label={t('purchaseFms.form.agent')}   value={item.agentName} />
+                <InfoRow label={t('purchaseFms.form.rate')}    value={item.rate ? `₹${item.rate}` : null} />
+                <InfoRow label={t('purchaseFms.form.leadTime')}    value={item.leadTimeDays ? `${item.leadTimeDays} days` : null} />
+                <InfoRow label={t('purchaseFms.form.doneOn')} value={fmtDate(item.s2ActualAt, language)} />
                 {item.s2DelayHours > 0 && (
-                  <><span className="text-red-400">Delay:</span><span className="text-red-600 font-medium">{fmtDelay(item.s2DelayHours)}</span></>
+                  <><span className="text-red-400">{t('purchaseFms.form.delay')}:</span><span className="text-red-600 font-medium">{fmtDelay(item.s2DelayHours, t)}</span></>
                 )}
               </CompletedStageCard>
             )}
             {item && stage >= 4 && (
-              <CompletedStageCard stepNum={3} title="Goods Inward" color="bg-blue-50 border-blue-100">
-                <InfoRow label="Status"   value={item.giStatus} />
-                <InfoRow label="Qty"      value={item.giQuantity ? `${item.giQuantity} ${item.unit || ''}` : null} />
-                <InfoRow label="Maal"     value={item.maalAaGaya ? 'हाँ ✅' : 'नहीं ❌'} />
-                <InfoRow label="Done on"  value={fmtDate(item.s3ActualAt)} />
+              <CompletedStageCard stepNum={3} title={t('purchaseFms.stages.goodsInward')} color="bg-blue-50 border-blue-100" t={t}>
+                <InfoRow label={t('purchaseFms.form.status')}   value={item.giStatus} />
+                <InfoRow label={t('purchaseFms.list.quantity')}      value={item.giQuantity ? `${item.giQuantity} ${item.unit || ''}` : null} />
+                <InfoRow label={t('purchaseFms.form.maalAaGaya')}     value={item.maalAaGaya ? t('purchaseFms.form.yes') : t('purchaseFms.form.no')} />
+                <InfoRow label={t('purchaseFms.form.doneOn')}  value={fmtDate(item.s3ActualAt, language)} />
                 {item.s3DelayHours > 0 && (
-                  <><span className="text-red-400">Delay:</span><span className="text-red-600 font-medium">{fmtDelay(item.s3DelayHours)}</span></>
+                  <><span className="text-red-400">{t('purchaseFms.form.delay')}:</span><span className="text-red-600 font-medium">{fmtDelay(item.s3DelayHours, t)}</span></>
                 )}
               </CompletedStageCard>
             )}
 
             {/* ── Active / Completed Stage Form ── */}
-            {isNew && <Step1Form form={form} setForm={setForm} />}
-            {!isNew && activeStep === 2 && <Step2Form form={form} setForm={setForm} item={item} />}
-            {!isNew && activeStep === 3 && <Step3Form form={form} setForm={setForm} item={item} />}
-            {!isNew && activeStep === 4 && <Step4Form form={form} setForm={setForm} item={item} />}
+            {isNew && <Step1Form form={form} setForm={setForm} t={t} />}
+            {!isNew && activeStep === 2 && <Step2Form form={form} setForm={setForm} item={item} t={t} language={language} />}
+            {!isNew && activeStep === 3 && <Step3Form form={form} setForm={setForm} item={item} t={t} language={language} />}
+            {!isNew && activeStep === 4 && <Step4Form form={form} setForm={setForm} item={item} t={t} language={language} />}
 
             {/* ── Completed view ── */}
             {isComplete && (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
                 <div className="text-3xl mb-2">🎉</div>
-                <p className="text-sm font-bold text-emerald-700">All stages complete!</p>
+                <p className="text-sm font-bold text-emerald-700">{t('purchaseFms.form.allStagesComplete')}</p>
                 <p className="text-xs text-emerald-500 mt-1">
-                  Follow-up done on {fmtDate(item.s4ActualAt)}
+                  {t('purchaseFms.form.followUpDoneOn')} {fmtDate(item.s4ActualAt, language)}
                 </p>
                 {item.s4DelayHours > 0 && (
-                  <p className="text-xs text-red-500 mt-1">⚠️ {fmtDelay(item.s4DelayHours)}</p>
+                  <p className="text-xs text-red-500 mt-1">⚠️ {fmtDelay(item.s4DelayHours, t)}</p>
                 )}
               </div>
             )}
@@ -498,16 +501,16 @@ export default function PurchaseForm({ item, onClose, onSubmit, isSubmitting }) 
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving…
+                  {t('purchaseFms.form.saving')}
                 </>
               ) : isNew ? (
-                '+ Create Requirement'
+                t('purchaseFms.form.createReq')
               ) : activeStep === 2 ? (
-                '✓ Confirm Order Done'
+                t('purchaseFms.form.confirmOrder')
               ) : activeStep === 3 ? (
-                '✓ Mark Goods Inward'
+                t('purchaseFms.form.markGI')
               ) : (
-                '✓ Close Follow-Up'
+                t('purchaseFms.form.closeFollowUp')
               )}
             </button>
           </div>

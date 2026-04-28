@@ -9,6 +9,7 @@ import StepBadge from '../components/StepBadge';
 import { getPendingStep as detectStep } from '../utils/jobLogic';
 import { useJobs, useCreateJob, useUpdateStep2, useUpdateStep3, useUpdateStep4, useUpdateStep5, useUpdateStep6 } from '../hooks/useJobs';
 import { useMasterData } from '../hooks/useMasterData';
+import { useLanguage } from '../i18n/LanguageContext';
 import catalogData from '../../item names according to cat and sub cat.json';
 // ─── Step Selector Config ─────────────────────────────────────────────────────
 const STEP_META = [
@@ -93,7 +94,10 @@ function TextAreaBase({ error, className, ...props }) {
   );
 }
 
-function YesNoToggle({ value, onChange, yesLabel = 'Yes', noLabel = 'No' }) {
+function YesNoToggle({ value, onChange, yesLabel, noLabel }) {
+  const { t } = useLanguage();
+  const yLabel = yesLabel || t('common.yes');
+  const nLabel = noLabel || t('common.no');
   return (
     <div className="flex gap-2">
       {[true, false].map((v) => (
@@ -108,14 +112,16 @@ function YesNoToggle({ value, onChange, yesLabel = 'Yes', noLabel = 'No' }) {
               : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
           )}
         >
-          {v ? yesLabel : noLabel}
+          {v ? yLabel : nLabel}
         </button>
       ))}
     </div>
   );
 }
 
-function SubmitButton({ loading, label = 'Submit Entry' }) {
+function SubmitButton({ loading, label }) {
+  const { t } = useLanguage();
+  const displayLabel = label || t('forms.submitEntry');
   return (
     <button
       type="submit"
@@ -133,9 +139,9 @@ function SubmitButton({ loading, label = 'Submit Entry' }) {
             <path className="opacity-75" fill="currentColor"
               d="M4 12a8 8 0 018-8v8H4z" />
           </svg>
-          Submitting…
+          {t('forms.submitting')}
         </span>
-      ) : label}
+      ) : displayLabel}
     </button>
   );
 }
@@ -151,13 +157,14 @@ function FormSection({ title }) {
 }
 
 function ConfirmationPopup({ title, details, onConfirm, onCancel, loading }) {
+  const { t } = useLanguage();
   if (!details) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm anim-fadeIn">
       <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl anim-slideUp">
         <div className="p-5 border-b border-gray-100">
           <h3 className="text-lg font-black text-gray-900">{title}</h3>
-          <p className="text-xs text-gray-500 mt-1">Please review the details below before submitting.</p>
+          <p className="text-xs text-gray-500 mt-1">{t('forms.reviewDetails')}</p>
         </div>
         <div className="p-5 max-h-[60vh] overflow-y-auto bg-gray-50/50 space-y-3">
           {Object.entries(details).map(([key, val]) => {
@@ -177,7 +184,7 @@ function ConfirmationPopup({ title, details, onConfirm, onCancel, loading }) {
             disabled={loading}
             className="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 btn-press disabled:opacity-50"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button 
             type="button" 
@@ -185,7 +192,7 @@ function ConfirmationPopup({ title, details, onConfirm, onCancel, loading }) {
             disabled={loading}
             className="flex-1 py-3 rounded-2xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 shadow-md shadow-indigo-200 btn-press disabled:opacity-50"
           >
-            {loading ? 'Submitting...' : 'Confirm'}
+            {loading ? t('forms.submitting') : t('common.confirm')}
           </button>
         </div>
       </div>
@@ -195,6 +202,7 @@ function ConfirmationPopup({ title, details, onConfirm, onCancel, loading }) {
 
 // ─── Success Screen ───────────────────────────────────────────────────────────
 function SuccessScreen({ jobNo, item, onNewEntry, onHome }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 gap-6 anim-slideUp text-center">
       {/* Animated checkmark */}
@@ -207,10 +215,10 @@ function SuccessScreen({ jobNo, item, onNewEntry, onHome }) {
         </svg>
       </div>
       <div>
-        <h2 className="text-2xl font-extrabold text-gray-900">Entry Submitted!</h2>
+        <h2 className="text-2xl font-extrabold text-gray-900">{t('forms.successTitle')}</h2>
         {(jobNo || item) && (
           <p className="text-gray-500 mt-1.5 text-sm">
-            {jobNo && <span className="font-semibold text-gray-700">Job #{jobNo}</span>}
+            {jobNo && <span className="font-semibold text-gray-700">{t('common.jobNo')} #{jobNo}</span>}
             {jobNo && item && ' · '}
             {item && <span>{item}</span>}
           </p>
@@ -222,14 +230,14 @@ function SuccessScreen({ jobNo, item, onNewEntry, onHome }) {
           className="flex-1 py-3.5 rounded-2xl border-2 border-indigo-200 text-indigo-600
                      font-bold text-sm hover:bg-indigo-50 btn-press transition-colors"
         >
-          New Entry
+          {t('forms.newEntry')}
         </button>
         <button
           onClick={onHome}
           className="flex-1 py-3.5 rounded-2xl bg-indigo-600 text-white font-bold text-sm
                      hover:bg-indigo-700 btn-press transition-colors shadow-md shadow-indigo-200"
         >
-          Home
+          {t('forms.home')}
         </button>
       </div>
     </div>
@@ -248,7 +256,7 @@ function PendingJobCard({ job, onClick }) {
           <span className="text-xs font-bold text-gray-900 truncate">{job.item}</span>
         </div>
         <div className="text-[10px] text-gray-400 font-semibold mt-1 flex gap-2">
-          <span>{job.size}</span><span>·</span><span>{job.qty} pcs</span>
+          <span>{job.size}</span><span>·</span><span>{job.qty} {t('common.pcs')}</span>
         </div>
       </div>
       <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
@@ -260,6 +268,7 @@ function PendingJobCard({ job, onClick }) {
 
 // ─── Step 1 Form ─────────────────────────────────────────────────────────────
 function Step1Form({ onSuccess }) {
+  const { t } = useLanguage();
   const init = { name: '', category: '', subcategory: '', item: '', reason: 'Order', specialInstruction: '' };
   const [form, setForm]     = useState(init);
   const [sets, setSets]     = useState([{ size: '', qty: '' }]);
@@ -322,14 +331,14 @@ function Step1Form({ onSuccess }) {
     const combinedSize = formatSets(sets);
 
     setConfirmData({
-      'Your Name (Prog. By)': form.name,
-      'Category': form.category,
-      'Subcategory': form.subcategory,
-      'Item Name': form.item,
-      'Size & Quantity': combinedSize,
-      'Total Quantity': totalQty,
-      'Reason': form.reason,
-      'Special Instruction': form.specialInstruction
+      [t('forms.progBy')]: form.name,
+      [t('forms.category')]: form.category,
+      [t('forms.subcategory')]: form.subcategory,
+      [t('forms.itemName')]: form.item,
+      [t('forms.sizeQtyDetails')]: combinedSize,
+      [t('common.qty')]: totalQty,
+      [t('common.reason')]: form.reason,
+      [t('forms.specialInstruction')]: form.specialInstruction
     });
   }
 
@@ -360,9 +369,9 @@ function Step1Form({ onSuccess }) {
 
       {/* Your Name */}
       <div>
-        <FieldLabel required>Your Name (Prog. By)</FieldLabel>
+        <FieldLabel required>{t('forms.progBy')}</FieldLabel>
         <SelectBase error={errors.name} value={form.name} onChange={set('name')}>
-          <option value="">Select your name…</option>
+          <option value="">{t('forms.selectName')}</option>
           {progByList.map((n) => <option key={n}>{n}</option>)}
         </SelectBase>
       </div>
@@ -370,39 +379,39 @@ function Step1Form({ onSuccess }) {
       {/* Cascade Dropdowns */}
       <div className="flex gap-3">
         <div className="flex-1">
-          <FieldLabel required>Category</FieldLabel>
+          <FieldLabel required>{t('forms.category')}</FieldLabel>
           <SelectBase 
             value={form.category} 
             onChange={(e) => setForm(p => ({ ...p, category: e.target.value, subcategory: '', item: '' }))} 
             error={errors.category}
           >
-            <option value="">Select category…</option>
+            <option value="">{t('forms.selectCategory')}</option>
             {availableCategories.map((c) => <option key={c.category} value={c.category}>{c.category}</option>)}
           </SelectBase>
         </div>
         <div className="flex-1">
-          <FieldLabel required>Subcategory</FieldLabel>
+          <FieldLabel required>{t('forms.subcategory')}</FieldLabel>
           <SelectBase 
             value={form.subcategory} 
             onChange={(e) => setForm(p => ({ ...p, subcategory: e.target.value, item: '' }))} 
             disabled={!form.category}
             error={errors.subcategory}
           >
-            <option value="">Select subcategory…</option>
+            <option value="">{t('forms.selectSubcategory')}</option>
             {availableSubcategories.map((s) => <option key={s.subcategory} value={s.subcategory}>{s.subcategory}</option>)}
           </SelectBase>
         </div>
       </div>
 
       <div>
-        <FieldLabel required>Item Name</FieldLabel>
+        <FieldLabel required>{t('forms.itemName')}</FieldLabel>
         <SelectBase 
           value={form.item} 
           onChange={set('item')} 
           disabled={!form.subcategory}
           error={errors.item}
         >
-          <option value="">Select item…</option>
+          <option value="">{t('forms.selectItem')}</option>
           {availableItems.map((it) => <option key={it} value={it}>{it}</option>)}
         </SelectBase>
       </div>
@@ -410,11 +419,11 @@ function Step1Form({ onSuccess }) {
       {/* Size and Quantity Sets */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <FieldLabel required>Size & Quantity Details</FieldLabel>
+          <FieldLabel required>{t('forms.sizeQtyDetails')}</FieldLabel>
           {sets.length < 3 && (
             <button type="button" onClick={addSet} className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
-              Add Set
+              {t('forms.addSet')}
             </button>
           )}
         </div>
@@ -423,7 +432,7 @@ function Step1Form({ onSuccess }) {
           <div key={i} className="flex gap-3 items-start anim-slideUp">
             <div className="flex-1">
               <InputBase 
-                placeholder="Size" 
+                placeholder={t('common.size')} 
                 value={s.size} 
                 onChange={(e) => updateSet(i, 'size', e.target.value)}
                 error={errors.sets?.[i]?.size}
@@ -432,7 +441,7 @@ function Step1Form({ onSuccess }) {
             <div className="flex-1">
               <InputBase 
                 type="number" 
-                placeholder="Qty" 
+                placeholder={t('common.qty')} 
                 value={s.qty} 
                 onChange={(e) => updateSet(i, 'qty', e.target.value)}
                 error={errors.sets?.[i]?.qty}
@@ -453,7 +462,7 @@ function Step1Form({ onSuccess }) {
 
       {/* Reason toggle */}
       <div>
-        <FieldLabel>Reason</FieldLabel>
+        <FieldLabel>{t('common.reason')}</FieldLabel>
         <div className="flex gap-2">
           {['Order', 'Refill'].map((r) => (
             <button key={r} type="button"
@@ -472,8 +481,8 @@ function Step1Form({ onSuccess }) {
 
       {/* Special Instruction */}
       <div>
-        <FieldLabel>Special Instruction <span className="text-gray-400 font-normal">(optional)</span></FieldLabel>
-        <TextAreaBase rows={2} placeholder="Any special instructions…"
+        <FieldLabel>{t('forms.specialInstruction')} <span className="text-gray-400 font-normal">{t('forms.optional')}</span></FieldLabel>
+        <TextAreaBase rows={2} placeholder={t('forms.specialInstruction') + '...'}
           value={form.specialInstruction} onChange={set('specialInstruction')} />
       </div>
 
@@ -481,7 +490,7 @@ function Step1Form({ onSuccess }) {
       
       {/* Confirmation Popup */}
       <ConfirmationPopup 
-        title="Confirm New Requirement" 
+        title={t('forms.confirmEntry')} 
         details={confirmData} 
         onConfirm={executeSubmit} 
         onCancel={() => setConfirmData(null)} 
@@ -493,6 +502,7 @@ function Step1Form({ onSuccess }) {
 
 // ─── Step 2 Form ─────────────────────────────────────────────────────────────
 function Step2Form({ job, onSuccess }) {
+  const { t } = useLanguage();
   const init = { name: '', yesNo: null, instructions: '', inhouseCutting: null };
   const [form, setForm] = useState(init);
   const [confirmData, setConfirmData] = useState(null);
@@ -508,12 +518,12 @@ function Step2Form({ job, onSuccess }) {
     if (form.yesNo === null) return alert('Please specify if approved for production.');
 
     setConfirmData({
-      'Job No': job.jobNo,
-      'Item': job.item,
-      'Your Name': form.name,
-      'Approve for Production?': form.yesNo === true ? '✅ Approve' : '❌ Reject',
-      'Instructions / Reason': form.instructions,
-      'Inhouse Cutting?': form.inhouseCutting === true ? 'Yes' : (form.inhouseCutting === false ? 'No' : 'Not specified')
+      [t('common.jobNo')]: job.jobNo,
+      [t('common.item')]: job.item,
+      [t('forms.yourName')]: form.name,
+      [t('forms.approveForProduction')]: form.yesNo === true ? '✅ ' + t('common.approve') : '❌ ' + t('common.reject'),
+      [t('forms.instructionsReason')]: form.instructions,
+      [t('forms.inhouseCutting')]: form.inhouseCutting === true ? t('common.yes') : (form.inhouseCutting === false ? t('common.no') : t('forms.notSpecified'))
     });
   }
 
@@ -533,32 +543,32 @@ function Step2Form({ job, onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 anim-slideUp">
       <div>
-        <FieldLabel required>Your Name</FieldLabel>
+        <FieldLabel required>{t('forms.yourName')}</FieldLabel>
         <SelectBase value={form.name} onChange={set('name')}>
-          <option value="">Select…</option>
+          <option value="">{t('forms.select')}</option>
           {STEP_PEOPLE[2].map((n) => <option key={n}>{n}</option>)}
         </SelectBase>
       </div>
       <div>
-        <FieldLabel>Approve for Production?</FieldLabel>
+        <FieldLabel>{t('forms.approveForProduction')}</FieldLabel>
         <YesNoToggle value={form.yesNo}
           onChange={(v) => setForm((p) => ({ ...p, yesNo: v }))}
-          yesLabel="✅ Approve" noLabel="❌ Reject" />
+          yesLabel={'✅ ' + t('common.approve')} noLabel={'❌ ' + t('common.reject')} />
       </div>
       <div>
-        <FieldLabel>Instructions / Reason</FieldLabel>
-        <TextAreaBase rows={3} placeholder="Add any instructions or rejection reason…"
+        <FieldLabel>{t('forms.instructionsReason')}</FieldLabel>
+        <TextAreaBase rows={3} placeholder={t('forms.addInstructionsPlaceholder')}
           value={form.instructions} onChange={set('instructions')} />
       </div>
       <div>
-        <FieldLabel>Inhouse Cutting?</FieldLabel>
+        <FieldLabel>{t('forms.inhouseCutting')}</FieldLabel>
         <YesNoToggle value={form.inhouseCutting}
           onChange={(v) => setForm((p) => ({ ...p, inhouseCutting: v }))} />
       </div>
       <SubmitButton loading={loading} />
 
       <ConfirmationPopup 
-        title="Confirm Production Approval" 
+        title={t('forms.confirmProductionApproval')} 
         details={confirmData} 
         onConfirm={executeSubmit} 
         onCancel={() => setConfirmData(null)} 
@@ -570,6 +580,7 @@ function Step2Form({ job, onSuccess }) {
 
 // ─── Step 3 Form ─────────────────────────────────────────────────────────────
 function Step3Form({ job, onSuccess }) {
+  const { t } = useLanguage();
   const [sets, setSets] = useState(() => parseSets(job.size, job.qty));
   const [form, setForm] = useState({ name: '' });
   const [confirmData, setConfirmData] = useState(null);
@@ -593,11 +604,11 @@ function Step3Form({ job, onSuccess }) {
     const combinedDetails = formatSets(sets);
 
     setConfirmData({
-      'Job No': job.jobNo,
-      'Item': job.item,
-      'Your Name': form.name,
-      'Total Cutting Pieces': totalCutting,
-      'Size Details': combinedDetails
+      [t('common.jobNo')]: job.jobNo,
+      [t('common.item')]: job.item,
+      [t('forms.yourName')]: form.name,
+      [t('forms.totalCuttingPieces')]: totalCutting,
+      [t('forms.sizeDetails')]: combinedDetails
     });
   }
 
@@ -620,14 +631,14 @@ function Step3Form({ job, onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 anim-slideUp">
       <div>
-        <FieldLabel required>Your Name</FieldLabel>
+        <FieldLabel required>{t('forms.yourName')}</FieldLabel>
         <SelectBase value={form.name} onChange={set('name')}>
-          <option value="">Select…</option>
+          <option value="">{t('forms.select')}</option>
           {cuttingNamesList.map((n) => <option key={n}>{n}</option>)}
         </SelectBase>
       </div>
 
-      <FormSection title="Actual Cutting (Size Wise)" />
+      <FormSection title={t('forms.actualCuttingSizeWise')} />
       
       <div className="space-y-4">
         {sets.map((s, i) => (
@@ -636,7 +647,7 @@ function Step3Form({ job, onSuccess }) {
               <FieldLabel>Size: <span className="text-indigo-600">{s.size}</span></FieldLabel>
               <InputBase 
                 type="number" 
-                placeholder="Cutting Qty" 
+                placeholder={t('forms.cuttingQty')} 
                 value={s.qty} 
                 onChange={(e) => updateSetQty(i, e.target.value)}
               />
@@ -647,7 +658,7 @@ function Step3Form({ job, onSuccess }) {
       <SubmitButton loading={loading} />
 
       <ConfirmationPopup 
-        title="Confirm Inhouse Cutting" 
+        title={t('forms.confirmInhouseCutting')} 
         details={confirmData} 
         onConfirm={executeSubmit} 
         onCancel={() => setConfirmData(null)} 
@@ -659,6 +670,7 @@ function Step3Form({ job, onSuccess }) {
 
 // ─── Step 4 Form ─────────────────────────────────────────────────────────────
 function Step4Form({ job, onSuccess }) {
+  const { t } = useLanguage();
   const [sets, setSets] = useState(() => parseSets(job.s3SizeDetails || job.size, job.s3DukanCutting || job.qty));
   const [form, setForm] = useState({ thekedarName: '', cutToPack: null, leadTime: '' });
   const [confirmData, setConfirmData] = useState(null);
@@ -679,13 +691,13 @@ function Step4Form({ job, onSuccess }) {
     const totalCutting = sets.reduce((sum, s) => sum + (Number(s.qty) || 0), 0);
 
     setConfirmData({
-      'Job No': job.jobNo,
-      'Item': job.item,
-      'Thekedar / Karigar': form.thekedarName,
-      'Cut to Pack?': form.cutToPack === true ? 'Yes' : (form.cutToPack === false ? 'No' : 'Not specified'),
-      'Lead Time (hrs)': form.leadTime,
-      'Total Cutting Pieces': totalCutting,
-      'Size Details': formatSets(sets)
+      [t('common.jobNo')]: job.jobNo,
+      [t('common.item')]: job.item,
+      [t('forms.thekedarKarigar')]: form.thekedarName,
+      [t('forms.cutToPack')]: form.cutToPack === true ? t('common.yes') : (form.cutToPack === false ? t('common.no') : t('forms.notSpecified')),
+      [t('forms.leadTimeHrs')]: form.leadTime,
+      [t('forms.totalCuttingPieces')]: totalCutting,
+      [t('forms.sizeDetails')]: formatSets(sets)
     });
   }
 
@@ -710,36 +722,36 @@ function Step4Form({ job, onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 anim-slideUp">
       <div>
-        <FieldLabel required>Thekedar / Karigar Name</FieldLabel>
+        <FieldLabel required>{t('forms.thekedarKarigarName')}</FieldLabel>
         <SelectBase value={form.thekedarName} onChange={set('thekedarName')}>
-          <option value="">Select Thekedar…</option>
+          <option value="">{t('forms.selectThekedar')}</option>
           {thekedarNamesList.map((n) => <option key={n}>{n}</option>)}
         </SelectBase>
       </div>
       <div>
-        <FieldLabel>Cut to Pack?</FieldLabel>
+        <FieldLabel>{t('forms.cutToPack')}</FieldLabel>
         <YesNoToggle value={form.cutToPack}
           onChange={(v) => setForm((p) => ({ ...p, cutToPack: v }))} />
       </div>
       <div>
-        <FieldLabel>Lead Time (working hours for Jama)</FieldLabel>
-        <InputBase type="number" inputMode="numeric" placeholder="e.g. 72"
+        <FieldLabel>{t('forms.leadTimeJama')}</FieldLabel>
+        <InputBase type="number" inputMode="numeric" placeholder={t('forms.leadTimePlaceholder')}
           value={form.leadTime} onChange={set('leadTime')} />
         <p className="text-[10px] text-gray-400 mt-1 pl-1">
-          ⏱ Enter working hours (10AM–7PM, Mon–Sat). Example: 72 hrs = ~8 working days.
+          {t('forms.leadTimeHelp')}
         </p>
       </div>
 
-      <FormSection title="Cutting Pieces (Size Wise)" />
+      <FormSection title={t('forms.cuttingPiecesSizeWise')} />
       
       <div className="space-y-4">
         {sets.map((s, i) => (
           <div key={i} className="flex gap-4 items-center">
             <div className="flex-1">
-              <FieldLabel>Size: <span className="text-indigo-600">{s.size}</span></FieldLabel>
+              <FieldLabel>{t('common.size')}: <span className="text-indigo-600">{s.size}</span></FieldLabel>
               <InputBase 
                 type="number" 
-                placeholder="Cutting Qty" 
+                placeholder={t('forms.cuttingQty')} 
                 value={s.qty} 
                 onChange={(e) => updateSetQty(i, e.target.value)}
               />
@@ -750,7 +762,7 @@ function Step4Form({ job, onSuccess }) {
       <SubmitButton loading={loading} />
 
       <ConfirmationPopup 
-        title="Confirm Naame" 
+        title={t('forms.confirmNaame')} 
         details={confirmData} 
         onConfirm={executeSubmit} 
         onCancel={() => setConfirmData(null)} 
@@ -762,6 +774,7 @@ function Step4Form({ job, onSuccess }) {
 
 // ─── Step 5 Form ─────────────────────────────────────────────────────────────
 function Step5Form({ job, onSuccess }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState({ 
     jamaQty: job.s5JamaQty || '', 
     pressHua: job.s5Press ? (job.s5Press === 'Yes') : null 
@@ -777,10 +790,10 @@ function Step5Form({ job, onSuccess }) {
     if (!form.jamaQty) return alert('Jama Quantity is required!');
 
     setConfirmData({
-      'Job No': job.jobNo,
-      'Item': job.item,
-      'Jama Quantity': form.jamaQty,
-      'Press Hua?': form.pressHua === true ? '✅ Yes' : (form.pressHua === false ? '❌ No' : 'Not specified')
+      [t('common.jobNo')]: job.jobNo,
+      [t('common.item')]: job.item,
+      [t('forms.jamaQty')]: form.jamaQty,
+      [t('forms.pressHua')]: form.pressHua === true ? '✅ ' + t('common.yes') : (form.pressHua === false ? '❌ ' + t('common.no') : t('forms.notSpecified'))
     });
   }
 
@@ -799,20 +812,20 @@ function Step5Form({ job, onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 anim-slideUp">
       <div>
-        <FieldLabel required>Jama Quantity</FieldLabel>
+        <FieldLabel required>{t('forms.jamaQty')}</FieldLabel>
         <InputBase type="number" inputMode="numeric" placeholder="0"
           value={form.jamaQty} onChange={set('jamaQty')} />
       </div>
       <div>
-        <FieldLabel>Press Hua ya Nahi?</FieldLabel>
+        <FieldLabel>{t('forms.pressHuaYaNahi')}</FieldLabel>
         <YesNoToggle value={form.pressHua}
           onChange={(v) => setForm((p) => ({ ...p, pressHua: v }))}
-          yesLabel="✅ Press Hua" noLabel="❌ Nahi" />
+          yesLabel={'✅ ' + t('forms.pressHuaLabel')} noLabel={'❌ ' + t('forms.pressNahiLabel')} />
       </div>
       <SubmitButton loading={loading} />
 
       <ConfirmationPopup 
-        title="Confirm Finished Maal Jama" 
+        title={t('forms.confirmJama')} 
         details={confirmData} 
         onConfirm={executeSubmit} 
         onCancel={() => setConfirmData(null)} 
@@ -824,6 +837,7 @@ function Step5Form({ job, onSuccess }) {
 
 // ─── Step 6 Form ─────────────────────────────────────────────────────────────
 function Step6Form({ job, onSuccess }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState({ 
     settleQty: job.s6SettleQty || '', 
     reason: job.s6Reason || '', 
@@ -845,14 +859,14 @@ function Step6Form({ job, onSuccess }) {
     if (!form.settleQty) return alert('Settle Quantity is required!');
 
     setConfirmData({
-      'Job No': job.jobNo,
-      'Item': job.item,
-      'Requirement': reqQty,
-      'Old Jama': jamaQty,
-      'Settle Quantity': form.settleQty,
-      'Remaining Balance': balance,
-      'Reason': form.reason,
-      'Your Name': form.yourName
+      [t('common.jobNo')]: job.jobNo,
+      [t('common.item')]: job.item,
+      [t('common.requirement')]: reqQty,
+      [t('forms.oldJama')]: jamaQty,
+      [t('forms.settleQty')]: form.settleQty,
+      [t('forms.remainingBalance')]: balance,
+      [t('common.reason')]: form.reason,
+      [t('forms.yourName')]: form.yourName
     });
   }
 
@@ -873,26 +887,26 @@ function Step6Form({ job, onSuccess }) {
     <form onSubmit={handleSubmit} className="space-y-5 anim-slideUp">
       <div className="bg-white p-5 rounded-3xl border-2 border-gray-100 shadow-sm space-y-4">
         <div className="flex justify-between items-center">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Calculated Balance</span>
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('forms.calculatedBalance')}</span>
           <span className={cls(
             "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter",
             balance <= 0 ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
           )}>
-            {balance <= 0 ? '✓ Cleared' : 'Pending'}
+            {balance <= 0 ? '✓ ' + t('forms.cleared') : t('common.pending')}
           </span>
         </div>
         
         <div className="grid grid-cols-3 gap-2">
            <div className="text-center">
-              <p className="text-[9px] font-black text-gray-400 uppercase">Requirement</p>
+              <p className="text-[9px] font-black text-gray-400 uppercase">{t('common.requirement')}</p>
               <p className="text-sm font-black text-gray-900">{reqQty}</p>
            </div>
            <div className="text-center border-x border-gray-100">
-              <p className="text-[9px] font-black text-gray-400 uppercase">Jama</p>
+              <p className="text-[9px] font-black text-gray-400 uppercase">{t('common.jama')}</p>
               <p className="text-sm font-black text-indigo-600">{jamaQty}</p>
            </div>
            <div className="text-center">
-              <p className="text-[9px] font-black text-gray-400 uppercase">Balance</p>
+              <p className="text-[9px] font-black text-gray-400 uppercase">{t('common.balance')}</p>
               <p className={cls("text-sm font-black", balance <= 0 ? "text-green-600" : "text-red-500")}>
                 {reqQty - jamaQty}
               </p>
@@ -901,7 +915,7 @@ function Step6Form({ job, onSuccess }) {
 
         <div className="pt-3 border-t border-gray-50 flex justify-between items-end">
            <div>
-              <p className="text-[10px] font-bold text-gray-500">Remaining After Settle</p>
+              <p className="text-[10px] font-bold text-gray-500">{t('forms.remainingAfterSettle')}</p>
               <p className={cls("text-2xl font-[900] leading-none mt-1", balance <= 0 ? "text-green-600" : "text-gray-900")}>
                 {balance}
               </p>
@@ -912,34 +926,34 @@ function Step6Form({ job, onSuccess }) {
                onClick={() => setForm(p => ({ ...p, settleQty: (reqQty - jamaQty).toString() }))}
                className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
              >
-               SETTLE ALL
+               {t('forms.settleAll')}
              </button>
            )}
         </div>
       </div>
 
       <div>
-        <FieldLabel required>Settle Quantity</FieldLabel>
-        <InputBase type="number" inputMode="numeric" placeholder={`Enter ${reqQty - jamaQty} to clear...`}
+        <FieldLabel required>{t('forms.settleQty')}</FieldLabel>
+        <InputBase type="number" inputMode="numeric" placeholder={t('forms.enterToClear').replace('{qty}', reqQty - jamaQty)}
           value={form.settleQty} onChange={set('settleQty')} />
         <p className="text-[10px] text-gray-400 mt-1.5 font-medium italic leading-tight">
-          Enter the number needed to bring the balance to zero.
+          {t('forms.settleHelp')}
         </p>
       </div>
       <div>
-        <FieldLabel>Reason</FieldLabel>
-        <TextAreaBase rows={3} placeholder="Why are we settling? Any notes…"
+        <FieldLabel>{t('common.reason')}</FieldLabel>
+        <TextAreaBase rows={3} placeholder={t('forms.settleReasonPlaceholder')}
           value={form.reason} onChange={set('reason')} />
       </div>
       <div>
-        <FieldLabel>Your Name</FieldLabel>
-        <InputBase type="text" placeholder="Your name (free text)"
+        <FieldLabel>{t('forms.yourName')}</FieldLabel>
+        <InputBase type="text" placeholder={t('forms.yourNamePlaceholder')}
           value={form.yourName} onChange={set('yourName')} />
       </div>
       <SubmitButton loading={loading} />
 
       <ConfirmationPopup 
-        title="Confirm Settle" 
+        title={t('forms.confirmSettle')} 
         details={confirmData} 
         onConfirm={executeSubmit} 
         onCancel={() => setConfirmData(null)} 
@@ -953,6 +967,7 @@ function Step6Form({ job, onSuccess }) {
 const STEP_FORM_MAP = { 2: Step2Form, 3: Step3Form, 4: Step4Form, 5: Step5Form, 6: Step6Form };
 
 function StepFormWithFetch({ step, onSuccess }) {
+  const { t } = useLanguage();
   // Use shared cache — no independent getAllJobs() call
   const { data: allJobs = [], isLoading: loading } = useJobs();
   const [selJob, setSelJob] = useState(null);
@@ -997,9 +1012,9 @@ function StepFormWithFetch({ step, onSuccess }) {
   if (selJob) {
     return (
       <div className="space-y-5">
-        <button onClick={() => setSelJob(null)} className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:underline">← Back to list</button>
+        <button onClick={() => setSelJob(null)} className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:underline">← {t('common.backToList')}</button>
         <JobCard job={selJob} showSteps />
-        <FormSection title={`Logging Step ${step}`} />
+        <FormSection title={`${t('forms.loggingStep')} ${step}`} />
         <StepForm job={selJob} onSuccess={(data) => {
            // After mutation, TanStack Query auto-invalidates the cache
            // The job list will re-filter automatically when the cache updates
@@ -1014,12 +1029,12 @@ function StepFormWithFetch({ step, onSuccess }) {
     <div className="space-y-4">
       <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" /></svg>
-        <input type="search" placeholder="Search pending jobs..." value={search} onChange={(e) => setSearch(e.target.value)}
+        <input type="search" placeholder={t('forms.searchPendingJobs')} value={search} onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-9 pr-4 py-3 rounded-2xl border-2 border-gray-100 outline-none focus:border-indigo-400 text-sm transition-all shadow-sm" />
       </div>
 
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{loading ? 'Searching...' : `Pending Jobs (${filtered.length})`}</h3>
+        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{loading ? t('common.searching') : `${t('forms.pendingJobs')} (${filtered.length})`}</h3>
       </div>
 
       <div className="space-y-3">
@@ -1028,7 +1043,7 @@ function StepFormWithFetch({ step, onSuccess }) {
         ) : filtered.length === 0 ? (
           <div className="py-12 text-center bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
             <span className="text-3xl block mb-2">🎉</span>
-            <p className="text-sm font-bold text-gray-500">No pending jobs for this step!</p>
+            <p className="text-sm font-bold text-gray-500">{t('forms.noPendingJobs')}</p>
           </div>
         ) : (
           filtered.map(j => <PendingJobCard key={j.jobNo} job={j} onClick={setSelJob} />)
@@ -1040,11 +1055,12 @@ function StepFormWithFetch({ step, onSuccess }) {
 
 // ─── Step Selector ────────────────────────────────────────────────────────────
 function StepSelector({ onSelect }) {
+  const { t } = useLanguage();
   return (
     <div className="p-4 space-y-4">
       <div className="mb-2">
-        <h2 className="text-2xl font-[900] text-gray-900 tracking-tight">Production Workflow</h2>
-        <p className="text-sm text-gray-500 font-medium">Select a stage to manage pending tasks</p>
+        <h2 className="text-2xl font-[900] text-gray-900 tracking-tight">{t('forms.productionWorkflow')}</h2>
+        <p className="text-sm text-gray-500 font-medium">{t('forms.selectStageManage')}</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {STEP_META.map(({ step, hindiName, englishName, color }) => {

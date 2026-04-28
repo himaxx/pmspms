@@ -11,7 +11,10 @@ import {
 } from '../../hooks/usePurchaseFMS';
 import { getPurchaseStage } from '../../utils/purchaseDb';
 
+import { useLanguage } from '../../i18n/LanguageContext';
+
 export default function PurchaseFMSPage() {
+  const { t } = useLanguage();
   const [isFormOpen,   setIsFormOpen]   = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -53,7 +56,7 @@ export default function PurchaseFMSPage() {
       closeForm();
     } catch (err) {
       console.error('Purchase FMS submit error:', err);
-      alert(`Error: ${err.message}`);
+      alert(`${t('common.error')}: ${err.message}`);
     }
   };
 
@@ -69,12 +72,12 @@ export default function PurchaseFMSPage() {
   if (isError) {
     return (
       <div className="p-8 text-center bg-red-50 rounded-3xl border border-red-100">
-        <p className="text-red-600 font-bold">Error loading Purchase FMS data.</p>
+        <p className="text-red-600 font-bold">{t('purchaseFms.errorLoading')}</p>
         <button
           onClick={() => window.location.reload()}
           className="mt-4 text-sm text-red-500 underline"
         >
-          Try refreshing
+          {t('purchaseFms.tryRefreshing')}
         </button>
       </div>
     );
@@ -87,9 +90,9 @@ export default function PurchaseFMSPage() {
       {/* ── Page Header ──────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-gray-900 tracking-tight">Purchase FMS</h2>
+          <h2 className="text-xl font-black text-gray-900 tracking-tight">{t('purchaseFms.title')}</h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            End-to-end procurement tracking — Requirement → Order → GI → Follow-Up
+            {t('purchaseFms.subtitle')}
           </p>
         </div>
 
@@ -104,17 +107,17 @@ export default function PurchaseFMSPage() {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
           </svg>
-          New Requirement
+          {t('purchaseFms.newRequirement')}
         </button>
       </div>
 
       {/* ── Stage Pipeline Banner ──────────────────────────────────────────── */}
       <div className="flex items-center gap-0 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
         {[
-          { num: 1, label: 'Requirement',  bg: 'bg-gray-100',    icon: '📋' },
-          { num: 2, label: 'Order Done',   bg: 'bg-amber-100',   icon: '🛒' },
-          { num: 3, label: 'Goods Inward', bg: 'bg-blue-100',    icon: '📦' },
-          { num: 4, label: 'Follow-Up',    bg: 'bg-violet-100',  icon: '📞' },
+          { num: 1, label: t('purchaseFms.stages.requirement'),  bg: 'bg-gray-100',    icon: '📋' },
+          { num: 2, label: t('purchaseFms.stages.orderDone'),   bg: 'bg-amber-100',   icon: '🛒' },
+          { num: 3, label: t('purchaseFms.stages.goodsInward'), bg: 'bg-blue-100',    icon: '📦' },
+          { num: 4, label: t('purchaseFms.stages.followUp'),    bg: 'bg-violet-100',  icon: '📞' },
         ].map((step, i) => (
           <div key={step.num} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 ${step.bg} relative`}>
             <span className="text-sm">{step.icon}</span>

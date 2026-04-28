@@ -359,6 +359,7 @@ export default function Dashboard() {
   const clearDashFilters = useUIStore((s) => s.clearDashFilters);
 
   const [selectedJob, setSelectedJob] = useState(null);
+  const [showFilters, setShowFilters]   = useState(false);
   const { toasts, addToast, dismiss } = useToast();
 
   const { containerRef, handlers, pullProgress, isRefreshing } = usePullToRefresh(refetch);
@@ -462,49 +463,101 @@ export default function Dashboard() {
         </div>
 
         {/* Filter Bar */}
-        <div className="px-4 mt-2 space-y-4">
-          <div className="relative anim-slideUp" style={{ animationDelay: '100ms' }}>
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
-                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
-            </svg>
-            <input type="search" placeholder="Search job no or item…"
-              value={search} onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-gray-200 text-sm bg-white
-                         outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 placeholder:text-gray-400 font-medium transition-all shadow-sm" />
+        <div className="px-4 mt-2 space-y-3">
+          {/* Search + Filter toggle row */}
+          <div className="flex gap-2 anim-slideUp" style={{ animationDelay: '100ms' }}>
+            <div className="relative flex-1">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+                   xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+              </svg>
+              <input type="search" placeholder="Search job no or item…"
+                value={search} onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-gray-200 text-sm bg-white
+                           outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 placeholder:text-gray-400 font-medium transition-all shadow-sm" />
+            </div>
+
+            {/* Filters toggle button */}
+            {(() => {
+              const activeCount = [
+                dashStartDate ? 1 : 0,
+                dashEndDate   ? 1 : 0,
+                stepFilter   !== 'All' ? 1 : 0,
+                statusFilter !== 'All' ? 1 : 0,
+              ].reduce((a, b) => a + b, 0);
+              return (
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(v => !v)}
+                  className={cls(
+                    'shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-2xl border-2 text-sm font-bold transition-all shadow-sm btn-press',
+                    showFilters
+                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-indigo-200'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300'
+                  )}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path fillRule="evenodd" d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clipRule="evenodd" />
+                  </svg>
+                  Filters
+                  {activeCount > 0 && (
+                    <span className={cls(
+                      'text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center',
+                      showFilters ? 'bg-white/25 text-white' : 'bg-indigo-600 text-white'
+                    )}>{activeCount}</span>
+                  )}
+                </button>
+              );
+            })()}
           </div>
 
-          {/* Date Range Filters */}
-          <div className="grid grid-cols-2 gap-2 bg-white/50 p-3 rounded-[1.5rem] border-2 border-gray-200 shadow-sm anim-slideUp" style={{ animationDelay: '150ms' }}>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Start Date</label>
-              <input type="date" value={dashStartDate} onChange={(e) => setDashStartDate(e.target.value)} 
-                     className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">End Date</label>
-              <input type="date" value={dashEndDate} onChange={(e) => setDashEndDate(e.target.value)} 
-                     className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
-            </div>
-          </div>
+          {/* Collapsible filters panel */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: showFilters ? '1fr' : '0fr',
+              transition: 'grid-template-rows 280ms cubic-bezier(0.4,0,0.2,1)',
+            }}
+          >
+            <div style={{ overflow: 'hidden' }}>
+              <div className="space-y-3 pb-1 pt-0.5">
+                {/* Date Range */}
+                <div className="grid grid-cols-2 gap-2 bg-white/50 p-3 rounded-[1.5rem] border-2 border-gray-200 shadow-sm">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Start Date</label>
+                    <input type="date" value={dashStartDate} onChange={(e) => setDashStartDate(e.target.value)}
+                           className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">End Date</label>
+                    <input type="date" value={dashEndDate} onChange={(e) => setDashEndDate(e.target.value)}
+                           className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
+                  </div>
+                </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar anim-slideUp" style={{ animationDelay: '200ms' }}>
-            {STEP_OPTS.map((s) => (
-              <button key={s} type="button" onClick={() => setStepFilter(s)}
-                className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
-                  stepFilter === s ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
-                {s === 'All' ? 'All Steps' : `Step ${s}`}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1.5 flex-wrap anim-slideUp" style={{ animationDelay: '250ms' }}>
-            {STATUS_OPTS.map((s) => (
-              <button key={s} type="button" onClick={() => setStatusFilter(s)}
-                className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
-                  statusFilter === s ? 'bg-gray-900 border-gray-900 text-white shadow-lg shadow-gray-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
-                {s}
-              </button>
-            ))}
+                {/* Step filter pills */}
+                <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                  {STEP_OPTS.map((s) => (
+                    <button key={s} type="button" onClick={() => setStepFilter(s)}
+                      className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
+                        stepFilter === s ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
+                      {s === 'All' ? 'All Steps' : `Step ${s}`}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Status filter pills */}
+                <div className="flex gap-1.5 flex-wrap">
+                  {STATUS_OPTS.map((s) => (
+                    <button key={s} type="button" onClick={() => setStatusFilter(s)}
+                      className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
+                        statusFilter === s ? 'bg-gray-900 border-gray-900 text-white shadow-lg shadow-gray-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

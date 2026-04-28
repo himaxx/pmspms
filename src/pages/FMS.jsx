@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import BiltyFMSPage from './fms/BiltyFMSPage';
+import BiltyFMSPage    from './fms/BiltyFMSPage';
+import PurchaseFMSPage from './fms/PurchaseFMSPage';
 
 /* ─── FMS Icons ─────────────────────────────────────────────────────────── */
 const BiltyIcon = () => (
@@ -71,25 +72,22 @@ export default function FMS() {
           </span>
         </div>
         <div className="flex-1 p-6 md:p-8 overflow-y-auto">
-            {activeTab === 'bilty' ? (
-              <BiltyFMSPage />
-            ) : (
+            {activeTab === 'bilty'    && <BiltyFMSPage />}
+            {activeTab === 'purchase' && <PurchaseFMSPage />}
+            {activeTab === 'order2delivery' && (
               <div className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto rounded-3xl bg-indigo-50 flex items-center justify-center text-indigo-500 mb-6 anim-slideUp">
-                      {(() => {
-                        const Icon = FMS_TABS.find(t => t.id === activeTab)?.Icon;
-                        return Icon ? <Icon /> : <BoxIcon />;
-                      })()}
+                  <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-50 flex items-center justify-center text-amber-500 mb-6 anim-slideUp">
+                    <BoxIcon />
                   </div>
                   <h2 className="text-2xl font-black text-gray-900 tracking-tight anim-slideUp" style={{ animationDelay: '100ms' }}>
-                    {FMS_TABS.find(t => t.id === activeTab)?.label}
+                    Order 2 Delivery FMS
                   </h2>
                   <p className="text-gray-400 mt-2 max-w-xs mx-auto anim-slideUp" style={{ animationDelay: '200ms' }}>
                     This module is currently being configured for your workflow.
                   </p>
                   <div className="mt-8 anim-slideUp" style={{ animationDelay: '300ms' }}>
-                    <span className="px-4 py-2 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold tracking-wider uppercase border border-indigo-100">
+                    <span className="px-4 py-2 rounded-full bg-amber-50 text-amber-600 text-xs font-bold tracking-wider uppercase border border-amber-100">
                       Coming Soon
                     </span>
                   </div>

@@ -13,7 +13,13 @@ function snakeToCamel(row) {
   const out = {};
   for (const [k, v] of Object.entries(row)) {
     const camel = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-    out[camel] = v ?? '';
+    
+    // Special handling for the joined bills array
+    if (k === 'bilty_bills' && Array.isArray(v)) {
+      out.billNumbers = v.map(b => b.bill_number);
+    } else {
+      out[camel] = v ?? '';
+    }
   }
   return out;
 }
@@ -22,7 +28,7 @@ function snakeToCamel(row) {
 export async function getBiltyEntries() {
   const { data, error } = await supabase
     .from('bilty_fms')
-    .select('*')
+    .select('*, bilty_bills(bill_number)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`getBiltyEntries: ${error.message}`);
@@ -85,7 +91,7 @@ export async function updateBiltyStep2(id, { status, remark }) {
 }
 
 // ─── 4. Update Step 3 — Bilty & Bill Photo Send ─────────────────────────────
-export async function updateBiltyStep3(id, { status, biltyNumber, photoUrl, remark }) {
+export async function updateBiltyStep3(id, { status, biltyNumber, photoUrl, remark, billNumbers = [] }) {
   const { data: existing } = await supabase
     .from('bilty_fms')
     .select('photo_send_planned_at')
@@ -99,7 +105,8 @@ export async function updateBiltyStep3(id, { status, biltyNumber, photoUrl, rema
   // Step 4 Planned = Step 3 Actual + 4 working hours
   const deliveryPlannedAt = addWorkingHours(photoSendActualAt, 4);
 
-  const { error } = await supabase
+  // 1. Update the Bilty record
+  const { error: biltyError } = await supabase
     .from('bilty_fms')
     .update({
       photo_send_status: status || 'Sent',
@@ -113,7 +120,35 @@ export async function updateBiltyStep3(id, { status, biltyNumber, photoUrl, rema
     })
     .eq('id', id);
 
-  if (error) throw new Error(`updateBiltyStep3: ${error.message}`);
+  if (biltyError) throw new Error(`updateBiltyStep3 (record): ${biltyError.message}`);
+
+  // 2. Handle Bills (Insert new ones, replace if needed - for simplicity here we just insert/delete)
+  if (billNumbers.length > 0) {
+    // Delete existing bills for this bilty first to ensure sync
+    await supabase.from('bilty_bills').delete().eq('bilty_id', id);
+
+    const billsToInsert = billNumbers.map(num => ({
+      bilty_id: id,
+      bill_number: num
+    }));
+
+    const { error: billsError } = await supabase
+      .from('bilty_bills')
+      .insert(billsToInsert);
+
+    if (billsError) throw new Error(`updateBiltyStep3 (bills): ${billsError.message}`);
+  }
+}
+
+/** Fetch bills associated with a Bilty ID */
+export async function fetchBiltyBills(biltyId) {
+  const { data, error } = await supabase
+    .from('bilty_bills')
+    .select('bill_number')
+    .eq('bilty_id', biltyId);
+
+  if (error) throw new Error(`fetchBiltyBills: ${error.message}`);
+  return (data ?? []).map(b => b.bill_number);
 }
 
 // ─── 5. Update Step 4 — Bilty Delivered ─────────────────────────────────────

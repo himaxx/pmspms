@@ -68,13 +68,34 @@ export default function BiltyList({ data = [], onSelect }) {
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-1.5">
                     <StatusBadge status={item.photoSendStatus} delay={item.photoSendDelayHours} />
+                    
                     {item.biltyNumber && (
-                      <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md self-start">
-                        #{item.biltyNumber}
+                      <span className="text-[10px] font-black text-indigo-700 bg-indigo-100/50 px-2 py-0.5 rounded-md self-start border border-indigo-100">
+                        LR: {item.biltyNumber}
                       </span>
                     )}
+
+                    {item.billNumbers && item.billNumbers.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {item.billNumbers.map((bill, idx) => (
+                          <span key={idx} className="text-[9px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
+                            Bill {bill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     {item.photoUrl && (
-                       <a href={item.photoUrl} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline">
+                       <a 
+                        href={item.photoUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="flex items-center gap-1 text-[10px] text-indigo-600 font-bold hover:underline mt-1"
+                       >
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                           <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                           <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                         </svg>
                          View Photo
                        </a>
                     )}

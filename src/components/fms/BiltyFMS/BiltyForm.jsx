@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import BiltyImageUploader from './BiltyImageUploader';
+import { fetchBiltyBills } from '../../../utils/biltyDb';
 
 export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
   const [formData, setFormData] = useState({
@@ -14,7 +16,10 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
     photoSendRemark: '',
     deliveryStatus: 'Delivered',
     deliveryRemark: '',
+    billNumbers: [],
   });
+
+  const [newBillNumber, setNewBillNumber] = useState('');
 
   useEffect(() => {
     if (item) {
@@ -22,6 +27,13 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
         ...formData,
         ...item,
       });
+
+      // If we have an item and it's at step 3, fetch associated bills
+      if (item.id) {
+        fetchBiltyBills(item.id).then(bills => {
+          setFormData(prev => ({ ...prev, billNumbers: bills }));
+        });
+      }
     }
   }, [item]);
 
@@ -142,16 +154,64 @@ export default function BiltyForm({ item, onClose, onSubmit, isSubmitting }) {
                     placeholder="Enter LR/Bilty No."
                   />
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Photo URL</label>
-                  <input
-                    type="url"
-                    value={formData.photoUrl}
-                    onChange={e => setFormData({ ...formData, photoUrl: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-sm font-medium"
-                    placeholder="Paste link to Google Drive/Whatsapp photo"
-                  />
+
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Linked Bills (Multiple)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newBillNumber}
+                      onChange={e => setNewBillNumber(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (newBillNumber.trim()) {
+                            setFormData(prev => ({ ...prev, billNumbers: [...prev.billNumbers, newBillNumber.trim()] }));
+                            setNewBillNumber('');
+                          }
+                        }
+                      }}
+                      className="flex-1 px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/30 focus:bg-white focus:border-indigo-500 transition-all outline-none text-sm font-medium"
+                      placeholder="Add Bill No. (Press Enter)"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newBillNumber.trim()) {
+                          setFormData(prev => ({ ...prev, billNumbers: [...prev.billNumbers, newBillNumber.trim()] }));
+                          setNewBillNumber('');
+                        }
+                      }}
+                      className="px-4 py-3 rounded-2xl bg-gray-900 text-white text-xs font-bold"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  
+                  {formData.billNumbers.length > 0 && (
+                    <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                      {formData.billNumbers.map((bill, idx) => (
+                        <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-gray-200 text-xs font-bold text-gray-700 shadow-sm">
+                          <span>{bill}</span>
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, billNumbers: prev.billNumbers.filter((_, i) => i !== idx) }))}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
+                <BiltyImageUploader 
+                  currentUrl={formData.photoUrl}
+                  onUploadComplete={(url) => setFormData({ ...formData, photoUrl: url })}
+                />
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Remark</label>
                   <textarea

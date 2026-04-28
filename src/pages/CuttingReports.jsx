@@ -96,7 +96,8 @@ function PendingTab({ jobs, loading, onJobClick }) {
 
   return (
     <div className="space-y-3 p-4">
-      <div className="sticky top-0 z-10 bg-gray-50 pb-2">
+      {/* Search bar sticky below both navigation bars */}
+      <div className="sticky top-[145px] z-10 bg-gray-50 pb-2">
         <input 
           type="text" 
           placeholder="Search pending jobs..." 
@@ -167,7 +168,8 @@ function CompletedTab({ jobs, loading }) {
 
   return (
     <div className="space-y-3 p-4">
-      <div className="sticky top-0 z-10 bg-gray-50 pb-2 space-y-3">
+      {/* Search bar sticky below both navigation bars */}
+      <div className="sticky top-[145px] z-10 bg-gray-50 pb-2 space-y-3">
         <input 
           type="text" 
           placeholder="Search by Job #, Item, or Person..." 
@@ -472,11 +474,20 @@ export default function CuttingReports() {
 
   return (
     <div className="min-h-full bg-gray-50" ref={containerRef} {...handlers}>
-      <div className="p-4 bg-white border-b sticky top-0 z-20">
-        <h1 className="text-xl font-black">Cutting Reports</h1>
-        <div className="flex gap-4 mt-2">
+      {/* Tabs bar - sticky below the Reports back-bar */}
+      <div className="bg-white/95 backdrop-blur-md border-b sticky top-[101px] z-20 px-5 py-3">
+        <div className="flex gap-6">
           {['pending', 'completed', 'hisab'].map(t => (
-            <button key={t} onClick={() => setTab(t)} className={cls('capitalize font-bold text-sm pb-1 border-b-2', tab===t?'text-indigo-600 border-indigo-600':'text-gray-400 border-transparent')}>{t}</button>
+            <button 
+              key={t} 
+              onClick={() => setTab(t)} 
+              className={cls(
+                'capitalize font-black text-xs pb-1 border-b-2 transition-all tracking-wider', 
+                tab === t ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-transparent'
+              )}
+            >
+              {t}
+            </button>
           ))}
         </div>
       </div>

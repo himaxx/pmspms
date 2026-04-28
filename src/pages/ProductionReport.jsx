@@ -279,20 +279,14 @@ export default function ProductionReport() {
       <div ref={containerRef} {...handlers}>
         <PullIndicator progress={pullProgress} isRefreshing={isRefreshing} />
 
-        {/* Page header */}
-        <div className="px-5 pt-5 pb-3">
-           <h1 className="text-[26px] font-black text-gray-900 tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">Pipeline</h1>
-           <p className="text-[13px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">Real-time Stage Summary</p>
-        </div>
-
-        {/* Category filter — horizontally scrolling */}
-        <div className="sticky top-0 z-30 bg-gray-50/80 backdrop-blur-xl pb-2 pt-2 border-b border-gray-200/50">
+        {/* Category filter — sticky below the Reports back-bar */}
+        <div className="sticky top-[101px] z-30 bg-gray-50/95 backdrop-blur-md pb-3 pt-3 border-b border-gray-200/50">
           <div className="flex gap-2.5 overflow-x-auto px-5 scrollbar-none"
                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {CATEGORIES.map((cat) => (
               <button key={cat} type="button" onClick={() => setCategory(cat)}
                 className={cls(
-                  'shrink-0 px-4 py-2 rounded-xl text-xs font-black border transition-all duration-200',
+                  'shrink-0 px-4 py-2 rounded-xl text-[10px] font-black border transition-all duration-200 uppercase tracking-widest',
                   category === cat
                     ? 'bg-gray-900 border-gray-900 text-white shadow-md'
                     : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 btn-press'

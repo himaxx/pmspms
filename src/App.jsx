@@ -4,8 +4,8 @@ import Layout from './components/Layout';
 import SplashScreen from './components/SplashScreen';
 import Dashboard from './pages/Dashboard';
 import Forms from './pages/Forms';
-import CuttingReports from './pages/CuttingReports';
-import ProductionReport from './pages/ProductionReport';
+import Reports from './pages/Reports';
+import FMS from './pages/FMS';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminRoute from './components/AdminRoute';
@@ -34,8 +34,8 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="forms" element={<Forms />} />
-          <Route path="cutting" element={<CuttingReports />} />
-          <Route path="production" element={<ProductionReport />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="fms" element={<FMS />} />
         </Route>
 
         {/* ── Admin routes ── */}

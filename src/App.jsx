@@ -33,9 +33,9 @@ function App() {
         {/* ── Public routes — no login required ── */}
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
-          <Route path="forms" element={<Forms />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="fms" element={<FMS />} />
+          <Route path="forms/*" element={<Forms />} />
+          <Route path="reports/*" element={<Reports />} />
+          <Route path="fms/*" element={<FMS />} />
         </Route>
 
         {/* ── Admin routes ── */}

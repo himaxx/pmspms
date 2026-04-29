@@ -43,7 +43,7 @@ export default function Layout() {
     { to: '/fms',     label: t('nav.fms'),       Icon: FMSIcon     },
   ];
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
+    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900 pb-16">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-[0_1px_8px_-2px_rgba(0,0,0,0.08)]">
@@ -97,7 +97,7 @@ export default function Layout() {
       </header>
 
       {/* ── Page Content ───────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto pb-20 px-0">
+      <main className="flex-1 w-full px-0">
         <Outlet />
       </main>
 

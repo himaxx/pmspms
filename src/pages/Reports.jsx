@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import CuttingReports from './CuttingReports';
 import ProductionReport from './ProductionReport';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -19,69 +20,83 @@ const FactoryIcon = () => (
 );
 
 export default function Reports() {
+  const navigate = useNavigate();
+
+  return (
+    <Routes>
+      <Route index element={<ReportsSelector />} />
+      <Route path="cutting" element={<ReportContainer type="cutting" />} />
+      <Route path="production" element={<ReportContainer type="production" />} />
+      <Route path="*" element={<Navigate to="/reports" replace />} />
+    </Routes>
+  );
+}
+
+function ReportsSelector() {
   const { t } = useLanguage();
-  const [active, setActive] = useState(null); // null = landing, 'cutting' | 'production' = detail
+  const navigate = useNavigate();
 
   const REPORT_TABS = [
     { id: 'cutting',    label: t('reports.cuttingReport'),    Icon: ScissorsIcon },
     { id: 'production', label: t('reports.productionReport'),  Icon: FactoryIcon  },
   ];
 
-  /* ── Landing — pick a report ─────────────────────────────────────────── */
-  if (active === null) {
-    return (
-      <div className="flex flex-col min-h-[calc(100vh-136px)]">
-        {/* Page header */}
-        <div className="px-4 pt-6 pb-2">
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">{t('nav.reports')}</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{t('reports.selectReportView')}</p>
-        </div>
-
-        {/* Report cards */}
-        <div className="flex flex-col gap-3 px-4 pt-4">
-          {REPORT_TABS.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => setActive(id)}
-              className="group w-full flex items-center gap-4 p-5 rounded-2xl border border-gray-100
-                         bg-white shadow-sm hover:shadow-md hover:border-indigo-200
-                         hover:bg-indigo-50/40 transition-all duration-200 text-left"
-            >
-              <span className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl
-                               bg-indigo-50 text-indigo-500 group-hover:bg-indigo-100 transition-colors">
-                <Icon />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
-                  {label}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {id === 'cutting'
-                    ? t('reports.viewPendingCompleted')
-                    : t('reports.trackProductionStages')}
-                </p>
-              </div>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                   className="w-5 h-5 text-gray-300 group-hover:text-indigo-400 transition-colors flex-shrink-0">
-                <path fillRule="evenodd"
-                      d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                      clipRule="evenodd" />
-              </svg>
-            </button>
-          ))}
-        </div>
+  return (
+    <div className="flex flex-col min-h-[calc(100vh-136px)]">
+      {/* Page header */}
+      <div className="px-4 pt-6 pb-2">
+        <h1 className="text-xl font-black text-gray-900 tracking-tight">{t('nav.reports')}</h1>
+        <p className="text-xs text-gray-400 mt-0.5">{t('reports.selectReportView')}</p>
       </div>
-    );
-  }
 
-  /* ── Detail view — show the selected report with a back button ────────── */
+      {/* Report cards */}
+      <div className="flex flex-col gap-3 px-4 pt-4">
+        {REPORT_TABS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => navigate(`/reports/${id}`)}
+            className="group w-full flex items-center gap-4 p-5 rounded-2xl border border-gray-100
+                       bg-white shadow-sm hover:shadow-md hover:border-indigo-200
+                       hover:bg-indigo-50/40 transition-all duration-200 text-left"
+          >
+            <span className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl
+                             bg-indigo-50 text-indigo-500 group-hover:bg-indigo-100 transition-colors">
+              <Icon />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+                {label}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {id === 'cutting'
+                  ? t('reports.viewPendingCompleted')
+                  : t('reports.trackProductionStages')}
+              </p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                 className="w-5 h-5 text-gray-300 group-hover:text-indigo-400 transition-colors flex-shrink-0">
+              <path fillRule="evenodd"
+                    d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                    clipRule="evenodd" />
+            </svg>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReportContainer({ type }) {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Back bar - 57px offset from layout header + 44px height = 101px total offset for next sticky */}
+      {/* Back bar */}
       <div className="sticky top-[57px] z-30 h-11 flex items-center gap-2 px-4
                       bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
         <button
-          onClick={() => setActive(null)}
+          onClick={() => navigate('/reports')}
           className="flex items-center gap-1.5 text-xs font-bold text-indigo-600
                      hover:text-indigo-800 transition-colors py-1"
         >
@@ -94,14 +109,13 @@ export default function Reports() {
         </button>
         <span className="text-gray-300 text-xs">/</span>
         <span className="text-xs font-bold text-gray-800 tracking-tight">
-          {active === 'cutting' ? t('reports.cuttingReport') : t('reports.productionReport')}
+          {type === 'cutting' ? t('reports.cuttingReport') : t('reports.productionReport')}
         </span>
       </div>
 
-      {/* The actual report content container */}
       <div className="flex-1">
-        {active === 'cutting'    && <CuttingReports />}
-        {active === 'production' && <ProductionReport />}
+        {type === 'cutting'    && <CuttingReports />}
+        {type === 'production' && <ProductionReport />}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { parseSets, formatSets } from '../utils/helpers';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Routes, Route, useParams, Navigate } from 'react-router-dom';
 import { STEP_PEOPLE, STEP_LABELS, ITEM_GROUPS, SHEET_NAMES } from '../utils/constants';
 import { getJobFromFMS } from '../utils/db';
 import JobCard from '../components/JobCard';
@@ -10,6 +10,7 @@ import { getPendingStep as detectStep } from '../utils/jobLogic';
 import { useJobs, useCreateJob, useUpdateStep2, useUpdateStep3, useUpdateStep4, useUpdateStep5, useUpdateStep6 } from '../hooks/useJobs';
 import { useMasterData } from '../hooks/useMasterData';
 import { useLanguage } from '../i18n/LanguageContext';
+import useUIStore from '../store/useUIStore';
 import catalogData from '../../item names according to cat and sub cat.json';
 // ─── Step Selector Config ─────────────────────────────────────────────────────
 const STEP_META = [
@@ -246,6 +247,7 @@ function SuccessScreen({ jobNo, item, onNewEntry, onHome }) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function PendingJobCard({ job, onClick }) {
+  const { t } = useLanguage();
   return (
     <button type="button" onClick={() => onClick(job)}
       className="w-full text-left bg-white rounded-2xl border-2 border-gray-100 p-4 shadow-sm 
@@ -1093,18 +1095,12 @@ function StepSelector({ onSelect }) {
   );
 }
 
-// ─── Main Forms Page ──────────────────────────────────────────────────────────
-export default function Forms() {
+// ─── Form Container Component ──────────────────────────────────────────────────
+function FormContainer() {
   const navigate = useNavigate();
-  const [view, setView] = useState('selector');  // 'selector' | 'form'
-  const [activeStep, setActiveStep] = useState(null);
+  const { stepId } = useParams();
+  const activeStep = parseInt(stepId, 10);
   const [successData, setSuccessData] = useState(null); // { jobNo, item }
-
-  function handleSelectStep(step) {
-    setActiveStep(step);
-    setSuccessData(null);
-    setView('form');
-  }
 
   function handleSuccess(data) {
     setSuccessData(data);
@@ -1115,7 +1111,7 @@ export default function Forms() {
   }
 
   function handleHome() {
-    navigate('/');
+    navigate('/forms');
   }
 
   // ── Success screen
@@ -1130,13 +1126,8 @@ export default function Forms() {
     );
   }
 
-  // ── Selector
-  if (view === 'selector') {
-    return <StepSelector onSelect={handleSelectStep} />;
-  }
-
-  // ── Active form
   const stepMeta = STEP_META.find((s) => s.step === activeStep);
+  if (!stepMeta) return <Navigate to="/forms" replace />;
 
   return (
     <div className="p-4 space-y-5 pb-8">
@@ -1144,7 +1135,7 @@ export default function Forms() {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={() => setView('selector')}
+          onClick={() => navigate('/forms')}
           className="p-2 rounded-xl hover:bg-gray-100 btn-press transition-colors text-gray-500"
           aria-label="Back"
         >
@@ -1156,10 +1147,10 @@ export default function Forms() {
           <div className="flex items-center gap-2">
             <StepBadge step={activeStep} size="md" />
             <h2 className="font-extrabold text-gray-900 text-base leading-tight">
-              {stepMeta?.hindiName}
+              {stepMeta.hindiName}
             </h2>
           </div>
-          <p className="text-xs text-gray-400 mt-0.5 pl-px">{stepMeta?.englishName}</p>
+          <p className="text-xs text-gray-400 mt-0.5 pl-px">{stepMeta.englishName}</p>
         </div>
       </div>
 
@@ -1170,9 +1161,22 @@ export default function Forms() {
         <StepFormWithFetch
           step={activeStep}
           onSuccess={handleSuccess}
-          onBack={() => setView('selector')}
+          onBack={() => navigate('/forms')}
         />
       )}
     </div>
+  );
+}
+
+// ─── Main Forms Page ──────────────────────────────────────────────────────────
+export default function Forms() {
+  const navigate = useNavigate();
+
+  return (
+    <Routes>
+      <Route index element={<StepSelector onSelect={(step) => navigate(`/forms/step/${step}`)} />} />
+      <Route path="step/:stepId" element={<FormContainer />} />
+      <Route path="*" element={<Navigate to="/forms" replace />} />
+    </Routes>
   );
 }

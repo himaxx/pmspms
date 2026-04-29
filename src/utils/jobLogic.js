@@ -44,6 +44,9 @@ export function getPendingStep(job) {
   return 2;
 }
 
+/** Alias exported for backward-compatible imports (e.g. AnalyticsHub) */
+export const detectStep = getPendingStep;
+
 function parseDate(str) {
   if (!str) return null;
   const d = new Date(str);
@@ -59,7 +62,7 @@ export function isJobDelayed(job) {
   
   // Measure time spent from the date the previous step completed
   const dateFields = {
-    2: job.date || job.created_at, 
+    2: job.date || job.createdAt, 
     3: job.s2Actual,
     4: job.s3Actual || job.s2Actual, // Uses s2Actual if cutting was skipped
     5: job.s4StartDate, 
@@ -92,7 +95,7 @@ export function getDaysInStep(job) {
   const step = getPendingStep(job);
   if (step === 7 || step === 1) return null;
   const dateFields = {
-    2: job.date || job.created_at, 
+    2: job.date || job.createdAt, 
     3: job.s2Actual,
     4: job.s3Actual || job.s2Actual,
     5: job.s4StartDate, 

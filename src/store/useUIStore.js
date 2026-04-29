@@ -2,7 +2,10 @@
  * useUIStore.js — Global UI State Store (Zustand)
  *
  * Holds all UI/interaction state that should survive page navigation:
- *   - Dashboard filters (search, step, status)
+ *   - Dashboard filters (search, step, status, dates)
+ *   - Forms view state (selector vs form, active step)
+ *   - FMS active tab
+ *   - Reports active sub-view
  *   - CuttingReports active tab
  *   - ProductionReport category + view mode
  *   - Currently selected job ID (for bottom sheets)
@@ -53,13 +56,15 @@ const useUIStore = create(
       }),
       {
         name: 'pms-pro-ui-store', // localStorage key
-        // Only persist filter/tab preferences — not derived selection state
+        // Persist navigation + filter state so it survives refresh and tab switches
         partialize: (state) => ({
+          // Dashboard
           dashSearch:          state.dashSearch,
           dashStepFilter:      state.dashStepFilter,
           dashStatusFilter:    state.dashStatusFilter,
           dashStartDate:       state.dashStartDate,
           dashEndDate:         state.dashEndDate,
+          // Report tabs
           cuttingTab:          state.cuttingTab,
           productionCategory:  state.productionCategory,
           productionViewMode:  state.productionViewMode,

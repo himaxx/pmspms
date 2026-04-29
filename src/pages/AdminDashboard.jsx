@@ -28,6 +28,7 @@ import { useJobs, useAdminUpdateJob } from '../hooks/useJobs';
 import { useMasterData, useUpdateMasterData } from '../hooks/useMasterData';
 import useAuthStore from '../store/useAuthStore';
 import { getPendingStep } from '../utils/jobLogic';
+import SystemLogsExplorer from '../components/admin/SystemLogsExplorer';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1744,7 +1745,15 @@ export default function AdminDashboard() {
               activeTab === 'system' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            ⚙️ System Modifications
+            ⚙️ System Settings
+          </button>
+          <button
+            onClick={() => setActiveTab('logs')}
+            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'logs' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            🕵️ Audit Logs
           </button>
         </div>
 
@@ -1809,6 +1818,10 @@ export default function AdminDashboard() {
             <MasterDataSettings />
             <CatalogSettings />
           </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <SystemLogsExplorer />
         )}
       </div>
     </div>

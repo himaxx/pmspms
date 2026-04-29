@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import BiltyFMSPage    from './fms/BiltyFMSPage';
 import PurchaseFMSPage from './fms/PurchaseFMSPage';
+import Order2DeliveryPage from './fms/Order2DeliveryPage';
 import { useLanguage } from '../i18n/LanguageContext';
 
 /* ─── FMS Icons ─────────────────────────────────────────────────────────── */
@@ -24,82 +25,44 @@ const BoxIcon = () => (
 );
 
 export default function FMS() {
+  return (
+    <Routes>
+      <Route index element={<FMSSelector />} />
+      <Route path="bilty" element={<FMSContainer type="bilty" />} />
+      <Route path="purchase" element={<FMSContainer type="purchase" />} />
+      <Route path="order2delivery" element={<FMSContainer type="order2delivery" />} />
+      <Route path="*" element={<Navigate to="/fms" replace />} />
+    </Routes>
+  );
+}
+
+const FMS_TABS = [
+  { 
+    id: 'bilty', 
+    labelKey: 'reports.biltyFms', 
+    Icon: BiltyIcon, 
+    descKey: 'reports.biltyFmsDesc',
+    color: 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100/50'
+  },
+  { 
+    id: 'purchase', 
+    labelKey: 'reports.purchaseFms', 
+    Icon: PurchaseIcon, 
+    descKey: 'reports.purchaseFmsDesc',
+    color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/50'
+  },
+  { 
+    id: 'order2delivery', 
+    labelKey: 'reports.orderToDelivery', 
+    Icon: BoxIcon, 
+    descKey: 'reports.order2DeliveryDesc',
+    color: 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100/50'
+  },
+];
+
+function FMSSelector() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState(null);
-
-  const FMS_TABS = [
-    { 
-      id: 'bilty', 
-      label: t('reports.biltyFms'), 
-      Icon: BiltyIcon, 
-      desc: t('reports.biltyFmsDesc'),
-      color: 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100/50'
-    },
-    { 
-      id: 'purchase', 
-      label: t('reports.purchaseFms'), 
-      Icon: PurchaseIcon, 
-      desc: t('reports.purchaseFmsDesc'),
-      color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/50'
-    },
-    { 
-      id: 'order2delivery', 
-      label: t('reports.orderToDelivery'), 
-      Icon: BoxIcon, 
-      desc: t('reports.order2DeliveryDesc'),
-      color: 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100/50'
-    },
-  ];
-
-  if (activeTab) {
-    return (
-      <div className="flex flex-col min-h-[calc(100vh-136px)]">
-         <div className="sticky top-[57px] z-30 h-11 flex items-center gap-2 px-4
-                        bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-          <button
-            onClick={() => setActiveTab(null)}
-            className="flex items-center gap-1.5 text-xs font-bold text-indigo-600
-                       hover:text-indigo-800 transition-colors py-1"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path fillRule="evenodd"
-                    d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
-                    clipRule="evenodd" />
-            </svg>
-            {t('nav.fms')}
-          </button>
-          <span className="text-gray-300 text-xs">/</span>
-          <span className="text-xs font-bold text-gray-800 tracking-tight">
-            {FMS_TABS.find(t => t.id === activeTab)?.label}
-          </span>
-        </div>
-        <div className="flex-1 p-6 md:p-8 overflow-y-auto">
-            {activeTab === 'bilty'    && <BiltyFMSPage />}
-            {activeTab === 'purchase' && <PurchaseFMSPage />}
-            {activeTab === 'order2delivery' && (
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-50 flex items-center justify-center text-amber-500 mb-6 anim-slideUp">
-                    <BoxIcon />
-                  </div>
-                  <h2 className="text-2xl font-black text-gray-900 tracking-tight anim-slideUp" style={{ animationDelay: '100ms' }}>
-                    {t('reports.orderToDelivery')}
-                  </h2>
-                  <p className="text-gray-400 mt-2 max-w-xs mx-auto anim-slideUp" style={{ animationDelay: '200ms' }}>
-                    {t('reports.beingConfigured')}
-                  </p>
-                  <div className="mt-8 anim-slideUp" style={{ animationDelay: '300ms' }}>
-                    <span className="px-4 py-2 rounded-full bg-amber-50 text-amber-600 text-xs font-bold tracking-wider uppercase border border-amber-100">
-                      {t('reports.comingSoon')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-        </div>
-      </div>
-    );
-  }
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-136px)] p-6 bg-gray-50/30">
@@ -109,10 +72,10 @@ export default function FMS() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 max-w-2xl">
-        {FMS_TABS.map(({ id, label, Icon, desc, color }, index) => (
+        {FMS_TABS.map(({ id, labelKey, Icon, descKey, color }, index) => (
           <button
             key={id}
-            onClick={() => setActiveTab(id)}
+            onClick={() => navigate(`/fms/${id}`)}
             className={`group relative flex items-center gap-5 p-6 rounded-3xl border 
                        bg-white shadow-sm hover:shadow-xl transition-all duration-300
                        text-left overflow-hidden anim-slideUp ag-lift btn-press`}
@@ -125,10 +88,10 @@ export default function FMS() {
             
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
-                {label}
+                {t(labelKey)}
               </h3>
               <p className="text-sm text-gray-400 mt-0.5 line-clamp-1">
-                {desc}
+                {t(descKey)}
               </p>
             </div>
 
@@ -142,6 +105,41 @@ export default function FMS() {
             <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br from-indigo-50/0 to-indigo-50/50 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function FMSContainer({ type }) {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+  const currentTabInfo = FMS_TABS.find(tab => tab.id === type);
+
+  return (
+    <div className="flex flex-col min-h-screen">
+       <div className="sticky top-[57px] z-30 h-11 flex items-center gap-2 px-4
+                      bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+        <button
+          onClick={() => navigate('/fms')}
+          className="flex items-center gap-1.5 text-xs font-bold text-indigo-600
+                     hover:text-indigo-800 transition-colors py-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+            <path fillRule="evenodd"
+                  d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                  clipRule="evenodd" />
+          </svg>
+          {t('nav.fms')}
+        </button>
+        <span className="text-gray-300 text-xs">/</span>
+        <span className="text-xs font-bold text-gray-800 tracking-tight">
+          {currentTabInfo ? t(currentTabInfo.labelKey) : ''}
+        </span>
+      </div>
+      <div className="flex-1 p-6 md:p-8">
+          {type === 'bilty'    && <BiltyFMSPage />}
+          {type === 'purchase' && <PurchaseFMSPage />}
+          {type === 'order2delivery' && <Order2DeliveryPage />}
       </div>
     </div>
   );

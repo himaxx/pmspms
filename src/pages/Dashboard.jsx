@@ -179,7 +179,7 @@ function JobDetailSheet({ job, onClose }) {
     { step: 1, title: t('steps.1'), done: Boolean(job.date),        date: fmtDate(job.date),        person: job.progBy,           extra: job.reason ? `${t('common.reason')}: ${job.reason}` : null },
     { step: 2, title: t('steps.2'), done: Boolean(job.s2Actual),    date: fmtDate(job.s2Actual),    person: null,                 extra: job.s2Instructions || null },
     { step: 3, title: t('steps.3'), done: Boolean(job.s3Actual),    date: fmtDate(job.s3Actual),    person: job.s3CuttingPerson,  extra: job.s3DukanCutting ? `${job.s3DukanCutting} ${t('common.pcs')} cut` : null },
-    { step: 4, title: t('steps.4'), done: Boolean(job.s4StartDate), date: fmtDate(job.s4StartDate), person: job.s4Thekedar,       extra: job.s4LeadTime ? `Lead: ${job.s4LeadTime} days` : null },
+    { step: 4, title: t('steps.4'), done: Boolean(job.s4StartDate), date: fmtDate(job.s4StartDate), person: job.s4Thekedar,       extra: job.s4LeadTime ? `${t('common.lead')}: ${job.s4LeadTime} ${t('common.hrs')}` : null },
     { step: 5, title: t('steps.5'), done: Boolean(job.s5JamaQty),   date: null,                     person: null,                 extra: job.s5JamaQty ? `Jama: ${job.s5JamaQty} ${t('common.pcs')}` : null },
     { step: 6, title: t('steps.6'), done: Boolean(job.s6SettleQty), date: null,                     person: job.s6Name,           extra: job.s6SettleQty ? `Settled: ${job.s6SettleQty}` : null },
     { step: 7, title: t('steps.7'), done: detectStep(job) === 7,    date: null,                     person: null,                 extra: null },
@@ -379,26 +379,26 @@ export default function Dashboard() {
     if (end) end.setHours(23, 59, 59, 999);
 
     return jobs.filter((j) => {
-      if (q && !String(j.jobNo).toLowerCase().includes(q) &&
-                !(j.item ?? '').toLowerCase().includes(q)) return false;
+      if (q && !String(j.jobNo || '').toLowerCase().includes(q) &&
+                !String(j.item || '').toLowerCase().includes(q)) return false;
       
       const jobDate = parseDate(j.date);
       if (start && (!jobDate || jobDate < start)) return false;
       if (end   && (!jobDate || jobDate > end))   return false;
 
       if (stepFilter !== 'All' && detectStep(j) !== Number(stepFilter)) return false;
-      if (statusFilter !== 'All') {
-        const s = getJobStatus(j);
-        if (statusFilter === 'On Track' && s !== 'on-track') return false;
-        if (statusFilter === 'Late'     && s !== 'late')     return false;
-        if (statusFilter === 'Complete' && s !== 'complete') return false;
-      }
+      if (statusFilter !== 'All' && getJobStatus(j) !== statusFilter) return false;
       return true;
     });
   }, [jobs, search, stepFilter, statusFilter, dashStartDate, dashEndDate]);
 
   const STEP_OPTS   = ['All', '1', '2', '3', '4', '5', '6', '7'];
-  const STATUS_OPTS = [t('common.all'), t('dashboard.onTrack'), t('dashboard.late'), t('dashboard.complete')];
+  const STATUS_OPTS = [
+    { label: t('common.all'), value: 'All' },
+    { label: t('dashboard.onTrack'), value: 'on-track' },
+    { label: t('dashboard.late'), value: 'late' },
+    { label: t('dashboard.complete'), value: 'complete' }
+  ];
 
   return (
     <div className="flex flex-col min-h-screen pb-8 bg-gray-100/30">
@@ -483,36 +483,54 @@ export default function Dashboard() {
                            outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 placeholder:text-gray-400 font-medium transition-all shadow-sm" />
             </div>
 
-            {/* Filters toggle button */}
+            {/* Filters toggle button + inline Clear */}
             {(() => {
               const activeCount = [
-                dashStartDate ? 1 : 0,
-                dashEndDate   ? 1 : 0,
+                search           ? 1 : 0,
+                dashStartDate    ? 1 : 0,
+                dashEndDate      ? 1 : 0,
                 stepFilter   !== 'All' ? 1 : 0,
                 statusFilter !== 'All' ? 1 : 0,
               ].reduce((a, b) => a + b, 0);
               return (
-                <button
-                  type="button"
-                  onClick={() => setShowFilters(v => !v)}
-                  className={cls(
-                    'shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-2xl border-2 text-sm font-bold transition-all shadow-sm btn-press',
-                    showFilters
-                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-indigo-200'
-                      : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300'
-                  )}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path fillRule="evenodd" d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clipRule="evenodd" />
-                  </svg>
-                  {t('dashboard.filters')}
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters(v => !v)}
+                    className={cls(
+                      'shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-2xl border-2 text-sm font-bold transition-all shadow-sm btn-press',
+                      showFilters
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-indigo-200'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300'
+                    )}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                      <path fillRule="evenodd" d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clipRule="evenodd" />
+                    </svg>
+                    {t('dashboard.filters')}
+                    {activeCount > 0 && (
+                      <span className={cls(
+                        'text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center',
+                        showFilters ? 'bg-white/25 text-white' : 'bg-indigo-600 text-white'
+                      )}>{activeCount}</span>
+                    )}
+                  </button>
+
+                  {/* Quick-clear — only when filters are active */}
                   {activeCount > 0 && (
-                    <span className={cls(
-                      'text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center',
-                      showFilters ? 'bg-white/25 text-white' : 'bg-indigo-600 text-white'
-                    )}>{activeCount}</span>
+                    <button
+                      type="button"
+                      onClick={() => { clearDashFilters(); setShowFilters(false); }}
+                      title="Clear all filters"
+                      className="shrink-0 flex items-center gap-1 px-3 py-2 rounded-2xl border-2 border-red-200 bg-red-50 text-red-500 text-xs font-bold transition-all shadow-sm btn-press hover:bg-red-100 hover:border-red-400 active:scale-95"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                      </svg>
+                      Clear
+                    </button>
                   )}
-                </button>
+                </div>
               );
             })()}
           </div>
@@ -554,14 +572,28 @@ export default function Dashboard() {
 
                 {/* Status filter pills */}
                 <div className="flex gap-1.5 flex-wrap">
-                  {STATUS_OPTS.map((s) => (
-                    <button key={s} type="button" onClick={() => setStatusFilter(s)}
+                  {STATUS_OPTS.map((opt) => (
+                    <button key={opt.value} type="button" onClick={() => setStatusFilter(opt.value)}
                       className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
-                        statusFilter === s ? 'bg-gray-900 border-gray-900 text-white shadow-lg shadow-gray-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
-                      {s}
+                        statusFilter === opt.value ? 'bg-gray-900 border-gray-900 text-white shadow-lg shadow-gray-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
+                      {opt.label}
                     </button>
                   ))}
                 </div>
+
+                {/* ── Clear All Filters ── */}
+                {(search || dashStartDate || dashEndDate || stepFilter !== 'All' || statusFilter !== 'All') && (
+                  <button
+                    type="button"
+                    onClick={() => { clearDashFilters(); setShowFilters(false); }}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-red-200 bg-red-50 text-red-600 font-bold text-sm transition-all btn-press hover:bg-red-100 hover:border-red-400 active:scale-[0.98] shadow-sm"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                    </svg>
+                    {t('dashboard.clearFilters') || 'Clear All Filters'}
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -46,52 +46,49 @@ export default function Layout() {
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900 pb-16">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-[0_1px_8px_-2px_rgba(0,0,0,0.08)]">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between shadow-[0_1px_8px_-2px_rgba(0,0,0,0.08)]">
         <img 
           src="/ketan_logo.png" 
           alt="Ketan Logo" 
-          className="h-9 w-auto object-contain select-none"
+          className="h-7 sm:h-9 w-auto object-contain select-none"
         />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <LanguageSwitcher />
 
           {/* Live badge + admin button */}
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
-                    style={{ animation: 'ping 1.2s cubic-bezier(0,0,0.2,1) infinite' }} />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="hidden xs:flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-emerald-600">
+              <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-emerald-500" />
+              </span>
+              LIVE
             </span>
-            LIVE
-          </span>
 
-          {/* Admin access button */}
-          {isAdmin ? (
-            <div className="flex items-center gap-1">
+            {/* Admin access button */}
+            {isAdmin ? (
               <button
                 onClick={() => navigate('/admin')}
-                className="flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors"
+                className="flex items-center gap-1 text-[9px] sm:text-[10px] font-black px-2 sm:px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-2.5 h-2.5 sm:w-3 sm:h-3">
                   <path fillRule="evenodd" d="M8 1a3.5 3.5 0 0 1 3.5 3.5V7A1.5 1.5 0 0 1 13 8.5v5A1.5 1.5 0 0 1 11.5 15h-7A1.5 1.5 0 0 1 3 13.5v-5A1.5 1.5 0 0 1 4.5 7V4.5A3.5 3.5 0 0 1 8 1Zm0 1.5A2 2 0 0 0 6 4.5V7h4V4.5A2 2 0 0 0 8 2.5Z" clipRule="evenodd" />
                 </svg>
                 Admin
               </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => navigate('/admin/login')}
-              title="Admin Login"
-              className="p-1.5 rounded-full text-gray-300 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-              aria-label="Admin login"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
+            ) : (
+              <button
+                onClick={() => navigate('/admin/login')}
+                title="Admin Login"
+                className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                aria-label="Admin login"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </header>

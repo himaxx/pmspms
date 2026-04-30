@@ -1731,10 +1731,10 @@ export default function AdminDashboard() {
       {/* ── Content ────────────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 py-5 space-y-5 pb-12">
         {/* ── Tabs ── */}
-        <div className="flex space-x-1 bg-black/40 p-1 rounded-2xl mb-6 border border-white/5 w-fit">
+        <div className="flex items-center overflow-x-auto scrollbar-hide space-x-1 bg-black/40 p-1 rounded-2xl mb-6 border border-white/5 w-full max-w-full">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`whitespace-nowrap px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex-shrink-0 ${
               activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -1742,15 +1742,15 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('system')}
-            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`whitespace-nowrap px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex-shrink-0 ${
               activeTab === 'system' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            ⚙️ System Settings
+            ⚙️ System
           </button>
           <button
             onClick={() => setActiveTab('logs')}
-            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`whitespace-nowrap px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex-shrink-0 ${
               activeTab === 'logs' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -1758,7 +1758,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('sizewise')}
-            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`whitespace-nowrap px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex-shrink-0 ${
               activeTab === 'sizewise' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >

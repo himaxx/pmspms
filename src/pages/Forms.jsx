@@ -536,6 +536,7 @@ function Step2Form({ job, onSuccess }) {
         yesNo:          form.yesNo,
         instructions:   form.instructions,
         inhouseCutting: form.inhouseCutting,
+        name:           form.name,
       });
       setConfirmData(null);
       onSuccess({ jobNo: job.jobNo, item: job.item });

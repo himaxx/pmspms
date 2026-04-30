@@ -88,6 +88,7 @@ export const FMS_COLUMNS = {
   s2Instructions:     12,
   s2Inhouse:          13,
   s2Delay:            14,
+  s2Approver:         21,
 
   // Step 3 — In house Cutting
   s3Planned:          15,

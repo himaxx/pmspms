@@ -103,7 +103,7 @@ export async function createJob({ progBy, item, itemGroup, size, qty, reason, sp
 }
 
 // ─── 4. Update step 2 — Production Approval ──────────────────────────────────
-export async function updateStep2(jobNo, { yesNo, instructions, inhouseCutting }) {
+export async function updateStep2(jobNo, { yesNo, instructions, inhouseCutting, name }) {
   // Fetch existing job to read s2_planned for delay calculation
   const { data: existing } = await supabase
     .from('jobs')
@@ -126,6 +126,7 @@ export async function updateStep2(jobNo, { yesNo, instructions, inhouseCutting }
       s2_instructions: instructions || null,
       s2_inhouse:      inhouseCutting ? 'Yes' : 'No',
       s2_delay:        s2Delay > 0 ? s2Delay : null,
+      s2_approver:     name || null,
       s3_planned:      toISO(s3Planned),               // plan for next stage
     })
     .eq('job_no', String(jobNo).trim());

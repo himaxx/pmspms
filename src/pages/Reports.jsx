@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import CuttingReports from './CuttingReports';
 import ProductionReport from './ProductionReport';
+import SizewiseDetails from './SizewiseDetails';
 import { useLanguage } from '../i18n/LanguageContext';
 
 /* ─── Sub-nav icons ───────────────────────────────────────────────────────── */
@@ -19,6 +20,12 @@ const FactoryIcon = () => (
   </svg>
 );
 
+const RulerIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M6.75 3.75a.75.75 0 000 1.5h.75a.75.75 0 000-1.5h-.75zM9 3.75a.75.75 0 000 1.5h2.25a.75.75 0 000-1.5H9zM13.5 3.75a.75.75 0 000 1.5h.75a.75.75 0 000-1.5h-.75zM15.75 3.75a.75.75 0 000 1.5h2.25a.75.75 0 000-1.5h-2.25zM19.5 8.25a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zM19.5 11.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0v-2.25a.75.75 0 01.75-.75zM19.5 15.75a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0v-.75a.75.75 0 01.75-.75zM4.5 2.25A2.25 2.25 0 002.25 4.5v15A2.25 2.25 0 004.5 21.75h15A2.25 2.25 0 0021.75 19.5v-15A2.25 2.25 0 0019.5 2.25h-15zM3.75 4.5c0-.414.336-.75.75-.75h1.5v2.25h-1.5A.75.75 0 013.75 4.5zm0 3v1.5h2.25v-1.5H3.75zm0 3v1.5h1.5v-1.5H3.75zm0 3v1.5h2.25v-1.5H3.75zm0 3v1.5h1.5A.75.75 0 014.5 18h-.75zM18 19.5h-1.5v-2.25h1.5c.414 0 .75.336.75.75v1.5zM15.75 19.5H14.25v-2.25h1.5v2.25zM12.75 19.5H11.25v-2.25h1.5v2.25zM9.75 19.5H8.25v-2.25h1.5v2.25zM6.75 19.5H5.25A.75.75 0 014.5 18.75v-.75h2.25v1.5z" />
+  </svg>
+);
+
 export default function Reports() {
   const navigate = useNavigate();
 
@@ -27,6 +34,7 @@ export default function Reports() {
       <Route index element={<ReportsSelector />} />
       <Route path="cutting" element={<ReportContainer type="cutting" />} />
       <Route path="production" element={<ReportContainer type="production" />} />
+      <Route path="sizewise" element={<ReportContainer type="sizewise" />} />
       <Route path="*" element={<Navigate to="/reports" replace />} />
     </Routes>
   );
@@ -39,6 +47,7 @@ function ReportsSelector() {
   const REPORT_TABS = [
     { id: 'cutting',    label: t('reports.cuttingReport'),    Icon: ScissorsIcon },
     { id: 'production', label: t('reports.productionReport'),  Icon: FactoryIcon  },
+    { id: 'sizewise',   label: t('reports.sizewiseDetails'),   Icon: RulerIcon    },
   ];
 
   return (
@@ -50,7 +59,7 @@ function ReportsSelector() {
       </div>
 
       {/* Report cards */}
-      <div className="flex flex-col gap-3 px-4 pt-4">
+      <div className="flex flex-col gap-3 px-4 pt-4 pb-10">
         {REPORT_TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -70,7 +79,9 @@ function ReportsSelector() {
               <p className="text-xs text-gray-400 mt-0.5">
                 {id === 'cutting'
                   ? t('reports.viewPendingCompleted')
-                  : t('reports.trackProductionStages')}
+                  : id === 'production'
+                    ? t('reports.trackProductionStages')
+                    : t('reports.sizewiseDetailsDesc')}
               </p>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
@@ -89,6 +100,15 @@ function ReportsSelector() {
 function ReportContainer({ type }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  const getTitle = () => {
+    switch(type) {
+      case 'cutting': return t('reports.cuttingReport');
+      case 'production': return t('reports.productionReport');
+      case 'sizewise': return t('reports.sizewiseDetails');
+      default: return '';
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -109,13 +129,14 @@ function ReportContainer({ type }) {
         </button>
         <span className="text-gray-300 text-xs">/</span>
         <span className="text-xs font-bold text-gray-800 tracking-tight">
-          {type === 'cutting' ? t('reports.cuttingReport') : t('reports.productionReport')}
+          {getTitle()}
         </span>
       </div>
 
       <div className="flex-1">
         {type === 'cutting'    && <CuttingReports />}
         {type === 'production' && <ProductionReport />}
+        {type === 'sizewise'   && <SizewiseDetails />}
       </div>
     </div>
   );

@@ -109,11 +109,12 @@ export function useCreateJob() {
 export function useUpdateStep2() {
   return useStepMutation(
     ({ jobNo, ...data }) => updateStep2(jobNo, data),
-    ({ jobNo, yesNo, instructions, inhouseCutting }) => ({
+    ({ jobNo, yesNo, instructions, inhouseCutting, name }) => ({
       s2YesNo:       yesNo ? 'Yes' : 'No',
       s2Instructions: instructions || null,
       s2Inhouse:     inhouseCutting ? 'Yes' : 'No',
       s2Actual:      new Date().toISOString(),
+      s2Approver:    name || null,
     })
   );
 }

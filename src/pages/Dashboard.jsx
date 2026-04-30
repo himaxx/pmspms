@@ -74,7 +74,7 @@ function JobRowCard({ job, onClick }) {
 }
 
 // ─── Timeline Row ─────────────────────────────────────────────────────────────
-function TimelineRow({ step, title, done, active, date, person, extra, isLast }) {
+function TimelineRow({ step, title, done, active, date, plannedDate, person, extra, isLast, isDelayed }) {
   const { t } = useLanguage();
   return (
     <div 
@@ -116,32 +116,52 @@ function TimelineRow({ step, title, done, active, date, person, extra, isLast })
                : 'bg-transparent border-transparent opacity-60'
       )}>
         <div className="flex items-start justify-between gap-2">
-          <div className="flex flex-col">
-            <span className={cls(
-               'text-[9px] font-black uppercase tracking-wider mb-0.5',
-               active ? 'text-indigo-500' : done ? 'text-green-500' : 'text-gray-400'
-            )}>
-               {t('dashboard.step')} {step}
-            </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className={cls(
+                 'text-[9px] font-black uppercase tracking-wider mb-0.5',
+                 active ? 'text-indigo-500' : done ? 'text-green-500' : 'text-gray-400'
+              )}>
+                 {t('dashboard.step')} {step}
+              </span>
+              {done && isDelayed && (
+                <span className="flex items-center gap-0.5 bg-red-50 text-red-600 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter ring-1 ring-red-100 animate-pulse">
+                  ⚠️ {t('common.late') || 'Late'}
+                </span>
+              )}
+            </div>
             <h4 className={cls(
-              'text-sm font-bold leading-tight',
+              'text-sm font-bold leading-tight truncate',
               active ? 'text-indigo-900' : done ? 'text-gray-900' : 'text-gray-500'
             )}>
               {title}
             </h4>
           </div>
-          {date && (
-            <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full shrink-0">
-              {date}
-            </span>
-          )}
+          <div className="flex flex-col items-end shrink-0">
+            {date && (
+              <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+                {date}
+              </span>
+            )}
+            {!done && plannedDate && (
+              <span className="text-[9px] font-black text-amber-500 mt-1 whitespace-nowrap">
+                {t('common.due') || 'Expected'}: {plannedDate}
+              </span>
+            )}
+          </div>
         </div>
         
         {(person || extra) && (
           <div className="mt-2.5 pt-2.5 border-t border-gray-100/50 space-y-1.5 overflow-hidden">
              {person && (
-               <div className="flex items-center gap-1.5 text-xs text-gray-700 font-medium tracking-tight">
-                  <span className="w-4 h-4 rounded-full bg-gray-100 flex items-center justify-center text-[8px]">👤</span>
+               <div className={cls(
+                 "flex items-center gap-1.5 text-xs font-medium tracking-tight",
+                 step === 2 ? "text-gray-900 text-[13px] font-black" : "text-gray-700"
+               )}>
+                  <span className={cls(
+                    "w-4 h-4 rounded-full bg-gray-100 flex items-center justify-center text-[8px]",
+                    step === 2 && "w-5 h-5 text-[10px] bg-indigo-50"
+                  )}>👤</span>
                   {person}
                </div>
              )}
@@ -176,13 +196,73 @@ function JobDetailSheet({ job, onClose }) {
   const currentStep = detectStep(job);
 
   const STEPS = [
-    { step: 1, title: t('steps.1'), done: Boolean(job.date),        date: fmtDate(job.date),        person: job.progBy,           extra: job.reason ? `${t('common.reason')}: ${job.reason}` : null },
-    { step: 2, title: t('steps.2'), done: Boolean(job.s2Actual),    date: fmtDate(job.s2Actual),    person: null,                 extra: job.s2Instructions || null },
-    { step: 3, title: t('steps.3'), done: Boolean(job.s3Actual),    date: fmtDate(job.s3Actual),    person: job.s3CuttingPerson,  extra: job.s3DukanCutting ? `${job.s3DukanCutting} ${t('common.pcs')} cut` : null },
-    { step: 4, title: t('steps.4'), done: Boolean(job.s4StartDate), date: fmtDate(job.s4StartDate), person: job.s4Thekedar,       extra: job.s4LeadTime ? `${t('common.lead')}: ${job.s4LeadTime} ${t('common.hrs')}` : null },
-    { step: 5, title: t('steps.5'), done: Boolean(job.s5JamaQty),   date: null,                     person: null,                 extra: job.s5JamaQty ? `Jama: ${job.s5JamaQty} ${t('common.pcs')}` : null },
-    { step: 6, title: t('steps.6'), done: Boolean(job.s6SettleQty), date: null,                     person: job.s6Name,           extra: job.s6SettleQty ? `Settled: ${job.s6SettleQty}` : null },
-    { step: 7, title: t('steps.7'), done: detectStep(job) === 7,    date: null,                     person: null,                 extra: null },
+    { 
+      step: 1, 
+      title: t('steps.1'), 
+      done: Boolean(job.date),        
+      date: fmtDate(job.date),        
+      person: job.progBy,           
+      extra: job.reason ? `${t('common.reason')}: ${job.reason}` : null,
+      isDelayed: false
+    },
+    { 
+      step: 2, 
+      title: t('steps.2'), 
+      done: Boolean(job.s2Actual),    
+      date: fmtDate(job.s2Actual),    
+      plannedDate: fmtDate(job.s2Planned),
+      person: job.s2Approver || null, 
+      extra: job.s2Instructions || null,
+      isDelayed: (Number(job.s2Delay) || 0) > 0
+    },
+    { 
+      step: 3, 
+      title: t('steps.3'), 
+      done: Boolean(job.s3Actual),    
+      date: fmtDate(job.s3Actual),    
+      plannedDate: fmtDate(job.s3Planned),
+      person: job.s3CuttingPerson,  
+      extra: job.s3DukanCutting ? `${job.s3DukanCutting} ${t('common.pcs')} cut` : null,
+      isDelayed: (Number(job.s3Delay) || 0) > 0
+    },
+    { 
+      step: 4, 
+      title: t('steps.4'), 
+      done: Boolean(job.s4StartDate), 
+      date: fmtDate(job.s4StartDate), 
+      plannedDate: fmtDate(job.s4Planned),
+      person: job.s4Thekedar,       
+      extra: job.s4LeadTime ? `${t('common.lead')}: ${job.s4LeadTime} ${t('common.hrs')}` : null,
+      isDelayed: (Number(job.s4Delay) || 0) > 0
+    },
+    { 
+      step: 5, 
+      title: t('steps.5'), 
+      done: Boolean(job.s5JamaQty),   
+      date: fmtDate(job.updatedAt), 
+      plannedDate: fmtDate(job.s5JamaPlanned),
+      person: null,                 
+      extra: job.s5JamaQty ? `Jama: ${job.s5JamaQty} ${t('common.pcs')}` : null,
+      isDelayed: (Number(job.s5Delay) || 0) > 0
+    },
+    { 
+      step: 6, 
+      title: t('steps.6'), 
+      done: Boolean(job.s6SettleQty), 
+      date: null,                     
+      person: job.s6Name,           
+      extra: job.s6SettleQty ? `Settled: ${job.s6SettleQty}` : null,
+      isDelayed: false
+    },
+    { 
+      step: 7, 
+      title: t('steps.7'), 
+      done: detectStep(job) === 7,    
+      date: null,                     
+      person: null,                 
+      extra: null,
+      isDelayed: false
+    },
   ];
 
   return (
@@ -215,7 +295,7 @@ function JobDetailSheet({ job, onClose }) {
         <div className="overflow-y-auto flex-1 px-5 py-4">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">{t('jobDetail.timeline')}</p>
           <div className="pl-1">
-            {STEPS.map(({ step, title, done, date, person, extra }, index) => (
+            {STEPS.map(({ step, title, done, date, plannedDate, person, extra, isDelayed }, index) => (
               <TimelineRow 
                 key={step} 
                 step={step} 
@@ -223,8 +303,10 @@ function JobDetailSheet({ job, onClose }) {
                 done={done} 
                 active={step === currentStep}
                 date={date} 
+                plannedDate={plannedDate}
                 person={person} 
                 extra={extra}
+                isDelayed={isDelayed}
                 isLast={index === STEPS.length - 1}
               />
             ))}

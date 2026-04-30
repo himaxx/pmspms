@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
-import sizewiseData from '../data/sizewise_details.json';
+import { useSizewiseData } from '../hooks/useSizewiseData';
+import localSizewiseData from '../data/sizewise_details.json';
 
 const RulerIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -37,10 +38,17 @@ function SelectBase({ label, value, onChange, options, placeholder, disabled }) 
 
 export default function SizewiseDetails() {
   const { t } = useLanguage();
+  const { data: fetchedData, isLoading } = useSizewiseData();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedDesign, setSelectedDesign] = useState('');
   const [selectedPanna, setSelectedPanna] = useState('');
   const [designSearch, setDesignSearch] = useState('');
+
+  // Use fetched data if available, fallback to local JSON for initial transition or offline
+  const sizewiseData = useMemo(() => {
+    if (fetchedData && Object.keys(fetchedData).length > 0) return fetchedData;
+    return localSizewiseData;
+  }, [fetchedData]);
 
   const categories = Object.keys(sizewiseData);
 
@@ -49,7 +57,7 @@ export default function SizewiseDetails() {
     const all = sizewiseData[selectedCategory].map(d => d.name);
     if (!designSearch) return all;
     return all.filter(name => name.toLowerCase().includes(designSearch.toLowerCase()));
-  }, [selectedCategory, designSearch]);
+  }, [selectedCategory, designSearch, sizewiseData]);
 
   const pannaOptions = useMemo(() => {
     if (!selectedCategory || !selectedDesign) return [];
@@ -59,17 +67,16 @@ export default function SizewiseDetails() {
     const widths = new Set();
     design.sizes.forEach(s => {
       Object.keys(s.lengths).forEach(w => {
-        // Only add if there's at least one non-null value for this width across any size
         if (s.lengths[w] !== null) widths.add(w);
       });
     });
     return Array.from(widths).sort((a, b) => Number(a) - Number(b));
-  }, [selectedCategory, selectedDesign]);
+  }, [selectedCategory, selectedDesign, sizewiseData]);
 
   const currentDesign = useMemo(() => {
     if (!selectedCategory || !selectedDesign) return null;
     return sizewiseData[selectedCategory].find(d => d.name === selectedDesign);
-  }, [selectedCategory, selectedDesign]);
+  }, [selectedCategory, selectedDesign, sizewiseData]);
 
   const tableData = useMemo(() => {
     if (!currentDesign || !selectedPanna) return [];
@@ -79,6 +86,10 @@ export default function SizewiseDetails() {
       length: s.lengths[selectedPanna]
     })).filter(item => item.length !== null);
   }, [currentDesign, selectedPanna]);
+
+  if (isLoading && !fetchedData) {
+    return <div className="p-20 text-center font-black text-gray-400 animate-pulse uppercase tracking-[0.2em]">Synchronizing Measurements...</div>;
+  }
 
   return (
     <div className="flex flex-col min-h-full bg-gray-50 animate-fadeIn">

@@ -29,6 +29,7 @@ import { useMasterData, useUpdateMasterData } from '../hooks/useMasterData';
 import useAuthStore from '../store/useAuthStore';
 import { getPendingStep } from '../utils/jobLogic';
 import SystemLogsExplorer from '../components/admin/SystemLogsExplorer';
+import SizewiseAdmin from '../components/admin/SizewiseAdmin';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1755,6 +1756,14 @@ export default function AdminDashboard() {
           >
             🕵️ Audit Logs
           </button>
+          <button
+            onClick={() => setActiveTab('sizewise')}
+            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'sizewise' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            📏 Sizewise
+          </button>
         </div>
 
         {activeTab === 'dashboard' && (
@@ -1822,6 +1831,10 @@ export default function AdminDashboard() {
 
         {activeTab === 'logs' && (
           <SystemLogsExplorer />
+        )}
+
+        {activeTab === 'sizewise' && (
+          <SizewiseAdmin />
         )}
       </div>
     </div>

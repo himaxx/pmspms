@@ -1,0 +1,166 @@
+📘 ImageKit API — Expert Guide
+
+A practitioner’s guide to authentication, uploads, transformations, webhooks, and production-ready usage.
+
+🚀 Overview
+
+ImageKit provides:
+
+URL-based transformations → Modify image URLs (no API call needed)
+REST API → Manage files, folders, metadata, cache
+Key Capabilities
+⬆️ File Upload API
+🗂️ Asset Management (DAM)
+🏷️ Custom Metadata
+🔄 CDN Cache Management
+
+💡 Important: Transformations are done via URL, not API calls.
+
+🔐 Authentication
+
+ImageKit uses HTTP Basic Auth:
+
+curl https://api.imagekit.io/v1/files \
+  -u your_private_api_key:
+
+Or via header:
+
+Authorization: Basic BASE64(your_private_key:)
+
+⚠️ HTTPS is mandatory. No HTTP allowed.
+
+🔑 API Keys
+Key Type	Prefix	Usage	Safe in Browser
+Public Key	public_	Client-side uploads	✅ Yes
+Private Key	private_	Server API calls	❌ No
+Restricted Key	private_	Scoped permissions	❌ No
+Best Practices
+Store keys in .env
+Never expose private keys
+Use restricted keys
+Rotate keys regularly
+📤 File Upload
+Server-side (Node.js)
+const response = await client.files.upload({
+  file: fs.createReadStream('photo.jpg'),
+  fileName: 'profile.jpg',
+  folder: '/users',
+  tags: ['avatar'],
+  useUniqueFileName: true
+});
+Client-side Upload Flow
+Generate auth on server
+Send to client
+Upload via form-data
+formData.append('file', file);
+formData.append('publicKey', 'public_key');
+formData.append('token', auth.token);
+🔄 Transformations (URL-Based)
+
+Example:
+
+https://ik.imagekit.io/demo/tr:w-400,h-300/image.jpg
+Common Parameters
+Param	Description
+w-	Width
+h-	Height
+c-	Crop
+f-	Format
+q-	Quality
+rt-	Rotation
+Chained Transform
+tr:w-400,h-300:rt-90
+SDK URL Builder
+client.helper.buildSrc({
+  src: '/image.jpg',
+  transformation: [{ width: 400 }]
+});
+🗂️ DAM (File Management API)
+
+Base URL:
+
+https://api.imagekit.io/v1
+Key Endpoints
+Action	Method	Endpoint
+List files	GET	/files
+Get file	GET	/files/:id
+Delete file	DELETE	/files/:id
+Move file	POST	/files/move
+🏷️ Metadata
+Get Metadata
+const meta = await client.files.getMetadata(fileId);
+Custom Metadata
+customMetadata: {
+  license: "editorial",
+  photographer: "John Doe"
+}
+🧹 Cache Management
+const purge = await client.purgeCache(url);
+
+Check status:
+
+await client.getPurgeCacheStatus(purge.requestId);
+⚠️ Error Handling
+Code	Meaning
+200	Success
+400	Bad request
+401	Unauthorized
+403	Forbidden
+429	Rate limit
+5xx	Server error
+Example
+try {
+  await upload();
+} catch (err) {
+  if (err.status === 429) {
+    // retry
+  }
+}
+🚦 Rate Limits
+Type	Limit
+Reads	~40 req/sec
+Writes	~5–20 req/sec
+
+Headers:
+
+X-RateLimit-Limit
+X-RateLimit-Reset
+🔔 Webhooks
+Flow
+Configure endpoint
+Receive event
+Verify signature
+Process event
+Example Events
+video.transformation.ready
+upload.post-transform.success
+Node.js Handler
+const event = client.webhooks.unwrap(req.body, {
+  headers: req.headers
+});
+
+🚨 Always verify webhook signatures
+
+🔒 Signed URLs
+const url = client.helper.buildSrc({
+  src: '/private/file.pdf',
+  signed: true,
+  expireSeconds: 3600
+});
+🧠 SDK Tips
+Use buildSrc() for URLs
+Store fileId always
+Use raw for unsupported transforms
+✅ Production Checklist
+Security
+Keys in environment variables
+Use restricted keys
+Upload
+Store fileId
+Use unique filenames
+Errors
+Handle 429 properly
+Log request IDs
+Webhooks
+Use HTTPS
+Verify signatures

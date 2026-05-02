@@ -223,9 +223,11 @@ function ProductWiseJobs({ jobs, onSelectJob }) {
 }
 
 // ─── Job Worker Wise Jobs ─────────────────────────────────────────────────────
+// ─── Job Worker Wise Jobs ─────────────────────────────────────────────────────
 function JobWorkerWiseJobs({ jobs, onSelectJob }) {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedWorker, setSelectedWorker] = useState(null);
 
   const groupedByWorker = useMemo(() => {
     const workers = {};
@@ -244,6 +246,60 @@ function JobWorkerWiseJobs({ jobs, onSelectJob }) {
       .sort((a, b) => b.jobs.length - a.jobs.length);
   }, [jobs, searchTerm]);
 
+  // View 1: Detailed Jobs for a specific worker
+  if (selectedWorker) {
+    const workerData = groupedByWorker.find(w => w.name === selectedWorker);
+    return (
+      <div className="anim-slideUp space-y-6">
+        <div className="flex items-center gap-4 bg-white p-5 rounded-[2.5rem] border-2 border-gray-100 shadow-xl shadow-gray-100/50">
+          <button 
+            onClick={() => setSelectedWorker(null)}
+            className="p-3 rounded-2xl bg-gray-50 text-gray-500 border border-gray-100 hover:bg-indigo-50 hover:text-indigo-600 transition-all btn-press"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6">
+              <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+            </svg>
+          </button>
+          <div className="flex-1">
+            <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">{selectedWorker}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{workerData?.jobs.length} {t('dashboard.activeJobs') || 'Active Jobs'}</span>
+              <span className="w-1 h-1 rounded-full bg-gray-300" />
+              <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">{workerData?.pendingQty} {t('common.pending')} Pcs</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin pb-10">
+          {workerData?.jobs.map(job => (
+            <div 
+              key={job.jobNo}
+              onClick={() => onSelectJob(job)}
+              className="bg-white rounded-3xl border-2 border-gray-100 p-5 shadow-sm hover:border-indigo-400 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden"
+            >
+              <div className="flex justify-between items-center gap-4 relative z-10">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md uppercase tracking-tighter shrink-0">#{job.jobNo}</span>
+                    <h4 className="text-sm font-black text-gray-900 truncate tracking-tight group-hover:text-indigo-600 transition-colors">{job.item}</h4>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded-lg border border-gray-100 truncate">{job.size}</span>
+                    <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg shrink-0">{job.qty} Pcs</span>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  <StepBadge step={detectStep(job)} size="xs" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // View 2: Worker Directory (Directory View)
   return (
     <div className="anim-slideUp space-y-6">
       <div className="relative group">
@@ -252,65 +308,45 @@ function JobWorkerWiseJobs({ jobs, onSelectJob }) {
         </svg>
         <input 
           type="text" 
-          placeholder="Search worker name..."
+          placeholder="Explore workers..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-100 text-sm bg-gray-50 focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 outline-none transition-all font-bold text-gray-800 shadow-inner"
         />
       </div>
 
-      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin pb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin pb-10">
         {groupedByWorker.length === 0 ? (
-          <div className="py-20 text-center bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-100">
+          <div className="col-span-full py-20 text-center bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-100">
             <span className="text-4xl opacity-30 block mb-4">👷</span>
             <p className="text-sm font-black text-gray-400 uppercase tracking-widest">No workers found</p>
           </div>
         ) : (
           groupedByWorker.map(worker => (
-            <div key={worker.name} className="bg-white rounded-[2rem] border-2 border-gray-100 overflow-hidden shadow-sm hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50/30 transition-all">
-              <div className="bg-gray-50/80 px-5 py-4 border-b border-gray-100 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-black shadow-lg">
-                    {worker.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight">{worker.name}</h4>
-                    <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mt-0.5">{worker.jobs.length} Active Jobs</p>
+            <button
+              key={worker.name}
+              onClick={() => setSelectedWorker(worker.name)}
+              className="bg-white rounded-[2.5rem] border-2 border-gray-100 p-6 flex items-center justify-between shadow-sm hover:border-indigo-400 hover:shadow-2xl hover:shadow-indigo-100/40 transition-all text-left relative group active:scale-[0.98] btn-press"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform">
+                  {worker.name.charAt(0)}
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight line-clamp-1">{worker.name}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">{worker.jobs.length} Active</span>
+                    <span className="w-1 h-1 rounded-full bg-gray-300" />
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{worker.pendingQty} Pcs</span>
                   </div>
                 </div>
-                <div className="bg-white px-3 py-2 rounded-xl border border-gray-200 text-right shadow-sm">
-                  <span className="block text-[11px] font-black text-gray-900">{worker.pendingQty}</span>
-                  <span className="block text-[8px] font-black text-gray-400 uppercase tracking-tighter">Pcs Pending</span>
-                </div>
               </div>
-              <div className="p-4 space-y-2">
-                {worker.jobs.slice(0, 3).map(job => (
-                  <div 
-                    key={job.jobNo} 
-                    onClick={() => onSelectJob(job)}
-                    className="flex items-center justify-between p-3 rounded-2xl bg-white border border-gray-100 hover:bg-gray-50 hover:border-indigo-100 transition-all cursor-pointer group"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">#{job.jobNo}</span>
-                        <p className="text-xs font-bold text-gray-800 truncate group-hover:text-indigo-600 transition-colors">{job.item}</p>
-                      </div>
-                    </div>
-                    <div className="shrink-0 ml-4">
-                      <StepBadge step={detectStep(job)} size="xs" />
-                    </div>
-                  </div>
-                ))}
-                {worker.jobs.length > 3 && (
-                  <button 
-                    onClick={() => onSelectJob(worker.jobs[0])}
-                    className="w-full py-3 text-[10px] font-black text-indigo-500 uppercase hover:bg-indigo-50 transition-all rounded-xl tracking-[0.2em] bg-indigo-50/30 mt-2"
-                  >
-                    + {worker.jobs.length - 3} More Active Jobs
-                  </button>
-                )}
+              <div className="p-2 rounded-xl bg-gray-50 text-gray-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                </svg>
               </div>
-            </div>
+            </button>
           ))
         )}
       </div>

@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5173",
+  "executionArgs": {
+    "projectName": "pms-pro",
+    "projectPath": "c:\\Users\\admin\\Downloads\\MAcrod\\pms-pro",
+    "testIds": [],
+    "additionalInstruction": "Verify the dashboard job list virtualization and general performance. Ensure scrolling is smooth and search/filters work correctly with the new virtualized list. The server is running on port 5173.",
+    "serverMode": "production",
+    "envs": {
+      "API_KEY": "sk-user-n3Dq0yCMdmvCkovUDveheV5oa3P3M-xfODZtF7jL3ZjTtCzsyKLhrpRm-R8t46wmYTruWtS_B1wM3XormFMqPS6X0FvQ9wZorMmzcMxSmzboXVgwJ10vAVG7AskNP-6M-QA"
+    }
+  },
+  "serverPort": 60932,
+  "proxy": "http://03a9bc4d-534e-41a5-8a5f-4f5c9c701670:TDKSweqk3mUgRWSO9ObPsWLIbAddMTwQ@tun.testsprite.com:8080"
+}

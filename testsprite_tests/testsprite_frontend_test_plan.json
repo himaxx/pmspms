@@ -1,0 +1,1016 @@
+[
+  {
+    "id": "TC001",
+    "title": "Create a requirement with multi-size quantities and confirm it appears on the dashboard",
+    "description": "Verifies a data entry operator can create a Step 1 requirement with category cascade and multi-size quantities and then see the new job appear on the dashboard.",
+    "category": "Production Forms (6-step Job Workflow)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forms"
+      },
+      {
+        "type": "action",
+        "description": "Select Step 1 in the step selector."
+      },
+      {
+        "type": "action",
+        "description": "Select a Category value."
+      },
+      {
+        "type": "action",
+        "description": "Select a Subcategory value."
+      },
+      {
+        "type": "action",
+        "description": "Select an Item value."
+      },
+      {
+        "type": "action",
+        "description": "Enter size and quantity details for multiple sizes using positive quantities."
+      },
+      {
+        "type": "action",
+        "description": "Submit the form to open the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the submission in the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation to go to the dashboard."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the newly created job appears in the live job list."
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Approve a pending job with inhouse cutting routes it to Step 3",
+    "description": "Verifies a supervisor can approve a Step 1 job and route it to Step 3 when inhouse cutting is selected.",
+    "category": "Production Forms (6-step Job Workflow)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forms"
+      },
+      {
+        "type": "action",
+        "description": "Select Step 1 in the step selector."
+      },
+      {
+        "type": "action",
+        "description": "Select a Category value."
+      },
+      {
+        "type": "action",
+        "description": "Select a Subcategory value."
+      },
+      {
+        "type": "action",
+        "description": "Select an Item value."
+      },
+      {
+        "type": "action",
+        "description": "Enter size and quantity details with at least one size having a positive quantity."
+      },
+      {
+        "type": "action",
+        "description": "Submit the form to open the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the submission in the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Select Step 2 in the step selector."
+      },
+      {
+        "type": "action",
+        "description": "Search for and select the newly created pending job."
+      },
+      {
+        "type": "action",
+        "description": "Select an approval decision to approve the job."
+      },
+      {
+        "type": "action",
+        "description": "Indicate that cutting is inhouse."
+      },
+      {
+        "type": "action",
+        "description": "Submit the form to open the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the submission in the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Select Step 3 in the step selector."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job is available in the Step 3 pending job selection list."
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Approve a pending job with external cutting skips Step 3 and routes to Step 4",
+    "description": "Verifies a supervisor can approve a Step 1 job and the workflow skips Step 3 when external cutting is selected, making the job available in Step 4.",
+    "category": "Production Forms (6-step Job Workflow)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forms"
+      },
+      {
+        "type": "action",
+        "description": "Select Step 1 in the step selector."
+      },
+      {
+        "type": "action",
+        "description": "Select a Category value."
+      },
+      {
+        "type": "action",
+        "description": "Select a Subcategory value."
+      },
+      {
+        "type": "action",
+        "description": "Select an Item value."
+      },
+      {
+        "type": "action",
+        "description": "Enter size and quantity details with at least one size having a positive quantity."
+      },
+      {
+        "type": "action",
+        "description": "Submit the form to open the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the submission in the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Select Step 2 in the step selector."
+      },
+      {
+        "type": "action",
+        "description": "Search for and select the newly created pending job."
+      },
+      {
+        "type": "action",
+        "description": "Select an approval decision to approve the job."
+      },
+      {
+        "type": "action",
+        "description": "Indicate that cutting is external (not inhouse)."
+      },
+      {
+        "type": "action",
+        "description": "Submit the form to open the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the submission in the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Select Step 4 in the step selector."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job is available in the Step 4 pending job selection list."
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Record cutting quantities for a pending inhouse cutting job",
+    "description": "Verifies a cutting lead can select a Step 3 pending job, enter per-size cutting quantities and cutter identity, and save the cutting entry.",
+    "category": "Production Forms (6-step Job Workflow)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forms"
+      },
+      {
+        "type": "action",
+        "description": "Select Step 1 in the step selector."
+      },
+      {
+        "type": "action",
+        "description": "Select a Category value."
+      },
+      {
+        "type": "action",
+        "description": "Select a Subcategory value."
+      },
+      {
+        "type": "action",
+        "description": "Select an Item value."
+      },
+      {
+        "type": "action",
+        "description": "Enter size and quantity details with at least one size having a positive quantity."
+      },
+      {
+        "type": "action",
+        "description": "Submit the form to open the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the submission in the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Select Step 2 in the step selector."
+      },
+      {
+        "type": "action",
+        "description": "Search for and select the newly created pending job."
+      },
+      {
+        "type": "action",
+        "description": "Select an approval decision to approve the job."
+      },
+      {
+        "type": "action",
+        "description": "Indicate that cutting is inhouse."
+      },
+      {
+        "type": "action",
+        "description": "Submit the form to open the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the submission in the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Select Step 3 in the step selector."
+      },
+      {
+        "type": "action",
+        "description": "Search for and select the pending job."
+      },
+      {
+        "type": "action",
+        "description": "Select the cutting person who did the cutting."
+      },
+      {
+        "type": "action",
+        "description": "Enter actual pieces cut per size using non-negative quantities."
+      },
+      {
+        "type": "action",
+        "description": "Submit the form to open the confirmation popup."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the submission in the confirmation popup."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cutting entry is recorded and the job is no longer pending for Step 3."
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Filter and inspect a job from the live dashboard",
+    "description": "Verifies a supervisor can find jobs using search and filters and open a job detail to view its step, balances, and delay indicators.",
+    "category": "Live Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill a search term into the dashboard search using a value from any visible job card (job number or item name)."
+      },
+      {
+        "type": "action",
+        "description": "Select a step filter value."
+      },
+      {
+        "type": "action",
+        "description": "Click a job from the filtered list to open its details."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job detail shows the current step, responsible person, balance quantity, and delay/status information."
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "View pipeline grouped by stage and inspect a job timeline",
+    "description": "Verifies that Pipeline View groups jobs by stage, prioritizes delayed jobs within a stage, and allows opening a job to view its timeline.",
+    "category": "Production Pipeline View & Thekedar Insights",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Switch the dashboard view to Pipeline View"
+      },
+      {
+        "type": "action",
+        "description": "Click a pipeline stage to open the list of jobs in that stage"
+      },
+      {
+        "type": "action",
+        "description": "Click the first job in the stage list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job timeline is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Inspect late job delay hours and step history from dashboard",
+    "description": "Verifies that a user can open a late job from the dashboard and see its delay hours and step history details.",
+    "category": "Smart Delay Detection Engine",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Filter jobs by Status = Late"
+      },
+      {
+        "type": "action",
+        "description": "Click a job card from the filtered results to open its details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job detail view shows delay hours information"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job detail view shows step history information"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Enter cutting for a pending job in reports and see it move to completed",
+    "description": "Verifies the cutting team can complete a pending cutting entry in Reports and the job moves from Pending to Completed.",
+    "category": "Cutting Reports & Hisab PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /reports"
+      },
+      {
+        "type": "action",
+        "description": "Open the Pending tab."
+      },
+      {
+        "type": "action",
+        "description": "Select a pending job from the list."
+      },
+      {
+        "type": "action",
+        "description": "Enter actual pieces cut for the job using valid quantities."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the cutting entry."
+      },
+      {
+        "type": "action",
+        "description": "Open the Completed tab."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job appears in the Completed list."
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Edit a job in Raw Data Explorer and see it reflected on Dashboard and Forms",
+    "description": "Verifies that modifying a job field via Raw Data Explorer updates the job representation across the Dashboard and Forms without stale data.",
+    "category": "Admin Control & Analytics",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open Raw Data Explorer"
+      },
+      {
+        "type": "action",
+        "description": "Search for a job by Job Number and open it from the results"
+      },
+      {
+        "type": "action",
+        "description": "Edit a raw field value to a new identifiable value"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the modification"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Open the same job from the dashboard list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated job information is displayed for the edited field"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /forms"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the same job shows the updated field value in its workflow context"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Set Step 4 lead time and see planned Jama date update",
+    "description": "Verifies that completing Step 4 (Naame) with a lead time causes the system to calculate and display an expected Jama date for the job.",
+    "category": "Smart Delay Detection Engine",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forms"
+      },
+      {
+        "type": "action",
+        "description": "Start Step 1 requirement creation for a new job"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid Category"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid Subcategory"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid Item"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid multi-size quantity breakdown"
+      },
+      {
+        "type": "action",
+        "description": "Confirm creation of the requirement"
+      },
+      {
+        "type": "action",
+        "description": "Proceed through the workflow to reach Step 4 (Naame) for the same job"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid lead time into the Step 4 lead time field"
+      },
+      {
+        "type": "action",
+        "description": "Submit Step 4 (Naame)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job shows an expected Jama date computed from the lead time"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job's step indicator reflects completion of Step 4"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Generate and download a Hisab PDF with calculated totals",
+    "description": "Verifies a cutting lead can compute totals for a cutter over a date range and generate a downloadable Hisab PDF.",
+    "category": "Cutting Reports & Hisab PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /reports"
+      },
+      {
+        "type": "action",
+        "description": "Open the Hisab tab."
+      },
+      {
+        "type": "action",
+        "description": "Select a cutting person."
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date range."
+      },
+      {
+        "type": "action",
+        "description": "Enter a positive per-piece rate for each listed job line."
+      },
+      {
+        "type": "action",
+        "description": "Generate the Hisab PDF."
+      },
+      {
+        "type": "action",
+        "description": "Download the generated PDF."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a PDF preview or generated-document state is displayed and a download action is available."
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Filter pipeline jobs by thekedar in Thekedar Insights",
+    "description": "Verifies that selecting a thekedar filters the pipeline to show only jobs assigned to that thekedar.",
+    "category": "Production Pipeline View & Thekedar Insights",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Switch the dashboard view to Pipeline View"
+      },
+      {
+        "type": "action",
+        "description": "Switch to Thekedar Insights within the pipeline view"
+      },
+      {
+        "type": "action",
+        "description": "Select a thekedar from the insights list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify only jobs for the selected thekedar are shown in the pipeline job list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Pull from Google Sheets updates the live job list",
+    "description": "Verifies a user can trigger a Sheets pull and see the dashboard list refresh to reflect pulled data.",
+    "category": "Live Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Trigger the action to pull data from Google Sheets."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the pull action."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible and the live job list refreshes to show updated results."
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Create and submit a Purchase entry and see it in the Purchase log",
+    "description": "Verifies that a logistics user can submit procurement details in Purchase and the new entry appears in the Purchase log.",
+    "category": "FMS Modules (Bilty, Purchase, Order2Delivery)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /fms"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the Purchase tab"
+      },
+      {
+        "type": "action",
+        "description": "Fill in a vendor value"
+      },
+      {
+        "type": "action",
+        "description": "Add an item line with a valid item and quantity"
+      },
+      {
+        "type": "action",
+        "description": "Submit the procurement entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new purchase entry is listed in the Purchase log"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Filter dashboard to only late jobs",
+    "description": "Verifies that applying the Late status filter on the dashboard shows only jobs marked as Late.",
+    "category": "Smart Delay Detection Engine",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Filter jobs by Status = Late"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify only jobs with a Late indicator are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Filter pipeline by category",
+    "description": "Verifies that applying a category filter updates the pipeline stages and job counts to reflect only jobs from the selected category.",
+    "category": "Production Pipeline View & Thekedar Insights",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Switch the dashboard view to Pipeline View"
+      },
+      {
+        "type": "action",
+        "description": "Select a category in the pipeline filters"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the pipeline stages update to show only jobs from the selected category"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "Late indicator consistency between dashboard card and job detail",
+    "description": "Verifies that a job marked Late on the dashboard remains marked Late in its detail view.",
+    "category": "Smart Delay Detection Engine",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Filter jobs by Status = Late"
+      },
+      {
+        "type": "action",
+        "description": "Click a job card from the filtered results to open its details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the job detail view indicates the job status is Late"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC018",
+    "title": "Create and submit a Bilty entry and see it in today’s dispatch records",
+    "description": "Verifies that dispatch staff can enter bilty details and the new bilty appears in the day's dispatch records list.",
+    "category": "FMS Modules (Bilty, Purchase, Order2Delivery)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /fms"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the Bilty tab"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid bilty details for a dispatch"
+      },
+      {
+        "type": "action",
+        "description": "Submit the bilty entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the bilty appears in the day's dispatch records"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC019",
+    "title": "Admin login grants access to admin dashboard analytics",
+    "description": "Verifies that an admin can log in via /admin/login and reach /admin with executive KPIs and analytics sections visible.",
+    "category": "Admin Control & Analytics",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the admin dashboard is displayed with executive KPIs and analytics sections"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC020",
+    "title": "Update Order2Delivery tracking and see status updated in the module",
+    "description": "Verifies that entering delivery tracking details updates the order delivery status in the Order2Delivery module.",
+    "category": "FMS Modules (Bilty, Purchase, Order2Delivery)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /fms"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the Order2Delivery tab"
+      },
+      {
+        "type": "action",
+        "description": "Select an order or create a new tracking entry if available"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid delivery tracking details"
+      },
+      {
+        "type": "action",
+        "description": "Submit the delivery update"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order delivery status is updated in the Order2Delivery list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC021",
+    "title": "Push to Google Sheets shows export confirmation",
+    "description": "Verifies a user can push job records to Google Sheets and receives a UI confirmation that export completed.",
+    "category": "Live Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Trigger the action to push data to Google Sheets."
+      },
+      {
+        "type": "action",
+        "description": "Confirm the push action."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible indicating job records were exported."
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC022",
+    "title": "Master data changes in Admin become available immediately in Forms catalog dropdowns",
+    "description": "Verifies that adding or editing catalog master data in Admin is reflected immediately in the cascaded dropdowns in /forms.",
+    "category": "Admin Control & Analytics",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open Master Data Mgmt"
+      },
+      {
+        "type": "action",
+        "description": "Add a new item in the catalog with a unique name"
+      },
+      {
+        "type": "action",
+        "description": "Save the master data changes"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /forms"
+      },
+      {
+        "type": "action",
+        "description": "Select the category and subcategory that contain the newly added item"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the newly added item is available in the item dropdown"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC023",
+    "title": "Clear Late filter returns mixed status results",
+    "description": "Verifies that clearing the Late status filter restores the job list to show jobs across multiple statuses.",
+    "category": "Smart Delay Detection Engine",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Filter jobs by Status = Late"
+      },
+      {
+        "type": "action",
+        "description": "Clear all applied filters"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify jobs with different status indicators are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC024",
+    "title": "Prevent Hisab PDF generation with a negative per-piece rate",
+    "description": "Verifies the Hisab calculator blocks invalid negative rates and prevents PDF generation.",
+    "category": "Cutting Reports & Hisab PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /reports"
+      },
+      {
+        "type": "action",
+        "description": "Open the Hisab tab."
+      },
+      {
+        "type": "action",
+        "description": "Select a cutting person."
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date range."
+      },
+      {
+        "type": "action",
+        "description": "Enter a negative per-piece rate for a job line."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to generate the Hisab PDF."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a validation error is visible and PDF generation does not proceed."
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC025",
+    "title": "Block Step form submission when a required field is missing",
+    "description": "Verifies the forms prevent submission when required fields are not filled and display a validation error.",
+    "category": "Production Forms (6-step Job Workflow)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forms"
+      },
+      {
+        "type": "action",
+        "description": "Select Step 1 in the step selector."
+      },
+      {
+        "type": "action",
+        "description": "Leave a required field empty (such as Category)."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit the form to proceed to confirmation."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a required-field validation error is visible and submission does not proceed."
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC026",
+    "title": "Validate dashboard date range rejects start date after end date",
+    "description": "Verifies the dashboard blocks invalid date filters when the start date is later than the end date.",
+    "category": "Live Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click to open the date range selector."
+      },
+      {
+        "type": "action",
+        "description": "Select a valid end date."
+      },
+      {
+        "type": "action",
+        "description": "Select a start date that is later than the selected end date."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a date-range validation error is visible and results are not applied."
+      }
+    ],
+    "priority": "Low"
+  }
+]

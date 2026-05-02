@@ -1,0 +1,78 @@
+version: "2"
+type: frontend
+tech_stack:
+  - JavaScript
+  - React
+  - Vite
+  - Tailwind CSS
+  - Supabase
+  - TanStack Query
+  - Zustand
+  - React Router
+  - Recharts
+  - jsPDF
+routes:
+  - path: /
+    file: src/pages/Dashboard.jsx
+    auth_required: false
+    description: Main dashboard showing job overview and stats
+  - path: /forms
+    file: src/pages/Forms.jsx
+    auth_required: false
+    description: Multi-step job workflow forms (Step 1 to 6)
+  - path: /reports
+    file: src/pages/Reports.jsx
+    auth_required: false
+    description: Production and cutting reports
+  - path: /fms
+    file: src/pages/FMS.jsx
+    auth_required: false
+    description: Freight and Order management system sub-modules
+  - path: /admin/login
+    file: src/pages/AdminLogin.jsx
+    auth_required: false
+    description: Administrator login page
+  - path: /admin
+    file: src/pages/AdminDashboard.jsx
+    auth_required: true
+    description: Admin panel for master data management
+features:
+  - name: Job Management Workflow
+    description: 6-step process from requirement to settlement
+    files:
+      - src/pages/Forms.jsx
+      - src/hooks/useJobs.js
+    entry_route: /forms
+    user_interactions:
+      - Select step from dashboard or navigation
+      - Fill job details (Category, Subcategory, Item)
+      - Enter size and quantity details
+      - Confirm and submit entry via popup
+    api_calls:
+      - method: POST
+        endpoint: supabase/jobs
+  - name: FMS Modules
+    description: Specialized modules for Bilty, Purchase, and Delivery tracking
+    files:
+      - src/pages/FMS.jsx
+      - src/pages/fms/PurchaseFMSPage.jsx
+    entry_route: /fms
+    user_interactions:
+      - Navigate between Bilty, Purchase, and Order2Delivery tabs
+      - Submit logistics and procurement data
+    api_calls:
+      - method: GET
+        endpoint: supabase/fms_data
+  - name: Admin Control
+    description: Manage master data lists for dropdowns and app configuration
+    files:
+      - src/pages/AdminDashboard.jsx
+    entry_route: /admin
+    user_interactions:
+      - Login with admin credentials
+      - Edit categories, items, and personnel lists
+    auth_required: true
+known_limitations:
+  - issue: Local dev server may be slow for concurrent tests
+    location: vite dev
+    impact: Possible timeouts during extensive testing

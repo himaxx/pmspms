@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { bulkSyncJobs, pullSheetsToDatabase } from '../utils/sync';
 import StepBadge from '../components/StepBadge';
 import { JobCardSkeleton } from '../components/Skeleton';
@@ -6,9 +6,11 @@ import AnalyticsHub from '../components/AnalyticsHub';
 import { useToast, ToastContainer } from '../components/Toast';
 import usePullToRefresh from '../hooks/usePullToRefresh';
 import { getPendingStep as detectStep, isJobDelayed as isDelayed, getJobStatus } from '../utils/jobLogic';
+import JobManagement from '../components/JobManagement';
 import { useJobs } from '../hooks/useJobs';
 import useUIStore from '../store/useUIStore';
 import { useLanguage } from '../i18n/LanguageContext';
+import { STEP_PEOPLE } from '../utils/constants';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -44,34 +46,41 @@ function StatusDot({ status }) {
 }
 
 // ─── Job Row Card ─────────────────────────────────────────────────────────────
-function JobRowCard({ job, onClick }) {
+const JobRowCard = React.memo(({ job, onClick, viewMode = 'comfortable' }) => {
   const { t } = useLanguage();
   const step   = detectStep(job);
   const status = getJobStatus(job);
+  const isCompact = viewMode === 'compact';
+
   return (
     <button type="button" onClick={() => onClick(job)}
-      className="w-full text-left anim-slideUp bg-white rounded-[1.25rem] border-2 border-gray-200
-                 shadow-md p-4 flex items-center gap-4 btn-press transition-all
-                 hover:shadow-lg hover:border-indigo-200 active:scale-[0.98]">
+      className={cls(
+        'w-full text-left anim-slideUp bg-white rounded-[1.25rem] border-2 border-gray-200 shadow-md flex items-center transition-all hover:shadow-lg hover:border-indigo-200 active:scale-[0.98] btn-press',
+        isCompact ? 'p-2 sm:p-2.5 gap-2 sm:gap-3' : 'p-3.5 sm:p-4 gap-3 sm:gap-4'
+      )}>
       <div className="flex flex-col gap-1 shrink-0">
-        <span className="text-xs font-bold text-gray-800">#{job.jobNo}</span>
-        <StepBadge step={step} size="sm" />
+        <span className={cls('font-bold text-gray-800', isCompact ? 'text-[10px]' : 'text-xs')}>#{job.jobNo}</span>
+        <StepBadge step={step} size={isCompact ? "xs" : "sm"} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-gray-900 text-sm truncate">{job.item || '—'}</p>
-        <p className="text-[11px] text-gray-400 mt-0.5 flex gap-2 flex-wrap">
+        <p className={cls('font-semibold text-gray-900 truncate', isCompact ? 'text-xs' : 'text-sm')}>{job.item || '—'}</p>
+        <p className={cls('text-gray-400 mt-0.5 flex gap-2 flex-wrap', isCompact ? 'text-[10px]' : 'text-[11px]')}>
           {job.size && <span>{job.size}</span>}
           {job.qty  && <span className="font-medium text-gray-600">{job.qty} pcs</span>}
         </p>
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
         <StatusDot status={status} />
-        {status === 'late'     && <span className="text-[9px] font-bold text-red-500   uppercase">{t('dashboard.late')}</span>}
-        {status === 'complete' && <span className="text-[9px] font-bold text-green-600 uppercase">{t('dashboard.complete')}</span>}
+        {!isCompact && (
+          <>
+            {status === 'late'     && <span className="text-[9px] font-bold text-red-500   uppercase">{t('dashboard.late')}</span>}
+            {status === 'complete' && <span className="text-[9px] font-bold text-green-600 uppercase">{t('dashboard.complete')}</span>}
+          </>
+        )}
       </div>
     </button>
   );
-}
+});
 
 // ─── Timeline Row ─────────────────────────────────────────────────────────────
 function TimelineRow({ step, title, done, active, date, plannedDate, person, extra, isLast, isDelayed }) {
@@ -377,8 +386,8 @@ function AajKeNaame({ jobs }) {
 
   return (
     <div className="px-4 mt-8 pb-4">
-      <div className="flex flex-col gap-4 bg-white rounded-[2rem] border-2 border-gray-200 p-6 shadow-md shadow-gray-100/50">
-        <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 bg-white rounded-[2rem] border-2 border-gray-200 p-5 sm:p-6 shadow-md shadow-gray-100/50">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-xl font-black text-gray-900 leading-none">{t('dashboard.aajKeNaame')}</h2>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{t('dashboard.dispatchLogs')}</p>
@@ -387,7 +396,7 @@ function AajKeNaame({ jobs }) {
             type="date" 
             value={selectedDate} 
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="text-xs font-bold border-2 border-gray-100 p-2 rounded-xl bg-gray-50 outline-none focus:border-indigo-400 transition-all"
+            className="w-full sm:w-auto text-xs font-bold border-2 border-gray-100 p-2.5 rounded-xl bg-gray-50 outline-none focus:border-indigo-400 transition-all"
           />
         </div>
 
@@ -427,6 +436,103 @@ function AajKeNaame({ jobs }) {
   );
 }
 
+// ─── Requirements Component ──────────────────────────────────────────────────
+function Requirements({ jobs }) {
+  const { t } = useLanguage();
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [selectedPerson, setSelectedPerson] = useState('All');
+
+  // Use fixed list from constants for filtering
+  const personNames = useMemo(() => {
+    return ['All', ...STEP_PEOPLE[1]];
+  }, []);
+
+  const requirementRecords = useMemo(() => {
+    return jobs.filter(j => {
+      if (!j.date) return false;
+      const jobDate = j.date.slice(0, 10);
+      const isDateMatch = jobDate === selectedDate;
+      const isPersonMatch = selectedPerson === 'All' || j.progBy === selectedPerson;
+      return isDateMatch && isPersonMatch;
+    }).sort((a, b) => b.jobNo - a.jobNo); // Latest to oldest
+  }, [jobs, selectedDate, selectedPerson]);
+
+  return (
+    <div className="px-4 mt-8 pb-4">
+      <div className="flex flex-col gap-4 bg-white rounded-[2rem] border-2 border-gray-200 p-6 shadow-md shadow-gray-100/50">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+          <div>
+            <h2 className="text-xl font-black text-gray-900 leading-none">{t('dashboard.requirements')}</h2>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{t('dashboard.requirementLogs')}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <select 
+              value={selectedPerson}
+              onChange={(e) => setSelectedPerson(e.target.value)}
+              className="text-[11px] font-black text-indigo-600 bg-indigo-50 border-2 border-indigo-100 p-2 rounded-xl outline-none focus:border-indigo-400 transition-all appearance-none pr-8 relative"
+              style={{ 
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234f46e5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, 
+                backgroundRepeat: 'no-repeat', 
+                backgroundPosition: 'right 0.5rem center', 
+                backgroundSize: '1rem' 
+              }}
+            >
+              {personNames.map(name => (
+                <option key={name} value={name}>{name === 'All' ? (t('common.all') || 'All') : name}</option>
+              ))}
+            </select>
+            <input 
+              type="date" 
+              value={selectedDate} 
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="text-xs font-bold border-2 border-gray-100 p-2 rounded-xl bg-gray-50 outline-none focus:border-indigo-400 transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3 mt-2 max-h-[350px] overflow-y-auto pr-1 scrollbar-thin">
+          {requirementRecords.length === 0 ? (
+            <div className="py-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
+              <span className="text-2xl opacity-50">📋</span>
+              <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-tight">{t('dashboard.noRequirements')}</p>
+            </div>
+          ) : (
+            requirementRecords.map(record => (
+              <div key={record.jobNo} className="flex items-center justify-between p-3.5 bg-gray-50/50 rounded-2xl border-2 border-gray-100 hover:border-indigo-100 transition-all group">
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black text-gray-400 leading-none uppercase">#{record.jobNo}</span>
+                    <span className="text-[9px] font-black text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">REQ</span>
+                  </div>
+                  <span className="text-sm font-black text-gray-800 mt-1 truncate">{record.item}</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[11px] font-bold text-gray-600">{record.progBy || 'Unknown'}</span>
+                    <span className="w-1 h-1 rounded-full bg-gray-300" />
+                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{record.itemGroup}</span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-lg font-black text-gray-900 leading-none">{record.qty || 0}</span>
+                  <span className="block text-[9px] font-black text-gray-400 uppercase">{t('dashboard.pieces')}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        
+        {requirementRecords.length > 0 && (
+          <div className="pt-2 border-t-2 border-gray-50 flex justify-between items-center px-1">
+            <span className="text-[11px] font-black text-gray-400 uppercase">{t('dashboard.totalRequirements')}</span>
+            <span className="text-sm font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">
+              {requirementRecords.reduce((acc, r) => acc + (Number(r.qty) || 0), 0)} {t('common.pcs')}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { t } = useLanguage();
   // ── Server state via TanStack Query (shared cache with all other pages) ──────
@@ -445,6 +551,8 @@ export default function Dashboard() {
   const setDashStartDate = useUIStore((s) => s.setDashStartDate);
   const setDashEndDate   = useUIStore((s) => s.setDashEndDate);
   const clearDashFilters = useUIStore((s) => s.clearDashFilters);
+  const viewMode         = useUIStore((s) => s.dashViewMode);
+  const setViewMode      = useUIStore((s) => s.setDashViewMode);
 
   const [selectedJob, setSelectedJob] = useState(null);
   const [showFilters, setShowFilters]   = useState(false);
@@ -453,6 +561,16 @@ export default function Dashboard() {
   const { containerRef, handlers, pullProgress, isRefreshing } = usePullToRefresh(refetch);
 
 
+  // Jobs with pre-parsed dates for faster filtering
+  const jobsWithDates = useMemo(() => {
+    return jobs.map(j => ({
+      ...j,
+      _parsedDate: parseDate(j.date),
+      _detectStep: detectStep(j),
+      _jobStatus: getJobStatus(j)
+    }));
+  }, [jobs]);
+
   // Filtered list
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -460,19 +578,19 @@ export default function Dashboard() {
     const end   = dashEndDate   ? new Date(dashEndDate)   : null;
     if (end) end.setHours(23, 59, 59, 999);
 
-    return jobs.filter((j) => {
+    return jobsWithDates.filter((j) => {
       if (q && !String(j.jobNo || '').toLowerCase().includes(q) &&
                 !String(j.item || '').toLowerCase().includes(q)) return false;
       
-      const jobDate = parseDate(j.date);
+      const jobDate = j._parsedDate;
       if (start && (!jobDate || jobDate < start)) return false;
       if (end   && (!jobDate || jobDate > end))   return false;
 
-      if (stepFilter !== 'All' && detectStep(j) !== Number(stepFilter)) return false;
-      if (statusFilter !== 'All' && getJobStatus(j) !== statusFilter) return false;
+      if (stepFilter !== 'All' && j._detectStep !== Number(stepFilter)) return false;
+      if (statusFilter !== 'All' && j._jobStatus !== statusFilter) return false;
       return true;
     });
-  }, [jobs, search, stepFilter, statusFilter, dashStartDate, dashEndDate]);
+  }, [jobsWithDates, search, stepFilter, statusFilter, dashStartDate, dashEndDate]);
 
   const STEP_OPTS   = ['All', '1', '2', '3', '4', '5', '6', '7'];
   const STATUS_OPTS = [
@@ -541,7 +659,7 @@ export default function Dashboard() {
                 {t('dashboard.description')}
               </p>
               {lastRefresh && (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-50 border border-gray-100 text-[9px] font-bold text-gray-400 ml-auto uppercase tracking-wider">
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white border border-gray-100 text-[9px] font-bold text-gray-400 ml-auto uppercase tracking-wider">
                   <span className="w-1 h-1 rounded-full bg-emerald-500" />
                   {lastRefresh.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                 </div>
@@ -550,173 +668,189 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Filter Bar */}
-        <div className="px-4 mt-2 space-y-3">
-          {/* Search + Filter toggle row */}
-          <div className="flex gap-2 anim-slideUp" style={{ animationDelay: '100ms' }}>
-            <div className="relative flex-1">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
-                   xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
-              </svg>
-              <input type="search" placeholder={t('dashboard.searchPlaceholder')}
-                value={search} onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-gray-200 text-sm bg-white
-                           outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 placeholder:text-gray-400 font-medium transition-all shadow-sm" />
-            </div>
-
-            {/* Filters toggle button + inline Clear */}
-            {(() => {
-              const activeCount = [
-                search           ? 1 : 0,
-                dashStartDate    ? 1 : 0,
-                dashEndDate      ? 1 : 0,
-                stepFilter   !== 'All' ? 1 : 0,
-                statusFilter !== 'All' ? 1 : 0,
-              ].reduce((a, b) => a + b, 0);
-              return (
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setShowFilters(v => !v)}
-                    className={cls(
-                      'shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-2xl border-2 text-sm font-bold transition-all shadow-sm btn-press',
-                      showFilters
-                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-indigo-200'
-                        : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300'
-                    )}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                      <path fillRule="evenodd" d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clipRule="evenodd" />
-                    </svg>
-                    {t('dashboard.filters')}
-                    {activeCount > 0 && (
-                      <span className={cls(
-                        'text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center',
-                        showFilters ? 'bg-white/25 text-white' : 'bg-indigo-600 text-white'
-                      )}>{activeCount}</span>
-                    )}
-                  </button>
-
-                  {/* Quick-clear — only when filters are active */}
-                  {activeCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => { clearDashFilters(); setShowFilters(false); }}
-                      title="Clear all filters"
-                      className="shrink-0 flex items-center gap-1 px-3 py-2 rounded-2xl border-2 border-red-200 bg-red-50 text-red-500 text-xs font-bold transition-all shadow-sm btn-press hover:bg-red-100 hover:border-red-400 active:scale-95"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-                      </svg>
-                      Clear
-                    </button>
-                  )}
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Collapsible filters panel */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateRows: showFilters ? '1fr' : '0fr',
-              transition: 'grid-template-rows 280ms cubic-bezier(0.4,0,0.2,1)',
-            }}
-          >
-            <div style={{ overflow: 'hidden' }}>
-              <div className="space-y-3 pb-1 pt-0.5">
-                {/* Date Range */}
-                <div className="grid grid-cols-2 gap-2 bg-white/50 p-3 rounded-[1.5rem] border-2 border-gray-200 shadow-sm">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('common.startDate')}</label>
-                    <input type="date" value={dashStartDate} onChange={(e) => setDashStartDate(e.target.value)}
-                           className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('common.endDate')}</label>
-                    <input type="date" value={dashEndDate} onChange={(e) => setDashEndDate(e.target.value)}
-                           className="w-full bg-white border-2 border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
-                  </div>
-                </div>
-
-                {/* Step filter pills */}
-                <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                  {STEP_OPTS.map((s) => (
-                    <button key={s} type="button" onClick={() => setStepFilter(s)}
-                      className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
-                        stepFilter === s ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
-                      {s === 'All' ? t('dashboard.allSteps') : `${t('dashboard.step')} ${s}`}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Status filter pills */}
-                <div className="flex gap-1.5 flex-wrap">
-                  {STATUS_OPTS.map((opt) => (
-                    <button key={opt.value} type="button" onClick={() => setStatusFilter(opt.value)}
-                      className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border-2 btn-press transition-all',
-                        statusFilter === opt.value ? 'bg-gray-900 border-gray-900 text-white shadow-lg shadow-gray-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* ── Clear All Filters ── */}
-                {(search || dashStartDate || dashEndDate || stepFilter !== 'All' || statusFilter !== 'All') && (
-                  <button
-                    type="button"
-                    onClick={() => { clearDashFilters(); setShowFilters(false); }}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-red-200 bg-red-50 text-red-600 font-bold text-sm transition-all btn-press hover:bg-red-100 hover:border-red-400 active:scale-[0.98] shadow-sm"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-                    </svg>
-                    {t('dashboard.clearFilters') || 'Clear All Filters'}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+        <div className="anim-slideUp" style={{ animationDelay: '100ms' }}>
+          <JobManagement jobs={jobs} onSelectJob={setSelectedJob} />
         </div>
 
-        {/* Jobs List */}
-        <div className="px-4 mt-4 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-gray-500">
-              {loading ? t('common.loading') : `${filtered.length} job${filtered.length !== 1 ? 's' : ''}`}
-            </p>
-            {(search || stepFilter !== 'All' || statusFilter !== 'All') && (
-              <button onClick={clearDashFilters}
-                className="text-xs text-indigo-600 font-semibold hover:underline">{t('dashboard.clearFilters')}</button>
-            )}
-          </div>
+        <div className="anim-slideUp" style={{ animationDelay: '200ms' }}>
+          <AajKeNaame jobs={jobs} />
+        </div>
 
-          <div className="max-h-[450px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200" id="jobs-scroll-container">
-            <div className="space-y-2.5 pb-2">
+        <div className="anim-slideUp" style={{ animationDelay: '300ms' }}>
+          <Requirements jobs={jobs} />
+        </div>
+
+        <div className="px-2 sm:px-4 mt-16 space-y-6 border-t-4 border-white pt-12 pb-10 bg-gray-50/50">
+          <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-2 sm:px-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tighter leading-tight">{t('dashboard.allJobs') || 'All Production Jobs'}</h2>
+                <p className="text-[10px] sm:text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest leading-relaxed">
+                  {loading ? t('common.loading') : `${filtered.length} entries found`}
+                </p>
+              </div>
+              {(search || stepFilter !== 'All' || statusFilter !== 'All') && (
+                <button onClick={clearDashFilters}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-white border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-all shadow-sm btn-press">
+                  {t('dashboard.clearFilters')}
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex gap-2 anim-slideUp">
+                <div className="relative flex-1">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+                       xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+                  </svg>
+                  <input type="search" placeholder={t('dashboard.searchPlaceholder')}
+                    value={search} onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-4 rounded-[2rem] border border-gray-200 text-sm bg-white
+                               outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 placeholder:text-gray-400 font-medium transition-all shadow-sm" />
+                </div>
+
+                {(() => {
+                  const activeCount = [
+                    search           ? 1 : 0,
+                    dashStartDate    ? 1 : 0,
+                    dashEndDate      ? 1 : 0,
+                    stepFilter   !== 'All' ? 1 : 0,
+                    statusFilter !== 'All' ? 1 : 0,
+                  ].reduce((a, b) => a + b, 0);
+                  return (
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowFilters(v => !v)}
+                        className={cls(
+                          'shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-2xl border-2 text-sm font-bold transition-all shadow-sm btn-press',
+                          showFilters
+                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-indigo-200'
+                            : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300'
+                        )}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                          <path fillRule="evenodd" d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clipRule="evenodd" />
+                        </svg>
+                        {t('dashboard.filters')}
+                        {activeCount > 0 && (
+                          <span className={cls(
+                            'text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center',
+                            showFilters ? 'bg-white/25 text-white' : 'bg-indigo-600 text-white'
+                          )}>{activeCount}</span>
+                        )}
+                      </button>
+
+                      <div className="flex bg-white border border-gray-200 rounded-2xl p-1 shadow-sm shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setViewMode('comfortable')}
+                          className={cls(
+                            'p-2 rounded-xl transition-all',
+                            viewMode === 'comfortable' ? 'bg-indigo-50 text-indigo-600 shadow-inner' : 'text-gray-400 hover:text-gray-600'
+                          )}
+                          title="Comfortable View"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                            <path fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10zm0 5.25a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10zm0 5.25a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setViewMode('compact')}
+                          className={cls(
+                            'p-2 rounded-xl transition-all',
+                            viewMode === 'compact' ? 'bg-indigo-50 text-indigo-600 shadow-inner' : 'text-gray-400 hover:text-gray-600'
+                          )}
+                          title="Compact List View"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                            <path fillRule="evenodd" d="M2 3.75A.75.75 0 012.75 3h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 3.75zm0 3.5A.75.75 0 012.75 6.5h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 7.25zm0 3.5A.75.75 0 012.75 10h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10.75zm0 3.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2.75 16.5a.75.75 0 000 1.5h14.5a.75.75 0 000-1.5H2.75z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateRows: showFilters ? '1fr' : '0fr',
+                  transition: 'grid-template-rows 280ms cubic-bezier(0.4,0,0.2,1)',
+                }}
+              >
+                <div style={{ overflow: 'hidden' }}>
+                  <div className="space-y-3 pb-1 pt-0.5">
+                    <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded-[1.5rem] border border-gray-100 shadow-sm">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('common.startDate')}</label>
+                        <input type="date" value={dashStartDate} onChange={(e) => setDashStartDate(e.target.value)}
+                               className="w-full bg-gray-50 border border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t('common.endDate')}</label>
+                        <input type="date" value={dashEndDate} onChange={(e) => setDashEndDate(e.target.value)}
+                               className="w-full bg-gray-50 border border-gray-100 rounded-xl px-2 py-2 text-[11px] font-bold outline-none focus:border-indigo-400 transition-all text-gray-700" />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                      {STEP_OPTS.map((s) => (
+                        <button key={s} type="button" onClick={() => setStepFilter(s)}
+                          className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border btn-press transition-all',
+                            stepFilter === s ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
+                          {s === 'All' ? t('dashboard.allSteps') : `${t('dashboard.step')} ${s}`}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-1.5 flex-wrap">
+                      {STATUS_OPTS.map((opt) => (
+                        <button key={opt.value} type="button" onClick={() => setStatusFilter(opt.value)}
+                          className={cls('shrink-0 px-4 py-2 rounded-full text-xs font-bold border btn-press transition-all',
+                            statusFilter === opt.value ? 'bg-gray-900 border-gray-900 text-white shadow-lg shadow-gray-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')}>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* List Results */}
+            <div className="space-y-4 px-1 pb-10">
               {loading ? (
-                [0, 1, 2, 3, 4].map((i) => <JobCardSkeleton key={i} />)
+                [1, 2, 3, 4, 5].map(i => <JobCardSkeleton key={i} />)
               ) : filtered.length === 0 ? (
-                <div className="flex flex-col items-center py-16 gap-2 text-center">
-                  <span className="text-4xl">🔍</span>
-                  <p className="text-gray-500 text-sm font-medium">{t('dashboard.noJobsFound')}</p>
-                  <p className="text-gray-400 text-xs">{t('dashboard.tryAdjusting')}</p>
+                <div className="py-24 text-center bg-white rounded-[3rem] border-2 border-dashed border-gray-200 shadow-inner">
+                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-gray-100">
+                    <span className="text-4xl opacity-40">🔍</span>
+                  </div>
+                  <h3 className="text-lg font-black text-gray-900 tracking-tight">{t('dashboard.noResults')}</h3>
+                  <p className="text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest">{t('dashboard.tryAdjustingFilters')}</p>
                 </div>
               ) : (
-                filtered.map((job) => <JobRowCard key={job.jobNo} job={job} onClick={setSelectedJob} />)
+                <div className={cls(
+                  'grid gap-4',
+                  viewMode === 'compact' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 lg:grid-cols-2'
+                )}>
+                  {filtered.map(j => (
+                    <JobRowCard key={j.jobNo} job={j} onClick={setSelectedJob} viewMode={viewMode} />
+                  ))}
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Aaj Ke Naame Dispatch Log */}
-        <AajKeNaame jobs={jobs} />
-
-        {/* Interactive Analytics Hub */}
-        <div className="mt-8 mb-4 border-t border-gray-100 pt-6">
+        {/* Analytics Hub */}
+        <div className="px-4 mt-8 pb-12">
            <div className="px-6 mb-3">
-              <h2 className="text-lg font-black text-gray-900 tracking-tight">{t('dashboard.liveInsights')}</h2>
+              <h2 className="text-xl font-black text-gray-900 tracking-tight">{t('dashboard.liveInsights')}</h2>
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{t('dashboard.systemHealth')}</p>
            </div>
            {!loading && <AnalyticsHub jobs={filtered} />}

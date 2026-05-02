@@ -31,6 +31,8 @@ const useUIStore = create(
         setDashStatusFilter: (v) => set({ dashStatusFilter: v }, false, 'setDashStatusFilter'),
         setDashStartDate:    (v) => set({ dashStartDate: v },    false, 'setDashStartDate'),
         setDashEndDate:      (v) => set({ dashEndDate: v },      false, 'setDashEndDate'),
+        dashViewMode: 'comfortable', // 'comfortable' | 'compact'
+        setDashViewMode:     (v) => set({ dashViewMode: v },     false, 'setDashViewMode'),
         clearDashFilters: () => set({
           dashSearch: '',
           dashStepFilter: 'All',
@@ -64,6 +66,7 @@ const useUIStore = create(
           dashStatusFilter:    state.dashStatusFilter,
           dashStartDate:       state.dashStartDate,
           dashEndDate:         state.dashEndDate,
+          dashViewMode:        state.dashViewMode,
           // Report tabs
           cuttingTab:          state.cuttingTab,
           productionCategory:  state.productionCategory,

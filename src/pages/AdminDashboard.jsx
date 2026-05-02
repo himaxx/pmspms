@@ -68,8 +68,8 @@ const STEP_NAMES = {
   5: 'Jama',
   6: 'Settle',
 };
-const STEP_COLORS = ['#818cf8', '#a78bfa', '#60a5fa', '#34d399', '#fbbf24', '#f87171'];
-const PIE_COLORS  = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6'];
+const STEP_COLORS = ['#818cf8', '#6366f1', '#4f46e5', '#4338ca', '#3b82f6', '#1e293b'];
+const PIE_COLORS  = ['#818cf8', '#6366f1', '#4f46e5', '#4338ca', '#3b82f6', '#1e293b', '#0f172a', '#334155'];
 
 /** ─── CSV Export Helper ─────────────────────────────────────────────────── */
 function convertToCSV(data) {
@@ -195,7 +195,7 @@ function VolumeTrend({ jobs }) {
         📈 Production Volume Trend
       </SectionTitle>
       <ResponsiveContainer width="100%" height={200}>
-        <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+        <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id="grad-created" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%"  stopColor="#818cf8" stopOpacity={0.4} />
@@ -236,10 +236,10 @@ function PipelineFunnel({ jobs }) {
         🔵 Live Pipeline — Jobs Per Stage
       </SectionTitle>
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
+        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 10, left: 30, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
           <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false} />
-          <YAxis type="category" dataKey="step" tick={{ fill: '#9ca3af', fontSize: 11 }} tickLine={false} axisLine={false} width={68} />
+          <YAxis type="category" dataKey="step" tick={{ fill: '#9ca3af', fontSize: 11 }} tickLine={false} axisLine={false} width={100} />
           <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
           <Bar dataKey="count" name="Jobs" radius={[0, 6, 6, 0]}>
             {data.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
@@ -269,7 +269,7 @@ function DelayHeatmap({ jobs }) {
         ⏱️ Delay Analysis by Step
       </SectionTitle>
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+        <BarChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
           <XAxis dataKey="step" tick={{ fill: '#9ca3af', fontSize: 11 }} tickLine={false} axisLine={false} />
           <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false}
@@ -405,7 +405,7 @@ function CuttingStats({ jobs }) {
         {/* Weekly bar */}
         <div className="flex-1">
           <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={weekData} margin={{ top: 5, right: 5, bottom: 0, left: -25 }}>
+            <BarChart data={weekData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
               <XAxis dataKey="week" tick={{ fill: '#6b7280', fontSize: 9 }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fill: '#6b7280', fontSize: 9 }} tickLine={false} axisLine={false} />
@@ -857,10 +857,10 @@ function ApprovalFlow({ jobs }) {
     const thekedar   = approved - inhouse;
 
     return [
-      { label: 'Approved', value: approved, fill: '#34d399' },
+      { label: 'Approved', value: approved, fill: '#6366f1' },
       { label: 'Rejected', value: rejected, fill: '#ef4444' },
       { label: '→ Inhouse Cutting', value: inhouse, fill: '#818cf8' },
-      { label: '→ To Thekedar', value: Math.max(thekedar, 0), fill: '#f59e0b' },
+      { label: '→ To Thekedar', value: Math.max(thekedar, 0), fill: '#4f46e5' },
     ];
   }, [jobs, period]);
 
@@ -881,7 +881,7 @@ function ApprovalFlow({ jobs }) {
         </select>
       </div>
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+        <BarChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
           <XAxis dataKey="label" tick={{ fill: '#9ca3af', fontSize: 10 }} tickLine={false} axisLine={false} />
           <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false} />

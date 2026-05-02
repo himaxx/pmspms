@@ -1,16 +1,27 @@
 import { Routes, Route } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import Layout from './components/Layout';
 import SplashScreen from './components/SplashScreen';
-import Dashboard from './pages/Dashboard';
-import Forms from './pages/Forms';
-import Reports from './pages/Reports';
-import FMS from './pages/FMS';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
 import AdminRoute from './components/AdminRoute';
 import { useJobsRealtime } from './hooks/useJobsRealtime';
 import useAuthStore from './store/useAuthStore';
+
+// Lazy load pages for better performance
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Forms = lazy(() => import('./pages/Forms'));
+const Reports = lazy(() => import('./pages/Reports'));
+const FMS = lazy(() => import('./pages/FMS'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+
+// Loading component for Suspense
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -29,25 +40,28 @@ function App() {
     <>
       {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
 
-      <Routes>
-        {/* ── Public routes — no login required ── */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="forms/*" element={<Forms />} />
-          <Route path="reports/*" element={<Reports />} />
-          <Route path="fms/*" element={<FMS />} />
-        </Route>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* ── Public routes — no login required ── */}
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="forms/*" element={<Forms />} />
+            <Route path="reports/*" element={<Reports />} />
+            <Route path="fms/*" element={<FMS />} />
+          </Route>
 
-        {/* ── Admin routes ── */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={
-          <AdminRoute>
-            <AdminDashboard />
-          </AdminRoute>
-        } />
-      </Routes>
+          {/* ── Admin routes ── */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          } />
+        </Routes>
+      </Suspense>
     </>
   );
 }
 
 export default App;
+

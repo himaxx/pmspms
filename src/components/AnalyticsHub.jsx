@@ -43,12 +43,13 @@ function isDelayed(job, step) {
 }
 
 // Steps shown in analytics (step 2–6 in our system)
+// Using a cohesive brand palette: Indigo, Blue, and Slate/Zinc for a premium feel
 const PIPELINE_STAGES = {
-  2: { name: 'Approval',    short: 'Awaits Appr', color: '#f59e0b' },
-  3: { name: 'Fabric/Cut',  short: 'Needs Cut',   color: '#3b82f6' },
-  4: { name: 'Naame',       short: 'In Naame',    color: '#a855f7' },
-  5: { name: 'Production',  short: 'In Prod',     color: '#6366f1' },
-  6: { name: 'Jama/Settle', short: 'Need Settle', color: '#14b8a6' },
+  2: { name: 'Approval',    short: 'Awaits Appr', color: '#818cf8' }, // Indigo 400
+  3: { name: 'Fabric/Cut',  short: 'Needs Cut',   color: '#6366f1' }, // Indigo 500
+  4: { name: 'Naame',       short: 'In Naame',    color: '#3b82f6' }, // Blue 500
+  5: { name: 'Production',  short: 'In Prod',     color: '#4338ca' }, // Indigo 700
+  6: { name: 'Jama/Settle', short: 'Need Settle', color: '#1e293b' }, // Slate 800
 };
 
 const ACTIVE_STEPS = [2, 3, 4, 5, 6];
@@ -104,10 +105,10 @@ export default function AnalyticsHub({ jobs }) {
           </div>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={bottleneckData} margin={{ top: 10, right: 30, left: -20, bottom: 0 }} layout="vertical">
+              <BarChart data={bottleneckData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                <XAxis type="number" tick={{ fontSize: 11, fontWeight: 700, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fontWeight: 800, fill: '#4b5563' }} axisLine={false} tickLine={false} width={80} />
+                <XAxis type="number" tick={{ fontSize: 9, fontWeight: 700, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 9, fontWeight: 800, fill: '#4b5563' }} axisLine={false} tickLine={false} width={80} />
                 <RechartsTooltip cursor={{ fill: '#f8fafc' }} contentStyle={customTooltipStyle} />
                 <Bar dataKey="Active Jobs" radius={[0, 8, 8, 0]} barSize={32}>
                   {bottleneckData.map((entry, index) => (
@@ -127,13 +128,13 @@ export default function AnalyticsHub({ jobs }) {
           </div>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={delayData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+              <BarChart data={delayData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 800, fill: '#6b7280' }} axisLine={false} tickLine={false} dy={10} />
-                <YAxis tick={{ fontSize: 11, fontWeight: 700, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fontWeight: 800, fill: '#6b7280' }} axisLine={false} tickLine={false} dy={10} />
+                <YAxis tick={{ fontSize: 9, fontWeight: 700, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                 <RechartsTooltip cursor={{ fill: '#f8fafc' }} contentStyle={customTooltipStyle} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '15px' }} />
-                <Bar dataKey="On Time" stackId="a" fill="#14b8a6" radius={[0, 0, 6, 6]} barSize={40} />
+                <Bar dataKey="On Time" stackId="a" fill="#6366f1" radius={[0, 0, 6, 6]} barSize={40} />
                 <Bar dataKey="Delayed"  stackId="a" fill="#ef4444" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

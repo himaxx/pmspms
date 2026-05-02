@@ -71,6 +71,11 @@ export const translations = {
       lastRefresh: "Last refresh",
       noJobsFound: "No jobs match your filters.",
       tryAdjusting: "Try adjusting the step or status filter.",
+      requirements: "Requirements",
+      requirementLogs: "Requirement Generation Logs",
+      noRequirements: "No requirements on this date",
+      totalRequirements: "Total Requirements",
+      allJobs: "All Production Jobs",
     },
     forms: {
       title: "Operation Forms",
@@ -536,6 +541,11 @@ export const translations = {
       lastRefresh: "पिछला रिफ्रेश",
       noJobsFound: "आपके फिल्टर से कोई जॉब मेल नहीं खाता।",
       tryAdjusting: "चरण या स्थिति फिल्टर को समायोजित करने का प्रयास करें।",
+      requirements: "आवश्यकताएं",
+      requirementLogs: "आवश्यकता जनरेशन लॉग",
+      noRequirements: "इस तिथि पर कोई आवश्यकता नहीं है",
+      totalRequirements: "कुल आवश्यकताएं",
+      allJobs: "सभी उत्पादन कार्य",
     },
     forms: {
       title: "ऑपरेशन फॉर्म",

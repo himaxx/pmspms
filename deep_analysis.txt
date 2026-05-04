@@ -1,0 +1,178 @@
+﻿=== FMS SHEET - Row 3 (Config) ===
+  Col 9: TAT Hours
+  Col 10: 63.0
+  Col 11: 63 hours ka TAT isliye rakha hai kyuki gaar koi requirement aati hai, and in case fabric availe nahi hai, 7 Days ka time hai, fabric availbe karwane ke liye
+  Col 14: KPR
+NR
+KR
+  Col 15: TAT
+  Col 16: 36.0
+  Col 17: This entry goes to another fms and actual comes formthere
+  Col 21: Outside Cutting Planned
+  Col 22: Inhouse Planned
+  Col 23: TAT
+From Previous Step, Fabric Availiblity hote h, withing 2 days
+  Col 24: 18.0
+  Col 25: Jaise hi fabric availblle hua uske 2 working days me maal prodution pe chala jana chahiye
+  Col 35: Jinka cut to pack hai unka toh lead time multiply by 8 hours and jinka cut to pack nahi hai, unka lead time multiply by 8 and addition 24 working hours or 3 days for press and aessories
+  Col 36: TAT
+  Col 37: As per lead time Given by the thekedar
+
+=== FMS SHEET - Row 4 (Headers) ===
+  Col 0: Manual Job No.
+  Col 1: Date
+  Col 2: Prog.
+By
+  Col 3: Item
+  Col 4: Size
+  Col 5: Qty
+  Col 6: Reason
+  Col 7: Special Instruction
+  Col 8: Item Group
+  Col 9: Planned
+  Col 10: Actual
+  Col 11: Yes / No
+  Col 12: Inhouse Cutting ?
+  Col 13: Special Instructions
+  Col 14: Time Delay
+  Col 15: Planned
+  Col 16: Actual
+  Col 17: Dukan ki Cutting
+  Col 18: Size wise Details
+  Col 19: Cutting Person
+  Col 20: Time Delay 
+  Col 21: Pick from s2
+  Col 22: pick from s3
+  Col 23: Planned
+  Col 24: Production Start Date
+  Col 25: Thekedar 
+Karigar
+ Name
+  Col 26: Cutting Pcs
+  Col 27: Cut to Pack 
+  Col 28: Lead Time 
+  Col 29: Vastra Job Number
+  Col 30: In House Cutting
+Step 3 wali
+  Col 31: Fixed Cutting
+Form Wali
+  Col 32: Open Cutting
+Open cutting form wali
+  Col 33: Time Delay
+  Col 34: Unfinished Maal Jama Ho Gaya
+  Col 35: Lead Time in Hours
+  Col 36: Jama Planned
+  Col 37: Jobslip Status
+Actual
+  Col 38: Status
+  Col 39: Balance Quantity
+  Col 40: Jama Quantity
+  Col 41: Given Quantity
+  Col 42: Press Hua ya Nahi?
+  Col 43: Time Delay
+  Col 44: Settle Quantity
+  Col 45: Reason
+  Col 46: Your Name
+
+=== FMS SHEET - Row 5 (First data) ===
+  Col 0: 171.0
+  Col 1: 2026-03-09 17:55:02.784000
+  Col 2: Capri - Sanjay
+  Col 3: GT300 tEST
+  Col 4: 34/38
+  Col 5: 500.0
+  Col 6: Order
+  Col 7:  
+  Col 8: Capri
+  Col 9: 2026-03-17 17:55:02.784000
+  Col 10: 2026-03-09 18:22:03.648000
+  Col 11: Yes
+  Col 12: Yes
+  Col 13: Vinod Bhaiyaa
+  Col 15: 2026-03-13 18:22:03.648000
+  Col 16: 2026-03-09 18:45:05.184000
+  Col 17: 400.0
+  Col 19: Vinod Bhaiya
+  Col 22: 2026-03-11 18:45:05.184000
+  Col 23: 2026-03-11 18:45:05.184000
+  Col 24: 2026-03-10 15:17:53.088000
+  Col 25: Test
+  Col 26: 400
+  Col 27: No
+  Col 28: 2.0
+  Col 30: 400
+  Col 31: 200
+  Col 35: 18
+  Col 36: 2026-03-12 15:17:53.088000
+  Col 37: 2026-03-12 16:22:54.912000
+  Col 38: Complete
+  Col 40: 591
+  Col 41: 400
+  Col 43: 1:05:02
+  Col 44: -191
+  Col 45: kata fata nikl gaya tha
+  Col 46: Himanshu Gurjar
+
+=== Total FMS data rows (col 0 not null): 5992 ===
+
+=== Naame SHEET - Headers ===
+  Col 0: Manual Job Number
+  Col 1: Timestamp
+  Col 2: Thekedar / Karigar Name
+  Col 3: Cut to Pack 
+  Col 4: Maal approx kitne din me jama hoga?
+  Col 5: Cutting Pieces
+  Col 6: Size Wise Detail( αñòαñ┐αññαñ¿αÑç Size  αñ«αÑç  αñòαñ┐αññαñ¿αÑç Pieces αñòαñƒαÑç     )
+
+=== Unique Thekedars in Naame (35): ===
+  Abdul Kadir Ji
+  Ajay Majumdar Ji
+  Amzad Khan Ji
+  Anil Goswami Ji
+  Anil Pal Ji
+  Anil Pawar Ji
+  Anil Pradhan Ji
+  Anil panwar
+  Bharat Namdev Ji
+  Dilip Sisodiya Ji
+  Harish Bakadiya Ji
+  Jitendra chore ji
+  Jitendre Chorey Ji
+  Jitendre Verma JI
+  Kadir
+  Kalu Rajpoot
+  Kalu sig
+  Kushal Parmar Ji
+  Mukati Ji
+  Mukati ji
+  Murli Namdev Ji
+  Nilesh Thakur Ji
+  Pappu
+  Rajesh Khatri Ji
+  Ravi Panwar
+  Said Khan Ji
+  Sanjay Verma ji
+  Shakil Shikh Ji
+  Sitaram Ji
+  Sitaram ji
+  Somraj Singhnath Ji
+  Sunil Singhnath Ji
+  Test
+  Vishal Pancholi Ji
+  Xyz
+
+=== Aaj ke Naame - Row 1 (Headers) ===
+  Col 0: Job Number 
+  Col 1: Date 
+  Col 2: Thekedar
+  Col 5: Quantity
+  Col 6: Sizes
+
+=== Aaj ke Naame - Row 2 (First data) ===
+  Col 0: 832
+  Col 1: 2026-05-02 12:57:44.640000
+  Col 2: Abdul Kadir Ji
+  Col 3: No
+  Col 4: 5
+  Col 5: 320
+  Col 6: 320

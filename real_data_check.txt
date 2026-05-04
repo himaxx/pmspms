@@ -1,0 +1,3 @@
+﻿Jobs with actual data (item or date): 698
+Empty placeholder rows: 5294
+Jobs with item AND date: 698

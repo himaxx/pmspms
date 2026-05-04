@@ -11,7 +11,7 @@ export const SHEET_NAMES = {
 
 // ─── People Per Step ─────────────────────────────────────────────────────────
 export const STEP_PEOPLE = {
-  1: ['Naresh', 'Bunty', 'Ankit', 'Sourabh', 'Manohar', 'Sanjay', 'Ashwin'],
+  1: ['Naresh', 'Bunty', 'Ankit', 'Sourabh', 'Manohar', 'Sanjay', 'Ashwin', 'KR', 'NR', 'KPR'],
   2: ['NR', 'KR', 'KPR'],
   3: ['Vinod', 'Rahul'],
   4: [
@@ -59,11 +59,11 @@ export const STEP_LABELS = {
 // ─── Item Groups ─────────────────────────────────────────────────────────────
 export const ITEM_GROUPS = [
   'Full Bottom',
-  'Capri',
+  'Skirt',
   'Shorts',
-  'Skirts',
-  'Tops/Tshirts',
-  'Aline/Frock/Long Tops',
+  'Capri',
+  'Tops',
+  'Alin/Frock/Long Tops',
   'Sets',
   'Boys',
 ];

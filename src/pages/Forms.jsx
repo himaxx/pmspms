@@ -11,8 +11,8 @@ import { useJobs, useCreateJob, useUpdateStep2, useUpdateStep3, useUpdateStep4, 
 import { useMasterData } from '../hooks/useMasterData';
 import { useLanguage } from '../i18n/LanguageContext';
 import useUIStore from '../store/useUIStore';
-import catalogData from '../../item names according to cat and sub cat.json';
 // ─── Step Selector Config ─────────────────────────────────────────────────────
+
 const STEP_META = [
   { step: 1, hindiName: 'नई आवश्यकता',        englishName: 'New Requirement',       color: 'indigo' },
   { step: 2, hindiName: 'प्रोडक्शन अप्रूवल',  englishName: 'Production Approval',   color: 'blue'   },
@@ -271,27 +271,13 @@ function PendingJobCard({ job, onClick }) {
 // ─── Step 1 Form ─────────────────────────────────────────────────────────────
 function Step1Form({ onSuccess }) {
   const { t } = useLanguage();
-  const init = { name: '', category: '', subcategory: '', item: '', reason: 'Order', specialInstruction: '' };
+  const init = { name: '', category: '', item: '', reason: 'Order', specialInstruction: '' };
   const [form, setForm]     = useState(init);
   const [sets, setSets]     = useState([{ size: '', qty: '' }]);
   const [errors, setErrors] = useState({});
   const [confirmData, setConfirmData] = useState(null);
 
   const { data: masterData } = useMasterData();
-  
-  // Derive cascade dropdowns from masterData (falling back to JSON)
-  const availableCategories = useMemo(() => masterData?.catalog?.length > 0 ? masterData.catalog : (catalogData.categories || []), [masterData]);
-  
-  const availableSubcategories = useMemo(() => {
-    const cat = availableCategories.find(c => c.category === form.category);
-    return cat ? cat.subcategories : [];
-  }, [form.category, availableCategories]);
-  
-  const availableItems = useMemo(() => {
-    const sub = availableSubcategories.find(s => s.subcategory === form.subcategory);
-    return sub ? sub.items : [];
-  }, [form.subcategory, availableSubcategories]);
-
   const createJobMutation = useCreateJob();
   const loading = createJobMutation.isPending;
   const progByList = masterData?.progBy?.length > 0 ? masterData.progBy : STEP_PEOPLE[1];
@@ -309,10 +295,9 @@ function Step1Form({ onSuccess }) {
 
   function validate() {
     const e = {};
-    if (!form.name.trim())  e.name  = true;
-    if (!form.category)     e.category = true;
-    if (!form.subcategory)  e.subcategory = true;
-    if (!form.item.trim())  e.item  = true;
+    if (!form.name.trim())     e.name     = true;
+    if (!form.category)        e.category  = true;
+    if (!form.item.trim())     e.item      = true;
     
     const setErrors = sets.map(s => ({
       size: !s.size.trim(),
@@ -333,13 +318,12 @@ function Step1Form({ onSuccess }) {
     const combinedSize = formatSets(sets);
 
     setConfirmData({
-      [t('forms.progBy')]: form.name,
-      [t('forms.category')]: form.category,
-      [t('forms.subcategory')]: form.subcategory,
-      [t('forms.itemName')]: form.item,
-      [t('forms.sizeQtyDetails')]: combinedSize,
-      [t('common.qty')]: totalQty,
-      [t('common.reason')]: form.reason,
+      [t('forms.progBy')]:           form.name,
+      [t('forms.category')]:         form.category,
+      [t('forms.itemName')]:         form.item,
+      [t('forms.sizeQtyDetails')]:   combinedSize,
+      [t('common.qty')]:             totalQty,
+      [t('common.reason')]:          form.reason,
       [t('forms.specialInstruction')]: form.specialInstruction
     });
   }
@@ -352,7 +336,7 @@ function Step1Form({ onSuccess }) {
       const newJob = await createJobMutation.mutateAsync({
         progBy:             form.name,
         item:               form.item,
-        itemGroup:          `${form.category} / ${form.subcategory}`,
+        itemGroup:          form.category,
         size:               combinedSize,
         qty:                totalQty,
         reason:             form.reason,
@@ -369,7 +353,7 @@ function Step1Form({ onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 anim-slideUp">
 
-      {/* Your Name */}
+      {/* Prog By — who is raising this requirement */}
       <div>
         <FieldLabel required>{t('forms.progBy')}</FieldLabel>
         <SelectBase error={errors.name} value={form.name} onChange={set('name')}>
@@ -378,44 +362,37 @@ function Step1Form({ onSuccess }) {
         </SelectBase>
       </div>
 
-      {/* Cascade Dropdowns */}
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <FieldLabel required>{t('forms.category')}</FieldLabel>
-          <SelectBase 
-            value={form.category} 
-            onChange={(e) => setForm(p => ({ ...p, category: e.target.value, subcategory: '', item: '' }))} 
-            error={errors.category}
-          >
-            <option value="">{t('forms.selectCategory')}</option>
-            {availableCategories.map((c) => <option key={c.category} value={c.category}>{c.category}</option>)}
-          </SelectBase>
-        </div>
-        <div className="flex-1">
-          <FieldLabel required>{t('forms.subcategory')}</FieldLabel>
-          <SelectBase 
-            value={form.subcategory} 
-            onChange={(e) => setForm(p => ({ ...p, subcategory: e.target.value, item: '' }))} 
-            disabled={!form.category}
-            error={errors.subcategory}
-          >
-            <option value="">{t('forms.selectSubcategory')}</option>
-            {availableSubcategories.map((s) => <option key={s.subcategory} value={s.subcategory}>{s.subcategory}</option>)}
-          </SelectBase>
-        </div>
+      {/* Category Dropdown — fixed 8 categories */}
+      <div>
+        <FieldLabel required>{t('forms.category')}</FieldLabel>
+        <SelectBase
+          value={form.category}
+          onChange={(e) => setForm(p => ({ ...p, category: e.target.value }))}
+          error={errors.category}
+        >
+          <option value="">{t('forms.selectCategory')}</option>
+          {ITEM_GROUPS.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </SelectBase>
+        {errors.category && (
+          <p className="text-xs text-red-400 mt-1 font-medium">Please select a category</p>
+        )}
       </div>
 
+      {/* Design Name — free text input */}
       <div>
         <FieldLabel required>{t('forms.itemName')}</FieldLabel>
-        <SelectBase 
-          value={form.item} 
-          onChange={set('item')} 
-          disabled={!form.subcategory}
+        <InputBase
+          type="text"
+          placeholder="Enter design name…"
+          value={form.item}
+          onChange={set('item')}
           error={errors.item}
-        >
-          <option value="">{t('forms.selectItem')}</option>
-          {availableItems.map((it) => <option key={it} value={it}>{it}</option>)}
-        </SelectBase>
+        />
+        {errors.item && (
+          <p className="text-xs text-red-400 mt-1 font-medium">Design name is required</p>
+        )}
       </div>
 
       {/* Size and Quantity Sets */}

@@ -1,0 +1,31 @@
+{
+  "total_jobs": 698,
+  "by_item_group": {
+    "Capri": 43,
+    "Full Bottom": 167,
+    "Skirt": 67,
+    "Tops": 218,
+    "Shorts": 94,
+    "Alin/Frock/Long Tops": 23,
+    "Sets": 80,
+    "Unknown": 1,
+    "Boys": 5
+  },
+  "by_status": {
+    "Complete": 348,
+    "In Progress": 266,
+    "Rejected": 84
+  },
+  "step_completion": {
+    "step_1": 698,
+    "step_2": 664,
+    "step_3": 285,
+    "step_4": 504,
+    "step_5": 374,
+    "step_6": 68
+  },
+  "date_range": {
+    "earliest": "2026-03-09T17:55:02.784000",
+    "latest": "2026-05-02T17:20:56.186000"
+  }
+}

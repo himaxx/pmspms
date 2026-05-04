@@ -1,0 +1,48 @@
+﻿============================================================
+PMS EXCEL DATA EXTRACTION
+============================================================
+
+≡ƒôé Loading: C:\Users\Asus\Downloads\PMS\New folder\pmspms\PMS FORM RESPONSES.xlsx
+  Sheets: ['Unfinished Maal jama', 'FMS', 'Open Cutting', 'New Requirement', 'Holidays', 'Production Approval', 'Naame', 'In house Cutting', 'Aaj ke Naame', 'Finished Maal Jama', 'Settle']
+
+ΓöÇΓöÇ Phase 1: FMS Extraction ΓöÇΓöÇ
+  FMS raw rows: 5992
+  FMS skipped (no job_no): 0
+  FMS empty placeholders filtered: 5294
+  FMS real jobs extracted: 698
+
+ΓöÇΓöÇ Phase 2: Cross-Reference Enrichment ΓöÇΓöÇ
+  Step 5 enrichment: 0 jama gaps filled
+  Step 6 enrichment: 0 settle gaps filled
+
+ΓöÇΓöÇ Phase 3: Validation Stats ΓöÇΓöÇ
+  Total unique jobs: 698
+  By Item Group: {
+    "Capri": 43,
+    "Full Bottom": 167,
+    "Skirt": 67,
+    "Tops": 218,
+    "Shorts": 94,
+    "Alin/Frock/Long Tops": 23,
+    "Sets": 80,
+    "Unknown": 1,
+    "Boys": 5
+}
+  By Status: {
+    "Complete": 348,
+    "In Progress": 266,
+    "Rejected": 84
+}
+  Step Completion: {
+    "step_1": 698,
+    "step_2": 664,
+    "step_3": 285,
+    "step_4": 504,
+    "step_5": 374,
+    "step_6": 68
+}
+  Date Range: 2026-03-09T17:55:02.784000 ΓåÆ 2026-05-02T17:20:56.186000
+
+Γ£à Output: C:\Users\Asus\Downloads\PMS\New folder\pmspms\scripts\cleaned_jobs.json (698 records)
+Γ£à Stats:  C:\Users\Asus\Downloads\PMS\New folder\pmspms\scripts\import_stats.json
+============================================================

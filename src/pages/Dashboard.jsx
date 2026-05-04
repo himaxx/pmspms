@@ -452,7 +452,8 @@ function Requirements({ jobs }) {
       if (!j.date) return false;
       const jobDate = j.date.slice(0, 10);
       const isDateMatch = jobDate === selectedDate;
-      const isPersonMatch = selectedPerson === 'All' || j.progBy === selectedPerson;
+      const isPersonMatch = selectedPerson === 'All' || 
+                            j.progBy?.toLowerCase().trim() === selectedPerson.toLowerCase().trim();
       return isDateMatch && isPersonMatch;
     }).sort((a, b) => b.jobNo - a.jobNo); // Latest to oldest
   }, [jobs, selectedDate, selectedPerson]);

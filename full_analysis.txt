@@ -1,0 +1,1322 @@
+﻿
+========================================
+SHEET: Unfinished Maal jama
+Rows: 1, Columns: 4
+========================================
+HEADERS:
+  [0] Manual job Number
+  [1] Timestamp
+  [2] Kitne Pcs Jama Hue
+  [3] Mistake ke pcs, jo ab repair hoke bhi nahi ban sakte
+
+SAMPLE DATA (first 0 rows of 0 total):
+
+UNIQUE VALUES ANALYSIS:
+
+========================================
+SHEET: FMS
+Rows: 5996, Columns: 47
+========================================
+HEADERS:
+  [0] 2026-05-02 18:45:18.144000
+  [1] (empty_col_1)
+  [2] 10:00:00
+  [3] 19:00
+  [4] 0000001
+  [5] (empty_col_5)
+  [6] (empty_col_6)
+  [7] (empty_col_7)
+  [8] (empty_col_8)
+  [9] (empty_col_9)
+  [10] (empty_col_10)
+  [11] (empty_col_11)
+  [12] (empty_col_12)
+  [13] (empty_col_13)
+  [14] (empty_col_14)
+  [15] (empty_col_15)
+  [16] (empty_col_16)
+  [17] (empty_col_17)
+  [18] (empty_col_18)
+  [19] (empty_col_19)
+  [20] (empty_col_20)
+  [21] (empty_col_21)
+  [22] (empty_col_22)
+  [23] (empty_col_23)
+  [24] (empty_col_24)
+  [25] (empty_col_25)
+  [26] (empty_col_26)
+  [27] (empty_col_27)
+  [28] (empty_col_28)
+  [29] (empty_col_29)
+  [30] (empty_col_30)
+  [31] (empty_col_31)
+  [32] (empty_col_32)
+  [33] (empty_col_33)
+  [34] (empty_col_34)
+  [35] (empty_col_35)
+  [36] (empty_col_36)
+  [37] (empty_col_37)
+  [38] (empty_col_38)
+  [39] (empty_col_39)
+  [40] (empty_col_40)
+  [41] (empty_col_41)
+  [42] (empty_col_42)
+  [43] (empty_col_43)
+  [44] (empty_col_44)
+  [45] (empty_col_45)
+  [46] (empty_col_46)
+
+SAMPLE DATA (first 15 rows of 5995 total):
+  Row 2:
+    [2026-05-02 18:45:18.144000] = αñ╢αÑìαñ░αÑÇ
+    [(empty_col_1)] = αñ»αñ╣ αñ«αñ╛αñ▓ αñ¼αñ¿αñ╡αñ╛αñ¿αñ╛ αñ╣αÑê
+    [(empty_col_9)] = Fabric is Now Available and Goods Should be sent on Prodution
+    [(empty_col_15)] = Inhouse Cutting Pcs
+    [(empty_col_23)] = Naame - Goods on Production
+    [(empty_col_35)] = Lead Time
+    [(empty_col_36)] = Jama
+    [(empty_col_44)] = Settle
+  Row 3:
+    [(empty_col_9)] = TAT Hours
+    [(empty_col_10)] = 63.0
+    [(empty_col_11)] = 63 hours ka TAT isliye rakha hai kyuki gaar koi requirement aati hai, and in case fabric availe nahi hai, 7 Days ka time hai, fabric availbe karwane ke liye
+    [(empty_col_14)] = KPR
+NR
+KR
+    [(empty_col_15)] = TAT
+    [(empty_col_16)] = 36.0
+    [(empty_col_17)] = This entry goes to another fms and actual comes formthere
+    [(empty_col_21)] = Outside Cutting Planned
+    [(empty_col_22)] = Inhouse Planned
+    [(empty_col_23)] = TAT
+From Previous Step, Fabric Availiblity hote h, withing 2 days
+    [(empty_col_24)] = 18.0
+    [(empty_col_25)] = Jaise hi fabric availblle hua uske 2 working days me maal prodution pe chala jana chahiye
+    [(empty_col_35)] = Jinka cut to pack hai unka toh lead time multiply by 8 hours and jinka cut to pack nahi hai, unka lead time multiply by 8 and addition 24 working hours or 3 days for press and aessories
+    [(empty_col_36)] = TAT
+    [(empty_col_37)] = As per lead time Given by the thekedar
+  Row 4:
+    [2026-05-02 18:45:18.144000] = Manual Job No.
+    [(empty_col_1)] = Date
+    [10:00:00] = Prog.
+By
+    [19:00] = Item
+    [0000001] = Size
+    [(empty_col_5)] = Qty
+    [(empty_col_6)] = Reason
+    [(empty_col_7)] = Special Instruction
+    [(empty_col_8)] = Item Group
+    [(empty_col_9)] = Planned
+    [(empty_col_10)] = Actual
+    [(empty_col_11)] = Yes / No
+    [(empty_col_12)] = Inhouse Cutting ?
+    [(empty_col_13)] = Special Instructions
+    [(empty_col_14)] = Time Delay
+    [(empty_col_15)] = Planned
+    [(empty_col_16)] = Actual
+    [(empty_col_17)] = Dukan ki Cutting
+    [(empty_col_18)] = Size wise Details
+    [(empty_col_19)] = Cutting Person
+    [(empty_col_20)] = Time Delay 
+    [(empty_col_21)] = Pick from s2
+    [(empty_col_22)] = pick from s3
+    [(empty_col_23)] = Planned
+    [(empty_col_24)] = Production Start Date
+    [(empty_col_25)] = Thekedar 
+Karigar
+ Name
+    [(empty_col_26)] = Cutting Pcs
+    [(empty_col_27)] = Cut to Pack 
+    [(empty_col_28)] = Lead Time 
+    [(empty_col_29)] = Vastra Job Number
+    [(empty_col_30)] = In House Cutting
+Step 3 wali
+    [(empty_col_31)] = Fixed Cutting
+Form Wali
+    [(empty_col_32)] = Open Cutting
+Open cutting form wali
+    [(empty_col_33)] = Time Delay
+    [(empty_col_34)] = Unfinished Maal Jama Ho Gaya
+    [(empty_col_35)] = Lead Time in Hours
+    [(empty_col_36)] = Jama Planned
+    [(empty_col_37)] = Jobslip Status
+Actual
+    [(empty_col_38)] = Status
+    [(empty_col_39)] = Balance Quantity
+    [(empty_col_40)] = Jama Quantity
+    [(empty_col_41)] = Given Quantity
+    [(empty_col_42)] = Press Hua ya Nahi?
+    [(empty_col_43)] = Time Delay
+    [(empty_col_44)] = Settle Quantity
+    [(empty_col_45)] = Reason
+    [(empty_col_46)] = Your Name
+  Row 5:
+    [2026-05-02 18:45:18.144000] = 171.0
+    [(empty_col_1)] = 2026-03-09 17:55:02.784000
+    [10:00:00] = Capri - Sanjay
+    [19:00] = GT300 tEST
+    [0000001] = 34/38
+    [(empty_col_5)] = 500.0
+    [(empty_col_6)] = Order
+    [(empty_col_8)] = Capri
+    [(empty_col_9)] = 2026-03-17 17:55:02.784000
+    [(empty_col_10)] = 2026-03-09 18:22:03.648000
+    [(empty_col_11)] = Yes
+    [(empty_col_12)] = Yes
+    [(empty_col_13)] = Vinod Bhaiyaa
+    [(empty_col_15)] = 2026-03-13 18:22:03.648000
+    [(empty_col_16)] = 2026-03-09 18:45:05.184000
+    [(empty_col_17)] = 400.0
+    [(empty_col_19)] = Vinod Bhaiya
+    [(empty_col_22)] = 2026-03-11 18:45:05.184000
+    [(empty_col_23)] = 2026-03-11 18:45:05.184000
+    [(empty_col_24)] = 2026-03-10 15:17:53.088000
+    [(empty_col_25)] = Test
+    [(empty_col_26)] = 400
+    [(empty_col_27)] = No
+    [(empty_col_28)] = 2.0
+    [(empty_col_30)] = 400
+    [(empty_col_31)] = 200
+    [(empty_col_35)] = 18
+    [(empty_col_36)] = 2026-03-12 15:17:53.088000
+    [(empty_col_37)] = 2026-03-12 16:22:54.912000
+    [(empty_col_38)] = Complete
+    [(empty_col_39)] = 0
+    [(empty_col_40)] = 591
+    [(empty_col_41)] = 400
+    [(empty_col_43)] = 1:05:02
+    [(empty_col_44)] = -191
+    [(empty_col_45)] = kata fata nikl gaya tha
+    [(empty_col_46)] = Himanshu Gurjar
+  Row 6:
+    [2026-05-02 18:45:18.144000] = 172
+    [(empty_col_1)] = 2026-03-10 11:29:18.603000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = Rib print plajo
+    [0000001] = 22/30, 32/40
+    [(empty_col_5)] = 300.0
+    [(empty_col_6)] = Refill
+    [(empty_col_7)] = Print puchna hai
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:29:18.816000
+    [(empty_col_10)] = 2026-03-10 13:07:20.928000
+    [(empty_col_11)] = Yes
+    [(empty_col_12)] = Yes
+    [(empty_col_13)] = Print sourabh bhaiya ko dikha ke katna hai
+    [(empty_col_15)] = 2026-03-23 11:29:18.816000
+    [(empty_col_16)] = 2026-03-13 16:01:27.732000
+    [(empty_col_17)] = 410.0
+    [(empty_col_18)] = 22.4
+    [(empty_col_19)] = Vinod Bhaiya
+    [(empty_col_22)] = 2026-03-16 16:01:27.552000
+    [(empty_col_23)] = 2026-03-16 16:01:27.732000
+    [(empty_col_24)] = 2026-03-13 16:29:33
+    [(empty_col_25)] = Somraj Singhnath Ji
+    [(empty_col_26)] = 410.0
+    [(empty_col_27)] = Yes
+    [(empty_col_28)] = 4.0
+    [(empty_col_30)] = 410.0
+    [(empty_col_31)] = 410.0
+    [(empty_col_35)] = 36.0
+    [(empty_col_36)] = 2026-03-18 16:29:33.216000
+    [(empty_col_37)] = 2026-03-16 15:31:06
+    [(empty_col_38)] = Complete
+    [(empty_col_39)] = 0.0
+    [(empty_col_40)] = 410.0
+    [(empty_col_41)] = 410.0
+  Row 7:
+    [2026-05-02 18:45:18.144000] = 173
+    [(empty_col_1)] = 2026-03-10 11:29:54.067000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = Rib print plajo
+    [0000001] = 22/30, 32/40
+    [(empty_col_5)] = 300.0
+    [(empty_col_6)] = Refill
+    [(empty_col_7)] = Print puchna hai
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:29:54.240000
+    [(empty_col_10)] = 2026-03-10 13:06:57.600000
+    [(empty_col_11)] = No
+    [(empty_col_12)] = No
+    [(empty_col_13)] = Repeat
+  Row 8:
+    [2026-05-02 18:45:18.144000] = 174
+    [(empty_col_1)] = 2026-03-10 11:31:33.172000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = Lining plajo
+    [0000001] = 22/30, 32/40
+    [(empty_col_5)] = 400.0
+    [(empty_col_6)] = Refill
+    [(empty_col_7)] = All colur
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:31:33.600000
+    [(empty_col_10)] = 2026-03-10 13:06:42.048000
+    [(empty_col_11)] = Yes
+    [(empty_col_12)] = Yes
+    [(empty_col_13)] = All size all color. 
+    [(empty_col_15)] = 2026-03-23 11:31:33.600000
+    [(empty_col_16)] = 2026-03-11 11:49:58.342000
+    [(empty_col_17)] = 240.0
+    [(empty_col_19)] = Vinod Bhaiya
+    [(empty_col_22)] = 2026-03-13 11:49:58.656000
+    [(empty_col_23)] = 2026-03-13 11:49:58.342000
+    [(empty_col_24)] = 2026-03-12 16:32:56
+    [(empty_col_25)] = Sunil Singhnath Ji
+    [(empty_col_26)] = 240.0
+    [(empty_col_27)] = Yes
+    [(empty_col_28)] = 3.0
+    [(empty_col_30)] = 240.0
+    [(empty_col_31)] = 240.0
+    [(empty_col_35)] = 27.0
+    [(empty_col_36)] = 2026-03-16 16:32:56.256000
+    [(empty_col_37)] = 2026-03-17 12:10:23
+    [(empty_col_38)] = Complete
+    [(empty_col_39)] = 0.0
+    [(empty_col_40)] = 240.0
+    [(empty_col_41)] = 240.0
+    [(empty_col_43)] = 19:37:27
+  Row 9:
+    [2026-05-02 18:45:18.144000] = 175
+    [(empty_col_1)] = 2026-03-10 11:32:49.705000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = M boos plajo
+    [0000001] = 22/30
+    [(empty_col_5)] = 180.0
+    [(empty_col_6)] = Refill
+    [(empty_col_7)] = All clour
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:32:49.632000
+    [(empty_col_10)] = 2026-03-10 11:45:31.680000
+    [(empty_col_11)] = Yes
+    [(empty_col_12)] = Yes
+    [(empty_col_13)] = Chote ke 6 bade ke 10 next chaal bhi isi me add kar do cutting me
+    [(empty_col_15)] = 2026-03-23 11:32:49.632000
+    [(empty_col_16)] = 2026-03-10 15:04:13.864000
+    [(empty_col_17)] = 480.0
+    [(empty_col_19)] = Vinod Bhaiya
+    [(empty_col_22)] = 2026-03-12 15:04:14.016000
+    [(empty_col_23)] = 2026-03-12 15:04:13.864000
+    [(empty_col_24)] = 2026-03-14 11:35:40
+    [(empty_col_25)] = Sunil Singhnath Ji
+    [(empty_col_26)] = 480.0
+    [(empty_col_27)] = Yes
+    [(empty_col_28)] = 3.0
+    [(empty_col_30)] = 480.0
+    [(empty_col_31)] = 480.0
+    [(empty_col_33)] = 1 day, 20:31:26.136000
+    [(empty_col_35)] = 27.0
+    [(empty_col_36)] = 2026-03-18 11:35:39.840000
+    [(empty_col_37)] = 2026-04-02 12:37:02
+    [(empty_col_38)] = Complete
+    [(empty_col_39)] = 0.0
+    [(empty_col_40)] = 480.0
+    [(empty_col_41)] = 480.0
+    [(empty_col_43)] = 15 days, 1:01:22
+  Row 10:
+    [2026-05-02 18:45:18.144000] = 176
+    [(empty_col_1)] = 2026-03-10 11:33:31.889000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = M boss plajo
+    [0000001] = 32/40
+    [(empty_col_5)] = 250.0
+    [(empty_col_6)] = Refill
+    [(empty_col_7)] = All colur
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:33:31.968000
+    [(empty_col_10)] = 2026-03-10 11:46:31.296000
+    [(empty_col_11)] = No
+    [(empty_col_12)] = No
+    [(empty_col_13)] = 175 ke sath hi cutting krna lekin chalan alag alag banega
+  Row 11:
+    [2026-05-02 18:45:18.144000] = 177
+    [(empty_col_1)] = 2026-03-10 11:34:21.966000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = Rubber plajo
+    [0000001] = 22/30
+    [(empty_col_5)] = 200.0
+    [(empty_col_6)] = Order
+    [(empty_col_7)] = All print colur
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:34:22.080000
+    [(empty_col_10)] = 2026-03-10 12:59:51.648000
+    [(empty_col_11)] = Yes
+    [(empty_col_12)] = Yes
+    [(empty_col_13)] = Chota 200 bada 200 - 22/40
+    [(empty_col_15)] = 2026-03-23 11:34:22.080000
+    [(empty_col_16)] = 2026-03-10 17:04:46.649000
+    [(empty_col_17)] = 530.0
+    [(empty_col_18)] = 22 /40 
+    [(empty_col_19)] = Vinod Bhaiya
+    [(empty_col_22)] = 2026-03-12 17:04:46.560000
+    [(empty_col_23)] = 2026-03-12 17:04:46.649000
+    [(empty_col_24)] = 2026-03-23 16:43:37
+    [(empty_col_25)] = Somraj Singhnath Ji
+    [(empty_col_26)] = 530.0
+    [(empty_col_27)] = Yes
+    [(empty_col_28)] = 1.0
+    [(empty_col_30)] = 530.0
+    [(empty_col_31)] = 530.0
+    [(empty_col_33)] = 10 days, 23:38:50.351000
+    [(empty_col_35)] = 9.0
+    [(empty_col_36)] = 2026-03-24 16:43:37.344000
+    [(empty_col_38)] = Complete
+    [(empty_col_39)] = 0.0
+    [(empty_col_41)] = 530.0
+    [(empty_col_43)] = 39 days, 2:01:41.312000
+    [(empty_col_44)] = 530.0
+    [(empty_col_45)] = Vastra ke 1007 no se jama kera
+    [(empty_col_46)] = Kpr
+  Row 12:
+    [2026-05-02 18:45:18.144000] = 178
+    [(empty_col_1)] = 2026-03-10 11:35:00.722000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = Rubber plajo
+    [0000001] = 32/40
+    [(empty_col_5)] = 200.0
+    [(empty_col_6)] = Order
+    [(empty_col_7)] = All print  colur
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:35:00.960000
+    [(empty_col_10)] = 2026-03-10 13:00:19.296000
+    [(empty_col_11)] = No
+    [(empty_col_12)] = No
+    [(empty_col_13)] = Repeat
+  Row 13:
+    [2026-05-02 18:45:18.144000] = 179
+    [(empty_col_1)] = 2026-03-10 11:37:02.158000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = Cross print plajo
+    [0000001] = 22/30
+    [(empty_col_5)] = 240.0
+    [(empty_col_6)] = Refill
+    [(empty_col_7)] = All print 
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:37:01.920000
+    [(empty_col_10)] = 2026-03-10 13:04:54.912000
+    [(empty_col_11)] = Yes
+    [(empty_col_12)] = Yes
+    [(empty_col_13)] = Pura size kaatna hai
+    [(empty_col_15)] = 2026-03-23 11:37:01.920000
+    [(empty_col_16)] = 2026-03-11 10:57:56.453000
+    [(empty_col_17)] = 480.0
+    [(empty_col_18)] = 22/40 
+    [(empty_col_19)] = Vinod Bhaiya
+    [(empty_col_22)] = 2026-03-13 10:57:56.160000
+    [(empty_col_23)] = 2026-03-13 10:57:56.453000
+    [(empty_col_24)] = 2026-03-14 11:37:19
+    [(empty_col_25)] = Sunil Singhnath Ji
+    [(empty_col_26)] = 480.0
+    [(empty_col_27)] = Yes
+    [(empty_col_28)] = 4.0
+    [(empty_col_30)] = 480.0
+    [(empty_col_31)] = 480.0
+    [(empty_col_33)] = 1 day, 0:39:22.547000
+    [(empty_col_35)] = 36.0
+    [(empty_col_36)] = 2026-03-19 11:37:19.200000
+    [(empty_col_37)] = 2026-04-02 12:37:19
+    [(empty_col_38)] = Complete
+    [(empty_col_39)] = 0.0
+    [(empty_col_40)] = 480.0
+    [(empty_col_41)] = 480.0
+    [(empty_col_43)] = 14 days, 1:00:00
+  Row 14:
+    [2026-05-02 18:45:18.144000] = 180
+    [(empty_col_1)] = 2026-03-10 11:38:14.352000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = Seemar plajo
+    [0000001] = 22/30
+    [(empty_col_5)] = 200.0
+    [(empty_col_6)] = Refill
+    [(empty_col_7)] = Color Upar puchna hai
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:38:14.496000
+    [(empty_col_10)] = 2026-03-10 13:05:26.880000
+    [(empty_col_11)] = Yes
+    [(empty_col_12)] = Yes
+    [(empty_col_13)] = Pura size 22/40 400 pcs total
+    [(empty_col_15)] = 2026-03-23 11:38:14.496000
+    [(empty_col_16)] = 2026-03-12 15:51:06.258000
+    [(empty_col_17)] = 180.0
+    [(empty_col_18)] = 22.4
+    [(empty_col_19)] = Vinod Bhaiya
+    [(empty_col_22)] = 2026-03-14 15:51:06.336000
+    [(empty_col_23)] = 2026-03-14 15:51:06.258000
+    [(empty_col_24)] = 2026-03-12 17:27:07
+    [(empty_col_25)] = Somraj Singhnath Ji
+    [(empty_col_26)] = 180.0
+    [(empty_col_27)] = Yes
+    [(empty_col_28)] = 4.0
+    [(empty_col_30)] = 180.0
+    [(empty_col_31)] = 180.0
+    [(empty_col_35)] = 36.0
+    [(empty_col_36)] = 2026-03-17 17:27:06.624000
+    [(empty_col_37)] = 2026-03-17 14:04:53
+    [(empty_col_38)] = Complete
+    [(empty_col_39)] = 0.0
+    [(empty_col_40)] = 468.0
+    [(empty_col_41)] = 180.0
+    [(empty_col_44)] = -288.0
+    [(empty_col_45)] = Wrong jama kera 180 pes thea
+    [(empty_col_46)] = Kpr
+  Row 15:
+    [2026-05-02 18:45:18.144000] = 181
+    [(empty_col_1)] = 2026-03-10 11:38:48.841000
+    [10:00:00] = Full Bottom Core  - Sourabh
+    [19:00] = Seemar plajo
+    [0000001] = 32/40
+    [(empty_col_5)] = 200.0
+    [(empty_col_6)] = Refill
+    [(empty_col_7)] = Color Upar puchna hai
+    [(empty_col_8)] = Full Bottom
+    [(empty_col_9)] = 2026-03-18 11:38:49.056000
+    [(empty_col_10)] = 2026-03-10 13:05:43.296000
+    [(empty_col_11)] = No
+    [(empty_col_12)] = No
+    [(empty_col_13)] = Repeat
+  Row 16:
+    [2026-05-02 18:45:18.144000] = 182
+    [(empty_col_1)] = 2026-03-10 13:47:08.902000
+    [10:00:00] = Skirts - Ankit
+    [19:00] = BUBBLE BALLON SKIRT 1 NO
+    [0000001] = 22/32
+    [(empty_col_5)] = 250.0
+    [(empty_col_6)] = Refill
+    [(empty_col_7)] = DUKAN
+    [(empty_col_8)] = Skirts
+    [(empty_col_9)] = 2026-03-18 13:47:09.024000
+    [(empty_col_10)] = 2026-03-10 14:21:59.904000
+    [(empty_col_11)] = Yes
+    [(empty_col_12)] = No
+    [(empty_col_13)] = Sitaram Ma.
+    [(empty_col_21)] = 2026-03-12 14:21:59.904000
+    [(empty_col_23)] = 2026-03-12 14:22:00.167000
+    [(empty_col_24)] = 2026-04-09 11:52:25.740000
+    [(empty_col_25)] = Test
+    [(empty_col_26)] = 1.0
+    [(empty_col_27)] = Yes
+    [(empty_col_28)] = 1.0
+    [(empty_col_31)] = 1.0
+    [(empty_col_33)] = 27 days, 21:30:25.573000
+    [(empty_col_35)] = 9.0
+    [(empty_col_36)] = 2026-04-10 11:52:25.536000
+    [(empty_col_38)] = Complete
+    [(empty_col_39)] = 0.0
+    [(empty_col_41)] = 1.0
+    [(empty_col_43)] = 22 days, 6:52:52.572000
+    [(empty_col_44)] = 1.0
+    [(empty_col_45)] = Old order
+    [(empty_col_46)] = Nr
+
+========================================
+SHEET: Open Cutting
+Rows: 4, Columns: 3
+========================================
+HEADERS:
+  [0] Mannual Challan No
+  [1] Timestamp
+  [2] Cutting Quantity
+
+SAMPLE DATA (first 3 rows of 3 total):
+  Row 2:
+    [Timestamp] = 2026-02-19 16:12:41
+    [Cutting Quantity] = 150.0
+  Row 3:
+    [Mannual Challan No] = 246.0
+    [Timestamp] = 2026-03-14 11:25:48
+    [Cutting Quantity] = 48.0
+  Row 4:
+    [Mannual Challan No] = 386.0
+    [Timestamp] = 2026-03-24 17:37:05
+    [Cutting Quantity] = 243.0
+
+UNIQUE VALUES ANALYSIS:
+  [Mannual Challan No]: 2 unique => ['246.0', '386.0']
+  [Timestamp]: 3 unique => ['2026-02-19 16:12:41', '2026-03-14 11:25:48', '2026-03-24 17:37:05']
+  [Cutting Quantity]: 3 unique => ['150.0', '243.0', '48.0']
+
+========================================
+SHEET: New Requirement
+Rows: 699, Columns: 8
+========================================
+HEADERS:
+  [0] Timestamp
+  [1] Your Name
+  [2] Item Name
+  [3] Size
+  [4] Quantity
+  [5] Order ka maal hai ya refill dukan ke stock ke liye?
+  [6] Koi special instruction? print ya color chart related? finishing related? urgency related?
+  [7] Item Group
+
+SAMPLE DATA (first 15 rows of 698 total):
+  Row 2:
+    [Timestamp] = 2026-03-09 17:55:03.138000
+    [Your Name] = Capri - Sanjay
+    [Item Name] = GT300 tEST
+    [Size] = 34/38
+    [Quantity] = 500.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Order
+    [Item Group] = Capri
+  Row 3:
+    [Timestamp] = 2026-03-10 11:29:18.603000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = Rib print plajo
+    [Size] = 22/30, 32/40
+    [Quantity] = 300.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = Print puchna hai
+    [Item Group] = Full Bottom
+  Row 4:
+    [Timestamp] = 2026-03-10 11:29:54.067000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = Rib print plajo
+    [Size] = 22/30, 32/40
+    [Quantity] = 300.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = Print puchna hai
+    [Item Group] = Full Bottom
+  Row 5:
+    [Timestamp] = 2026-03-10 11:31:33.172000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = Lining plajo
+    [Size] = 22/30, 32/40
+    [Quantity] = 400.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = All colur
+    [Item Group] = Full Bottom
+  Row 6:
+    [Timestamp] = 2026-03-10 11:32:49.705000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = M boos plajo
+    [Size] = 22/30
+    [Quantity] = 180.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = All clour
+    [Item Group] = Full Bottom
+  Row 7:
+    [Timestamp] = 2026-03-10 11:33:31.889000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = M boss plajo
+    [Size] = 32/40
+    [Quantity] = 250.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = All colur
+    [Item Group] = Full Bottom
+  Row 8:
+    [Timestamp] = 2026-03-10 11:34:21.966000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = Rubber plajo
+    [Size] = 22/30
+    [Quantity] = 200.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Order
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = All print colur
+    [Item Group] = Full Bottom
+  Row 9:
+    [Timestamp] = 2026-03-10 11:35:00.722000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = Rubber plajo
+    [Size] = 32/40
+    [Quantity] = 200.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Order
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = All print  colur
+    [Item Group] = Full Bottom
+  Row 10:
+    [Timestamp] = 2026-03-10 11:37:02.158000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = Cross print plajo
+    [Size] = 22/30
+    [Quantity] = 240.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = All print 
+    [Item Group] = Full Bottom
+  Row 11:
+    [Timestamp] = 2026-03-10 11:38:14.352000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = Seemar plajo
+    [Size] = 22/30
+    [Quantity] = 200.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = Color Upar puchna hai
+    [Item Group] = Full Bottom
+  Row 12:
+    [Timestamp] = 2026-03-10 11:38:48.841000
+    [Your Name] = Full Bottom Core  - Sourabh
+    [Item Name] = Seemar plajo
+    [Size] = 32/40
+    [Quantity] = 200.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = Color Upar puchna hai
+    [Item Group] = Full Bottom
+  Row 13:
+    [Timestamp] = 2026-03-10 13:47:08.902000
+    [Your Name] = Skirts - Ankit
+    [Item Name] = BUBBLE BALLON SKIRT 1 NO
+    [Size] = 22/32
+    [Quantity] = 250.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = DUKAN
+    [Item Group] = Skirts
+  Row 14:
+    [Timestamp] = 2026-03-10 13:48:16.629000
+    [Your Name] = Skirts - Ankit
+    [Item Name] = SATAN PALTING FOIL SKIRT
+    [Size] = 22/32, 32/40
+    [Quantity] = 450.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = DUAKN
+    [Item Group] = Skirts
+  Row 15:
+    [Timestamp] = 2026-03-10 14:22:09.576000
+    [Your Name] = Skirts - Ankit
+    [Item Name] = PLATING SEEMAR SKIRT 
+    [Size] = 22/32
+    [Quantity] = 240.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = Dukam
+    [Item Group] = Skirts
+  Row 16:
+    [Timestamp] = 2026-03-10 14:23:08.304000
+    [Your Name] = Skirts - Ankit
+    [Item Name] = SEEMAR FRILL SKIRT
+    [Size] = 22/32
+    [Quantity] = 240.0
+    [Order ka maal hai ya refill dukan ke stock ke liye?] = Refill
+    [Koi special instruction? print ya color chart related? finishing related? urgency related?] = Dukan
+    [Item Group] = Skirts
+
+UNIQUE VALUES ANALYSIS:
+  [Timestamp]: 697 unique values
+  [Your Name]: 11 unique => ['Aline & Frock - Ashvin', 'Capri - Sanjay', 'Full Bottom Core  - Sourabh', 'KPR', 'KR', 'NR', 'Sets - Ashvin', 'Shorts - Manohar', 'Skirts - Ankit', 'Tops Fancy & Denim - Bunty', 'Tops Hosiery - Naresh']
+  [Item Name]: 440 unique values
+  [Size]: 63 unique values
+  [Quantity]: 85 unique values
+  [Order ka maal hai ya refill dukan ke stock ke liye?]: 13 unique => [' Party name Daga  Orde bhe hi refill bhe hi', 'Kisan ka maal lag gaya hai, office ke liye', 'L ka long aur xl', 'New', 'New sample ', 'Orde bhi hi refill bhi hi ', 'Order', 'Party name daga and  refill ', 'Refill', 'Repair', 'Sample ', 'Tukdo me', 'Westage']
+  [Koi special instruction? print ya color chart related? finishing related? urgency related?]: 310 unique values
+  [Item Group]: 8 unique => ['Aline / Frock / Long Tops', 'Boys', 'Capri', 'Full Bottom', 'Sets', 'Shorts', 'Skirts', 'Tops / Tshirts']
+
+========================================
+SHEET: Holidays
+Rows: 1, Columns: 1
+========================================
+  EMPTY SHEET
+
+========================================
+SHEET: Production Approval
+Rows: 867, Columns: 5
+========================================
+HEADERS:
+  [0] Timestamp
+  [1] Manual Job  Number
+  [2] Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)
+  [3] Maal Factory me Katega kya?
+  [4] No - Ye requirement kyu cancel hui?   Or Yes - Instructions? Kisko dena hai?
+
+SAMPLE DATA (first 15 rows of 866 total):
+  Row 2:
+    [Timestamp] = 2026-02-19 15:26:58.664000
+    [Manual Job  Number] = 2.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = Yes
+  Row 3:
+    [Timestamp] = 2026-02-19 16:05:12.743000
+    [Manual Job  Number] = 2.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = Yes
+  Row 4:
+    [Timestamp] = 2026-02-19 16:20:00.120000
+    [Manual Job  Number] = 3.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = Yes
+  Row 5:
+    [Timestamp] = 2026-02-20 10:59:35.690000
+    [Manual Job  Number] = 7.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = No
+    [No - Ye requirement kyu cancel hui?   Or Yes - Instructions? Kisko dena hai?] = Testing ke liye dala tha
+  Row 6:
+    [Timestamp] = 2026-02-20 11:42:11.436000
+    [Manual Job  Number] = 27.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = No
+    [No - Ye requirement kyu cancel hui?   Or Yes - Instructions? Kisko dena hai?] = Order par hi banvana he
+  Row 7:
+    [Timestamp] = 2026-02-20 11:54:35.357000
+    [Manual Job  Number] = 30.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = No
+    [No - Ye requirement kyu cancel hui?   Or Yes - Instructions? Kisko dena hai?] = Order cancel ho jaega maal aane tak
+  Row 8:
+    [Timestamp] = 2026-02-20 11:56:34.731000
+    [Manual Job  Number] = 28.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = No
+    [No - Ye requirement kyu cancel hui?   Or Yes - Instructions? Kisko dena hai?] = Already on production
+  Row 9:
+    [Timestamp] = 2026-02-20 12:18:00.183000
+    [Manual Job  Number] = 29.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = Yes
+  Row 10:
+    [Timestamp] = 2026-02-20 12:18:13.825000
+    [Manual Job  Number] = 31.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = Yes
+  Row 11:
+    [Timestamp] = 2026-02-20 12:18:52.567000
+    [Manual Job  Number] = 32.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = Yes
+  Row 12:
+    [Timestamp] = 2026-02-20 12:19:03.369000
+    [Manual Job  Number] = 33.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = Yes
+  Row 13:
+    [Timestamp] = 2026-02-20 12:29:46.028000
+    [Manual Job  Number] = 34.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = Yes
+  Row 14:
+    [Timestamp] = 2026-02-20 12:57:32.316000
+    [Manual Job  Number] = 6.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = No
+    [No - Ye requirement kyu cancel hui?   Or Yes - Instructions? Kisko dena hai?] = Allready production 
+  Row 15:
+    [Timestamp] = 2026-02-20 12:59:13.709000
+    [Manual Job  Number] = 9.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = No
+    [No - Ye requirement kyu cancel hui?   Or Yes - Instructions? Kisko dena hai?] = Allready production 
+  Row 16:
+    [Timestamp] = 2026-02-20 13:00:21.192000
+    [Manual Job  Number] = 13.0
+    [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)] = No
+    [No - Ye requirement kyu cancel hui?   Or Yes - Instructions? Kisko dena hai?] = Allready production 
+
+UNIQUE VALUES ANALYSIS:
+  [Timestamp]: 866 unique values
+  [Manual Job  Number]: 819 unique values
+  [Ye maal prodution pe bhejna hai kya? ( Kapda hona chahaiye is you are marking yes)]: 2 unique => ['No', 'Yes']
+  [Maal Factory me Katega kya?]: 2 unique => ['No', 'Yes']
+  [No - Ye requirement kyu cancel hui?   Or Yes - Instructions? Kisko dena hai?]: 416 unique values
+
+========================================
+SHEET: Naame
+Rows: 1533, Columns: 13
+========================================
+HEADERS:
+  [0] Manual Job Number
+  [1] Timestamp
+  [2] Thekedar / Karigar Name
+  [3] Cut to Pack 
+  [4] Maal approx kitne din me jama hoga?
+  [5] Cutting Pieces
+  [6] Size Wise Detail( αñòαñ┐αññαñ¿αÑç Size  αñ«αÑç  αñòαñ┐αññαñ¿αÑç Pieces αñòαñƒαÑç     )
+  [7] (empty_col_7)
+  [8] (empty_col_8)
+  [9] (empty_col_9)
+  [10] (empty_col_10)
+  [11] (empty_col_11)
+  [12] (empty_col_12)
+
+SAMPLE DATA (first 15 rows of 1532 total):
+  Row 2:
+    [Manual Job Number] = 1.0
+    [Timestamp] = 2026-02-19 16:00:32
+    [Thekedar / Karigar Name] = Mukati Ji
+    [(empty_col_9)] = Test
+  Row 3:
+    [Manual Job Number] = 2.0
+    [Timestamp] = 2026-02-19 16:05:42
+    [Thekedar / Karigar Name] = Test
+    [(empty_col_9)] = Mukati Ji
+  Row 4:
+    [Manual Job Number] = 171.0
+    [Timestamp] = 2026-03-10 15:17:53
+    [Thekedar / Karigar Name] = Test
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 2.0
+    [Cutting Pieces] = 200.0
+    [(empty_col_9)] = Sitaram Ji
+  Row 5:
+    [Manual Job Number] = 193.0
+    [Timestamp] = 2026-03-10 15:50:51
+    [Thekedar / Karigar Name] = Dilip Sisodiya Ji
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 2.0
+    [(empty_col_9)] = Kushal Parmar Ji
+  Row 6:
+    [Manual Job Number] = 194.0
+    [Timestamp] = 2026-03-10 16:15:39
+    [Thekedar / Karigar Name] = Jitendre Chorey Ji
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 3.0
+    [Cutting Pieces] = 708.0
+    [(empty_col_9)] = Harish Bakadiya Ji
+  Row 7:
+    [Manual Job Number] = 189.0
+    [Timestamp] = 2026-03-12 12:15:25
+    [Thekedar / Karigar Name] = Shakil Shikh Ji
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 3.0
+    [Cutting Pieces] = 288.0
+    [(empty_col_9)] = Sanjay Verma ji
+  Row 8:
+    [Manual Job Number] = 186.0
+    [Timestamp] = 2026-03-12 12:44:25
+    [Thekedar / Karigar Name] = Nilesh Thakur Ji
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 3.0
+    [Cutting Pieces] = 288.0
+    [(empty_col_9)] = Ajay Majumdar Ji
+  Row 9:
+    [Manual Job Number] = 195.0
+    [Timestamp] = 2026-03-12 13:12:42
+    [Thekedar / Karigar Name] = Sanjay Verma ji
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 3.0
+    [Cutting Pieces] = 336.0
+    [(empty_col_9)] = Sunil Singhnath Ji
+  Row 10:
+    [Manual Job Number] = 213.0
+    [Timestamp] = 2026-03-12 13:32:25
+    [Thekedar / Karigar Name] = Anil Pradhan Ji
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 4.0
+    [Cutting Pieces] = 228.0
+    [(empty_col_9)] = Somraj Singhnath Ji
+  Row 11:
+    [Manual Job Number] = 187.0
+    [Timestamp] = 2026-03-12 13:37:50
+    [Thekedar / Karigar Name] = Dilip Sisodiya Ji
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 4.0
+    [Cutting Pieces] = 320.0
+    [(empty_col_9)] = Vishal Pancholi Ji
+  Row 12:
+    [Manual Job Number] = 226.0
+    [Timestamp] = 2026-03-12 16:00:48
+    [Thekedar / Karigar Name] = Test
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 4.0
+    [Cutting Pieces] = 540.0
+    [(empty_col_9)] = Jitendre Verma JI
+  Row 13:
+    [Manual Job Number] = 188.0
+    [Timestamp] = 2026-03-12 16:06:04
+    [Thekedar / Karigar Name] = Test
+    [Cut to Pack ] = No
+    [Maal approx kitne din me jama hoga?] = 2.0
+    [Cutting Pieces] = 296.0
+    [(empty_col_9)] = Murli Namdev Ji
+  Row 14:
+    [Manual Job Number] = 174.0
+    [Timestamp] = 2026-03-12 16:32:56
+    [Thekedar / Karigar Name] = Sunil Singhnath Ji
+    [Cut to Pack ] = Yes
+    [Maal approx kitne din me jama hoga?] = 3.0
+    [Cutting Pieces] = 240.0
+    [(empty_col_9)] = Amzad Khan Ji
+  Row 15:
+    [Manual Job Number] = 196.0
+    [Timestamp] = 2026-03-12 17:03:38
+    [Thekedar / Karigar Name] = Somraj Singhnath Ji
+    [Cut to Pack ] = Yes
+    [Maal approx kitne din me jama hoga?] = 2.0
+    [Cutting Pieces] = 450.0
+    [(empty_col_9)] = Rajesh Khatri Ji
+  Row 16:
+    [Manual Job Number] = 180.0
+    [Timestamp] = 2026-03-12 17:27:07
+    [Thekedar / Karigar Name] = Somraj Singhnath Ji
+    [Cut to Pack ] = Yes
+    [Maal approx kitne din me jama hoga?] = 4.0
+    [Cutting Pieces] = 180.0
+    [(empty_col_9)] = Said Khan Ji
+
+UNIQUE VALUES ANALYSIS:
+  [Manual Job Number]: 507 unique values
+  [Timestamp]: 532 unique values
+  [Thekedar / Karigar Name]: 35 unique values
+  [Cut to Pack ]: 2 unique => ['No', 'Yes']
+  [Maal approx kitne din me jama hoga?]: 26 unique => ['0.0', '00', '000', '1.0', '10.0', '11.0', '12.0', '13.0', '14.0', '15.0', '19.0', '2.0', '20.0', '21.0', '22.0', '25.0', '26.0', '27.0', '272.0', '3.0']
+  [Cutting Pieces]: 149 unique values
+  [Size Wise Detail( αñòαñ┐αññαñ¿αÑç Size  αñ«αÑç  αñòαñ┐αññαñ¿αÑç Pieces αñòαñƒαÑç     )]: 152 unique values
+  [(empty_col_9)]: 26 unique => ['Abdul Kadir Ji', 'Ajay Majumdar Ji', 'Amzad Khan Ji', 'Anil Goswami Ji', 'Anil Pal Ji', 'Anil Pawar Ji', 'Anil Pradhan Ji', 'Anish Maatshab Ji', 'Bharat Namdev Ji', 'Dilip Sisodiya Ji', 'Harish Bakadiya Ji', 'Jitendre Chorey Ji', 'Jitendre Verma JI', 'Kushal Parmar Ji', 'Mukati Ji', 'Murli Namdev Ji', 'Nilesh Thakur Ji', 'Rajesh Khatri Ji', 'Said Khan Ji', 'Sanjay Verma ji']
+
+========================================
+SHEET: In house Cutting
+Rows: 405, Columns: 5
+========================================
+HEADERS:
+  [0] Job Number
+  [1] Timestamp
+  [2] Actual Cutting Pieces
+  [3] Size Wise Details
+  [4] αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? 
+
+SAMPLE DATA (first 15 rows of 404 total):
+  Row 2:
+    [Job Number] = 171.0
+    [Timestamp] = 2026-03-09 18:45:05.501000
+    [Actual Cutting Pieces] = 400.0
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 3:
+    [Job Number] = 175.0
+    [Timestamp] = 2026-03-10 15:04:13.864000
+    [Actual Cutting Pieces] = 480.0
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 4:
+    [Job Number] = 177.0
+    [Timestamp] = 2026-03-10 17:04:46.649000
+    [Actual Cutting Pieces] = 530.0
+    [Size Wise Details] = 22 /40 
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 5:
+    [Job Number] = 179.0
+    [Timestamp] = 2026-03-11 10:57:56.453000
+    [Actual Cutting Pieces] = 480.0
+    [Size Wise Details] = 22/40 
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 6:
+    [Job Number] = 179.0
+    [Timestamp] = 2026-03-11 10:59:30.769000
+    [Actual Cutting Pieces] = 480.0
+    [Size Wise Details] = 22.4
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 7:
+    [Job Number] = 174.0
+    [Timestamp] = 2026-03-11 11:49:58.342000
+    [Actual Cutting Pieces] = 240.0
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 8:
+    [Job Number] = 190.0
+    [Timestamp] = 2026-03-11 12:55:18.501000
+    [Actual Cutting Pieces] = 296.0
+    [Size Wise Details] = 22.36
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 9:
+    [Job Number] = 187.0
+    [Timestamp] = 2026-03-12 11:00:05.176000
+    [Actual Cutting Pieces] = 320.0
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 10:
+    [Job Number] = 189.0
+    [Timestamp] = 2026-03-12 11:03:58.077000
+    [Actual Cutting Pieces] = 288.0
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 11:
+    [Job Number] = 191.0
+    [Timestamp] = 2026-03-12 11:04:33.007000
+    [Actual Cutting Pieces] = 288.0
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 12:
+    [Job Number] = 186.0
+    [Timestamp] = 2026-03-12 12:36:42.853000
+    [Actual Cutting Pieces] = 288.0
+    [Size Wise Details] = 22.36
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 13:
+    [Job Number] = 195.0
+    [Timestamp] = 2026-03-12 13:08:03.400000
+    [Actual Cutting Pieces] = 336.0
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 14:
+    [Job Number] = 180.0
+    [Timestamp] = 2026-03-12 15:51:06.258000
+    [Actual Cutting Pieces] = 180.0
+    [Size Wise Details] = 22.4
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 15:
+    [Job Number] = 188.0
+    [Timestamp] = 2026-03-12 15:52:15.829000
+    [Actual Cutting Pieces] = 296.0
+    [Size Wise Details] = 22.36
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+  Row 16:
+    [Job Number] = 196.0
+    [Timestamp] = 2026-03-12 15:52:52.052000
+    [Actual Cutting Pieces] = 450.0
+    [Size Wise Details] = 22.4
+    [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ] = Vinod Bhaiya
+
+UNIQUE VALUES ANALYSIS:
+  [Job Number]: 286 unique values
+  [Timestamp]: 304 unique values
+  [Actual Cutting Pieces]: 105 unique values
+  [Size Wise Details]: 61 unique values
+  [αñ£αñ┐αñ╕αñ¿αÑç αñòαñƒαñ┐αñéαñù αñòαÑÇ ? ]: 2 unique => ['Rahul', 'Vinod Bhaiya']
+
+========================================
+SHEET: Aaj ke Naame
+Rows: 1001, Columns: 26
+========================================
+HEADERS:
+  [0] Job Number 
+  [1] Date 
+  [2] Thekedar
+  [3] (empty_col_3)
+  [4] (empty_col_4)
+  [5] Quantity
+  [6] Sizes
+  [7] (empty_col_7)
+  [8] (empty_col_8)
+  [9] (empty_col_9)
+  [10] (empty_col_10)
+  [11] (empty_col_11)
+  [12] (empty_col_12)
+  [13] (empty_col_13)
+  [14] (empty_col_14)
+  [15] (empty_col_15)
+  [16] (empty_col_16)
+  [17] (empty_col_17)
+  [18] (empty_col_18)
+  [19] (empty_col_19)
+  [20] (empty_col_20)
+  [21] (empty_col_21)
+  [22] (empty_col_22)
+  [23] (empty_col_23)
+  [24] (empty_col_24)
+  [25] (empty_col_25)
+
+SAMPLE DATA (first 15 rows of 1000 total):
+  Row 2:
+    [Job Number ] = 832
+    [Date ] = 2026-05-02 12:57:44.640000
+    [Thekedar] = Abdul Kadir Ji
+    [(empty_col_3)] = No
+    [(empty_col_4)] = 5
+    [Quantity] = 320
+    [Sizes] = 320
+  Row 3:
+    [Job Number ] = 823
+    [Date ] = 2026-05-02 14:11:03.264000
+    [Thekedar] = Somraj Singhnath Ji
+    [(empty_col_3)] = Yes
+    [(empty_col_4)] = 4
+    [Quantity] = 500
+    [Sizes] = 22/40
+  Row 4:
+    [Job Number ] = 742
+    [Date ] = 2026-05-02 15:10:27.264000
+    [Thekedar] = Mukati Ji
+    [(empty_col_3)] = No
+    [(empty_col_4)] = 0
+    [Quantity] = 0000
+    [Sizes] = 000
+  Row 5:
+    [Job Number ] = 824
+    [Date ] = 2026-05-02 15:16:49.152000
+    [Thekedar] = Somraj Singhnath Ji
+    [(empty_col_3)] = Yes
+    [(empty_col_4)] = 5
+    [Quantity] = 520
+    [Sizes] = 22/40
+  Row 6:
+    [Job Number ] = 868
+    [Date ] = 2026-05-02 17:28:01.056000
+    [Thekedar] = Amzad Khan Ji
+    [(empty_col_3)] = No
+    [(empty_col_4)] = 6
+    [Quantity] = 256
+    [Sizes] = 22/36
+  Row 7:
+    [Job Number ] = 867
+    [Date ] = 2026-05-02 18:27:09.504000
+    [Thekedar] = Sitaram Ji
+    [(empty_col_3)] = Yes
+    [(empty_col_4)] = 10
+    [Quantity] = 336
+    [Sizes] = 34/44
+  Row 8:
+  Row 9:
+  Row 10:
+  Row 11:
+  Row 12:
+  Row 13:
+  Row 14:
+  Row 15:
+  Row 16:
+
+UNIQUE VALUES ANALYSIS:
+  [Job Number ]: 6 unique => ['742', '823', '824', '832', '867', '868']
+  [Date ]: 6 unique => ['2026-05-02 12:57:44.640000', '2026-05-02 14:11:03.264000', '2026-05-02 15:10:27.264000', '2026-05-02 15:16:49.152000', '2026-05-02 17:28:01.056000', '2026-05-02 18:27:09.504000']
+  [Thekedar]: 5 unique => ['Abdul Kadir Ji', 'Amzad Khan Ji', 'Mukati Ji', 'Sitaram Ji', 'Somraj Singhnath Ji']
+  [(empty_col_3)]: 2 unique => ['No', 'Yes']
+  [(empty_col_4)]: 5 unique => ['0', '10', '4', '5', '6']
+  [Quantity]: 6 unique => ['0000', '256', '320', '336', '500', '520']
+  [Sizes]: 5 unique => ['000', '22/36', '22/40', '320', '34/44']
+
+========================================
+SHEET: Finished Maal Jama
+Rows: 475, Columns: 4
+========================================
+HEADERS:
+  [0] Manual job Number
+  [1] Timestamp
+  [2] Kitne Pcs Jama Hue
+  [3] Maal Press Hoke Jama Hua ya fir bina press ke?
+
+SAMPLE DATA (first 15 rows of 474 total):
+  Row 2:
+    [Manual job Number] = 1.0
+    [Timestamp] = 2026-02-19 16:34:51
+    [Kitne Pcs Jama Hue] = 180.0
+  Row 3:
+    [Manual job Number] = 2.0
+    [Timestamp] = 2026-02-19 16:38:30
+    [Kitne Pcs Jama Hue] = 137.0
+  Row 4:
+    [Manual job Number] = 1.0
+    [Timestamp] = 2026-02-19 17:07:34
+    [Kitne Pcs Jama Hue] = 117.0
+  Row 5:
+    [Manual job Number] = 3.0
+    [Timestamp] = 2026-02-20 10:54:03
+    [Kitne Pcs Jama Hue] = 12.0
+  Row 6:
+    [Manual job Number] = 115.0
+    [Timestamp] = 2026-02-25 16:55:02
+    [Kitne Pcs Jama Hue] = 30.0
+  Row 7:
+    [Manual job Number] = 33.0
+    [Timestamp] = 2026-03-02 17:24:21
+    [Kitne Pcs Jama Hue] = 570.0
+  Row 8:
+    [Manual job Number] = 25.0
+    [Timestamp] = 2026-03-02 17:24:49
+    [Kitne Pcs Jama Hue] = 380.0
+  Row 9:
+    [Manual job Number] = 171.0
+    [Timestamp] = 2026-03-12 16:22:55
+    [Kitne Pcs Jama Hue] = 180.0
+  Row 10:
+    [Manual job Number] = 171.0
+    [Timestamp] = 2026-03-12 16:23:09
+    [Kitne Pcs Jama Hue] = 111.0
+  Row 11:
+    [Manual job Number] = 171.0
+    [Timestamp] = 2026-03-12 17:14:02
+    [Kitne Pcs Jama Hue] = 200.0
+  Row 12:
+    [Manual job Number] = 246.0
+    [Timestamp] = 2026-03-14 11:20:42
+    [Kitne Pcs Jama Hue] = 48.0
+  Row 13:
+    [Manual job Number] = 218.0
+    [Timestamp] = 2026-03-14 16:20:06
+    [Kitne Pcs Jama Hue] = 150.0
+  Row 14:
+    [Manual job Number] = 172.0
+    [Timestamp] = 2026-03-16 15:31:06
+    [Kitne Pcs Jama Hue] = 410.0
+  Row 15:
+    [Manual job Number] = 174.0
+    [Timestamp] = 2026-03-17 12:10:23
+    [Kitne Pcs Jama Hue] = 240.0
+  Row 16:
+    [Manual job Number] = 180.0
+    [Timestamp] = 2026-03-17 14:04:53
+    [Kitne Pcs Jama Hue] = 180.0
+
+UNIQUE VALUES ANALYSIS:
+  [Manual job Number]: 387 unique values
+  [Timestamp]: 474 unique values
+  [Kitne Pcs Jama Hue]: 175 unique values
+  [Maal Press Hoke Jama Hua ya fir bina press ke?]: 2 unique => ['Press Hogyi Γ£à', 'Press Hona Baaki Hai Γ¥î']
+
+========================================
+SHEET: Settle
+Rows: 194, Columns: 5
+========================================
+HEADERS:
+  [0] Timestamp
+  [1] Manual Job Number
+  [2] Settle Quantity
+  [3] Reason 
+  [4] Your Name
+
+SAMPLE DATA (first 15 rows of 193 total):
+  Row 2:
+    [Timestamp] = 2026-03-12 18:42:11
+    [Manual Job Number] = 171.0
+    [Settle Quantity] = -191.0
+    [Reason ] = kata fata nikl gaya tha
+    [Your Name] = Himanshu Gurjar
+  Row 3:
+    [Timestamp] = 2026-03-27 16:12:40
+    [Manual Job Number] = 406.0
+    [Settle Quantity] = 1.0
+    [Reason ] = No
+    [Your Name] = No
+  Row 4:
+    [Timestamp] = 2026-04-01 14:42:54
+    [Manual Job Number] = 241.0
+    [Settle Quantity] = 8.0
+    [Reason ] = Misteck
+    [Your Name] = Kpr
+  Row 5:
+    [Timestamp] = 2026-04-01 14:45:47
+    [Manual Job Number] = 241.0
+    [Settle Quantity] = 8.0
+    [Reason ] = Misteck
+    [Your Name] = Kpr
+  Row 6:
+    [Timestamp] = 2026-04-01 14:47:20
+    [Manual Job Number] = 259.0
+    [Settle Quantity] = 8.0
+    [Reason ] = Misteck
+    [Your Name] = Kpr
+  Row 7:
+    [Timestamp] = 2026-04-02 12:42:09
+    [Manual Job Number] = 341.0
+    [Settle Quantity] = -130.0
+    [Reason ] = Wrong entry
+    [Your Name] = Nr
+  Row 8:
+    [Timestamp] = 2026-04-02 12:43:27
+    [Manual Job Number] = 335.0
+    [Settle Quantity] = -320.0
+    [Reason ] = Wrong entry
+    [Your Name] = Nr
+  Row 9:
+    [Timestamp] = 2026-04-02 12:44:10
+    [Manual Job Number] = 336.0
+    [Settle Quantity] = -320.0
+    [Reason ] = .
+    [Your Name] = Nr
+  Row 10:
+    [Timestamp] = 2026-04-02 12:44:31
+    [Manual Job Number] = 341.0
+    [Settle Quantity] = -640.0
+    [Your Name] = Nr
+  Row 11:
+    [Timestamp] = 2026-04-02 13:40:53
+    [Manual Job Number] = 201.0
+    [Settle Quantity] = -384.0
+    [Reason ] = Doble se jama
+    [Your Name] = Kpr
+  Row 12:
+    [Timestamp] = 2026-04-02 16:05:38
+    [Manual Job Number] = 221.0
+    [Settle Quantity] = -457.0
+    [Reason ] = 957 pec jama kere jabki 493 he jama hue thea
+    [Your Name] = Kpr
+  Row 13:
+    [Timestamp] = 2026-04-02 16:13:53
+    [Manual Job Number] = 222.0
+    [Settle Quantity] = 90.0
+    [Reason ] = Dahyri me jagdish ne jama ker 95
+    [Your Name] = Kpr
+  Row 14:
+    [Timestamp] = 2026-04-02 16:20:02
+    [Manual Job Number] = 227.0
+    [Settle Quantity] = -42.0
+    [Reason ] = Dusry lot ke 42 extra laye
+    [Your Name] = Kpr
+  Row 15:
+    [Timestamp] = 2026-04-02 16:24:49
+    [Manual Job Number] = 0.0
+    [Settle Quantity] = 175.0
+    [Reason ] = Jama ho gaye 23 /3
+    [Your Name] = Kpr
+  Row 16:
+    [Timestamp] = 2026-04-02 16:26:15
+    [Manual Job Number] = 405.0
+    [Settle Quantity] = 1.0
+    [Reason ] = Aa gaya
+    [Your Name] = Kpr
+
+UNIQUE VALUES ANALYSIS:
+  [Timestamp]: 92 unique values
+  [Manual Job Number]: 70 unique values
+  [Settle Quantity]: 60 unique values
+  [Reason ]: 56 unique values
+  [Your Name]: 11 unique => ['.', 'Br', 'G', 'H', 'Himanshu', 'Himanshu Gurjar', 'KPR', 'Kanupriya ', 'Kpr', 'No', 'Nr']

@@ -1,0 +1,57 @@
+﻿Sheet names: ['Unfinished Maal jama', 'FMS', 'Open Cutting', 'New Requirement', 'Holidays', 'Production Approval', 'Naame', 'In house Cutting', 'Aaj ke Naame', 'Finished Maal Jama', 'Settle']
+Total sheets: 11
+
+==============================
+SHEET: Unfinished Maal jama
+Rows: 1, Columns: 4
+==============================
+
+==============================
+SHEET: FMS
+Rows: 5996, Columns: 47
+==============================
+
+==============================
+SHEET: Open Cutting
+Rows: 4, Columns: 3
+==============================
+
+==============================
+SHEET: New Requirement
+Rows: 699, Columns: 8
+==============================
+
+==============================
+SHEET: Holidays
+Rows: 1, Columns: 1
+==============================
+
+==============================
+SHEET: Production Approval
+Rows: 867, Columns: 5
+==============================
+
+==============================
+SHEET: Naame
+Rows: 1533, Columns: 13
+==============================
+
+==============================
+SHEET: In house Cutting
+Rows: 405, Columns: 5
+==============================
+
+==============================
+SHEET: Aaj ke Naame
+Rows: 1001, Columns: 26
+==============================
+
+==============================
+SHEET: Finished Maal Jama
+Rows: 475, Columns: 4
+==============================
+
+==============================
+SHEET: Settle
+Rows: 194, Columns: 5
+==============================

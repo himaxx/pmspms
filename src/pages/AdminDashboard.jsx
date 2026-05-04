@@ -57,8 +57,65 @@ function fmt(d, opts = { month: 'short', day: 'numeric' }) {
 
 function hoursToLabel(h) {
   if (!h || h <= 0) return '0h';
-  return h < 24 ? `${Math.round(h)}h` : `${(h / 24).toFixed(1)}d`;
+  if (h < 1) return `${Math.round(h * 60)}m`;
+  if (h < 9) return `${h.toFixed(1)}h`;
+  if (h < 54) return `${Math.round(h)}h`;
+  const days = h / 9; // 9 working hours/day
+  return `${days.toFixed(1)}d`;
 }
+
+// ─── Business Hours Engine ────────────────────────────────────────────────────
+// Working: Mon–Sat, 10:00–19:00 (9 hrs/day). Sunday = holiday.
+const BIZ_START = 10; // 10:00
+const BIZ_END   = 19; // 19:00
+const BIZ_HRS   = BIZ_END - BIZ_START; // 9 hrs/day
+
+/**
+ * Calculates working-hours difference between two dates.
+ * Skips Sundays and time outside 10:00–19:00.
+ * Returns hours (float).
+ */
+function bizHoursDiff(from, to) {
+  if (!from || !to) return 0;
+  const start = from instanceof Date ? from : new Date(from);
+  const end   = to   instanceof Date ? to   : new Date(to);
+  if (isNaN(start) || isNaN(end) || end <= start) return 0;
+
+  let hours = 0;
+  const cur = new Date(start);
+
+  // Clamp start to within business hours
+  if (cur.getHours() < BIZ_START) cur.setHours(BIZ_START, 0, 0, 0);
+  if (cur.getHours() >= BIZ_END)  { cur.setDate(cur.getDate() + 1); cur.setHours(BIZ_START, 0, 0, 0); }
+
+  while (cur < end) {
+    const dow = cur.getDay(); // 0=Sun
+    if (dow === 0) { cur.setDate(cur.getDate() + 1); cur.setHours(BIZ_START, 0, 0, 0); continue; }
+    const dayEnd = new Date(cur);
+    dayEnd.setHours(BIZ_END, 0, 0, 0);
+    const effectiveEnd = end < dayEnd ? end : dayEnd;
+    const diff = (effectiveEnd - cur) / 3600000;
+    if (diff > 0) hours += diff;
+    cur.setDate(cur.getDate() + 1);
+    cur.setHours(BIZ_START, 0, 0, 0);
+  }
+  return Math.round(hours * 10) / 10;
+}
+
+/**
+ * Standard turnaround time in business hours per step.
+ * These are the SLA targets used to compute 'on-time' vs 'delayed'.
+ */
+const STEP_TAT_HRS = {
+  // Step 1→2: Approval should happen same day = 9 business hours
+  s2: 9,
+  // Step 2→3: Cutting within 1 working day after approval
+  s3: 9,
+  // Step 3→4: Naame dispatch within 2 working days
+  s4: 18,
+  // Step 4→5: Jama (depends on lead time, but standard = 3 working days)
+  s5: 27,
+};
 
 const STEP_NAMES = {
   1: 'New Req.',
@@ -136,34 +193,69 @@ function KpiBar({ jobs }) {
     const active    = jobs.filter(j => getPendingStep(j) < 7);
     const completed = jobs.filter(j => {
       if (getPendingStep(j) !== 7) return false;
-      const d = parseDate(j.s6SettleQty ? j.date : j.s5Actual);
+      const d = parseDate(j.s5Actual || j.date);
       return d && d.getMonth() === month && d.getFullYear() === year;
     });
-    const approved  = jobs.filter(j => j.s2YesNo === 'Yes');
-    const submitted = jobs.filter(j => j.s2Actual);
+
+    // Approval Rate — only jobs that reached S2
+    const submitted    = jobs.filter(j => j.s2Actual);
+    const approved     = submitted.filter(j => j.s2YesNo === 'Yes');
     const approvalRate = submitted.length ? Math.round((approved.length / submitted.length) * 100) : 0;
-    const totalPcs  = active.reduce((s, j) => s + (Number(j.s4CuttingPcs) || 0), 0);
-    const delays    = jobs.flatMap(j => [j.s2Delay, j.s3Delay, j.s4Delay, j.s5Delay].filter(Boolean).map(Number));
-    const avgDelay  = delays.length ? Math.round(delays.reduce((a, b) => a + b, 0) / delays.length) : 0;
+
+    // Pieces: sum of ALL active jobs' s4CuttingPcs (what's physically in stitching)
+    const pcsInProd = active
+      .filter(j => getPendingStep(j) >= 4 && getPendingStep(j) <= 5)
+      .reduce((s, j) => s + (Number(j.s4CuttingPcs) || 0), 0);
+
+    // Avg TAT for completed jobs: S1-date → S5-actual, in business hours
+    const tatValues = jobs
+      .filter(j => j.date && j.s5Actual && getPendingStep(j) >= 6)
+      .map(j => bizHoursDiff(j.date, j.s5Actual))
+      .filter(h => h > 0);
+    const avgTAT = tatValues.length
+      ? Math.round(tatValues.reduce((a, b) => a + b, 0) / tatValues.length)
+      : 0;
+
+    // Avg biz-hours delay per step (only jobs with recorded actual vs planned)
+    const bizDelays = [];
+    jobs.forEach(j => {
+      if (j.date && j.s2Actual)    bizDelays.push(Math.max(0, bizHoursDiff(j.date,    j.s2Actual) - STEP_TAT_HRS.s2));
+      if (j.s2Actual && j.s3Actual) bizDelays.push(Math.max(0, bizHoursDiff(j.s2Actual, j.s3Actual) - STEP_TAT_HRS.s3));
+      if (j.s3Actual && j.s4StartDate) bizDelays.push(Math.max(0, bizHoursDiff(j.s3Actual, j.s4StartDate) - STEP_TAT_HRS.s4));
+    });
+    const avgBizDelay = bizDelays.filter(d => d > 0).length
+      ? Math.round(bizDelays.filter(d => d > 0).reduce((a, b) => a + b, 0) / bizDelays.filter(d => d > 0).length)
+      : 0;
+
+    // On-Time delivery rate
+    const completedWithDates = jobs.filter(j => j.date && j.s5Actual && getPendingStep(j) >= 6);
+    const onTime = completedWithDates.filter(j => {
+      const tat = bizHoursDiff(j.date, j.s5Actual);
+      return tat <= 54; // ≤6 biz days (6×9h) = on time
+    });
+    const onTimeRate = completedWithDates.length
+      ? Math.round((onTime.length / completedWithDates.length) * 100)
+      : 0;
 
     return [
-      { label: 'Total Jobs',             value: jobs.length,   color: 'from-indigo-600 to-violet-600', icon: '📋' },
-      { label: 'Active Jobs',            value: active.length, color: 'from-blue-600 to-cyan-600',     icon: '⚡' },
-      { label: 'Completed This Month',   value: completed.length, color: 'from-emerald-600 to-teal-600', icon: '✅' },
-      { label: 'Approval Rate',          value: `${approvalRate}%`, color: 'from-violet-600 to-pink-600', icon: '🎯' },
-      { label: 'Pieces in Production',   value: totalPcs.toLocaleString(), color: 'from-amber-600 to-orange-600', icon: '🧵' },
-      { label: 'Avg. Delay (hrs)',        value: hoursToLabel(avgDelay), color: 'from-rose-600 to-red-600', icon: '⏱️' },
+      { label: 'Total Jobs',           value: jobs.length,              color: 'from-indigo-600 to-violet-600', icon: '📋', sub: `${active.length} active` },
+      { label: 'Completed This Month', value: completed.length,         color: 'from-emerald-600 to-teal-600',  icon: '✅', sub: `of ${jobs.length} total` },
+      { label: 'Approval Rate',        value: `${approvalRate}%`,       color: 'from-violet-600 to-pink-600',   icon: '🎯', sub: `${approved.length}/${submitted.length} reviewed` },
+      { label: 'Pcs in Stitching',     value: pcsInProd.toLocaleString(), color: 'from-amber-600 to-orange-600', icon: '🧵', sub: 'S4→S5 active jobs' },
+      { label: 'Avg TAT (biz hrs)',    value: hoursToLabel(avgTAT),     color: 'from-blue-600 to-cyan-600',     icon: '⏱️', sub: 'S1→S5, excl. Sun' },
+      { label: 'On-Time Rate',         value: `${onTimeRate}%`,         color: onTimeRate >= 70 ? 'from-green-600 to-emerald-700' : 'from-rose-600 to-red-700', icon: '🚦', sub: '≤6 biz days target' },
     ];
   }, [jobs, month, year]);
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-      {kpis.map(({ label, value, color, icon }) => (
+      {kpis.map(({ label, value, color, icon, sub }) => (
         <div key={label}
           className={`rounded-2xl bg-gradient-to-br ${color} p-4 shadow-lg relative overflow-hidden`}>
           <div className="absolute right-3 top-2 text-2xl opacity-20">{icon}</div>
-          <p className="text-xs font-bold text-white/70 uppercase tracking-widest">{label}</p>
+          <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{label}</p>
           <p className="text-2xl font-black text-white mt-1 leading-none">{value}</p>
+          {sub && <p className="text-[10px] text-white/40 font-medium mt-1">{sub}</p>}
         </div>
       ))}
     </div>
@@ -254,30 +346,66 @@ function PipelineFunnel({ jobs }) {
 
 function DelayHeatmap({ jobs }) {
   const data = useMemo(() => {
-    return [2, 3, 4, 5].map((step, i) => {
-      const key    = `s${step}Delay`;
-      const delays = jobs.map(j => Number(j[key])).filter(v => v > 0);
-      const avg    = delays.length ? delays.reduce((a, b) => a + b, 0) / delays.length : 0;
-      const max    = delays.length ? Math.max(...delays) : 0;
-      return { step: STEP_NAMES[step], avg: Math.round(avg), max: Math.round(max), fill: STEP_COLORS[i + 1] };
+    // Calculate actual business-hours delay vs SLA target per step
+    const steps = [
+      { step: 'New Req.→Approv.', from: 'date',       to: 's2Actual',    sla: STEP_TAT_HRS.s2 },
+      { step: 'Approv.→Cutting', from: 's2Actual',    to: 's3Actual',    sla: STEP_TAT_HRS.s3 },
+      { step: 'Cutting→Naame',   from: 's3Actual',    to: 's4StartDate', sla: STEP_TAT_HRS.s4 },
+      { step: 'Naame→Jama',      from: 's4StartDate', to: 's5Actual',    sla: STEP_TAT_HRS.s5 },
+    ];
+    return steps.map((s, i) => {
+      const vals = jobs
+        .filter(j => j[s.from] && j[s.to])
+        .map(j => bizHoursDiff(j[s.from], j[s.to]));
+      const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+      const over = Math.max(0, avg - s.sla);
+      return {
+        step: s.step,
+        actual: Math.round(avg * 10) / 10,
+        sla: s.sla,
+        over: Math.round(over * 10) / 10,
+        n: vals.length,
+        fill: STEP_COLORS[i + 1],
+      };
     });
   }, [jobs]);
 
+  const CustomTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0].payload;
+    return (
+      <div style={TOOLTIP_STYLE} className="p-3 rounded-xl">
+        <p className="font-black text-white mb-1">{d.step}</p>
+        <p className="text-indigo-300">Avg actual: {hoursToLabel(d.actual)}</p>
+        <p className="text-gray-400">SLA target: {hoursToLabel(d.sla)}</p>
+        {d.over > 0
+          ? <p className="text-red-400 font-bold">Overrun: +{hoursToLabel(d.over)}</p>
+          : <p className="text-emerald-400 font-bold">✓ Within SLA</p>}
+        <p className="text-gray-600 text-[10px] mt-1">{d.n} jobs measured (biz hrs only)</p>
+      </div>
+    );
+  };
+
   return (
     <Card>
-      <SectionTitle sub="Average and maximum delay hours per step (higher = worse)">
-        ⏱️ Delay Analysis by Step
+      <SectionTitle sub="Avg turnaround vs SLA target — business hours only (Sun excl., 10–19)">
+        ⏱️ Step Turnaround Analysis
       </SectionTitle>
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={data} margin={{ top: 5, right: 5, bottom: 30, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-          <XAxis dataKey="step" tick={{ fill: '#9ca3af', fontSize: 11 }} tickLine={false} axisLine={false} />
+          <XAxis dataKey="step" tick={{ fill: '#9ca3af', fontSize: 9 }} tickLine={false} axisLine={false}
+            angle={-20} textAnchor="end" interval={0} />
           <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false}
                  tickFormatter={hoursToLabel} />
-          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => hoursToLabel(v)} />
+          <Tooltip content={<CustomTooltip />} />
           <Legend wrapperStyle={{ color: '#9ca3af', fontSize: 11 }} />
-          <Bar dataKey="avg" name="Avg Delay" radius={[6, 6, 0, 0]} fill="#f59e0b" />
-          <Bar dataKey="max" name="Max Delay" radius={[6, 6, 0, 0]} fill="#ef4444" />
+          <Bar dataKey="sla"    name="SLA Target" radius={[4, 4, 0, 0]} fill="rgba(99,102,241,0.3)" />
+          <Bar dataKey="actual" name="Avg Actual"  radius={[4, 4, 0, 0]}>
+            {data.map((d, i) => (
+              <Cell key={i} fill={d.actual > d.sla ? '#ef4444' : '#34d399'} />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </Card>
@@ -422,47 +550,155 @@ function CuttingStats({ jobs }) {
   );
 }
 
-// ─── Section 7: Item Group Distribution ──────────────────────────────────────
+// ─── Section 7: Item Group Distribution (Interactive) ──────────────────────────
 
 function ItemGroupChart({ jobs }) {
+  const [activeGroup, setActiveGroup] = useState(null);
+  const [metric, setMetric] = useState('pieces'); // 'pieces' | 'jobs'
+
   const data = useMemo(() => {
     const map = {};
     jobs.forEach(j => {
       const g = j.itemGroup || 'Other';
-      if (!map[g]) map[g] = { name: g, count: 0, pieces: 0 };
+      if (!map[g]) map[g] = { name: g, count: 0, pieces: 0, active: 0, complete: 0 };
       map[g].count++;
       map[g].pieces += Number(j.qty) || 0;
+      if (getPendingStep(j) >= 7) map[g].complete++;
+      else map[g].active++;
     });
-    return Object.values(map).sort((a, b) => b.pieces - a.pieces);
-  }, [jobs]);
+    return Object.values(map).sort((a, b) => b[metric === 'pieces' ? 'pieces' : 'count'] - a[metric === 'pieces' ? 'pieces' : 'count']);
+  }, [jobs, metric]);
+
+  const drillJobs = useMemo(() => {
+    if (!activeGroup) return [];
+    return jobs
+      .filter(j => (j.itemGroup || 'Other') === activeGroup)
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 15);
+  }, [jobs, activeGroup]);
+
+  const CustomBarLabel = ({ x, y, width, value }) => {
+    if (!value) return null;
+    return (
+      <text x={x + width + 6} y={y + 10} fill="#6b7280" fontSize={10} fontWeight={700}>
+        {metric === 'pieces' ? value.toLocaleString() : value}
+      </text>
+    );
+  };
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0].payload;
+    return (
+      <div style={TOOLTIP_STYLE} className="p-3 rounded-xl">
+        <p className="font-black text-white mb-1">{d.name}</p>
+        <p className="text-indigo-300">{d.count} jobs · {d.pieces.toLocaleString()} pcs</p>
+        <p className="text-emerald-400 text-[10px] mt-1">{d.complete} complete · {d.active} active</p>
+        <p className="text-gray-500 text-[10px] mt-0.5">Click to drill down →</p>
+      </div>
+    );
+  };
 
   return (
     <Card>
-      <SectionTitle sub="Job count and total pieces by garment category">
-        🏷️ Item Group Distribution
-      </SectionTitle>
-      <div className="flex gap-4">
-        <ResponsiveContainer width="50%" height={200}>
-          <PieChart>
-            <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey="count" nameKey="name" paddingAngle={2}>
-              {data.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-            </Pie>
-            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v, n) => [`${v} jobs`, n]} />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="flex-1 space-y-1.5 overflow-y-auto max-h-48 justify-center flex flex-col">
-          {data.map((d, i) => (
-            <div key={d.name} className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-              <p className="text-xs text-gray-300 font-semibold truncate flex-1">{d.name}</p>
-              <p className="text-xs text-gray-500 font-bold shrink-0">{d.count}j · {d.pieces.toLocaleString()}p</p>
-            </div>
+      <div className="flex items-start justify-between mb-4">
+        <SectionTitle sub="Click any bar to see jobs in that category">
+          🏷️ Item Group Distribution
+        </SectionTitle>
+        <div className="flex gap-1 bg-white/5 rounded-xl p-1">
+          {['pieces', 'jobs'].map(m => (
+            <button key={m} onClick={() => setMetric(m)}
+              className={cls('text-[10px] font-black px-3 py-1 rounded-lg transition-all uppercase tracking-wider',
+                metric === m ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300')}>
+              {m}
+            </button>
           ))}
         </div>
       </div>
+
+      {/* Bar chart */}
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 80, left: 10, bottom: 0 }}
+          onClick={(e) => {
+            if (e?.activePayload?.[0]) {
+              const name = e.activePayload[0].payload.name;
+              setActiveGroup(prev => prev === name ? null : name);
+            }
+          }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
+          <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false}
+            tickFormatter={v => metric === 'pieces' ? `${(v/1000).toFixed(0)}k` : v} />
+          <YAxis type="category" dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} tickLine={false}
+            axisLine={false} width={100} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+          <Bar dataKey={metric === 'pieces' ? 'pieces' : 'count'} name={metric === 'pieces' ? 'Pieces' : 'Jobs'}
+            radius={[0, 6, 6, 0]} label={<CustomBarLabel />}>
+            {data.map((entry, i) => (
+              <Cell key={i}
+                fill={activeGroup === entry.name ? '#818cf8' : activeGroup ? 'rgba(129,140,248,0.25)' : PIE_COLORS[i % PIE_COLORS.length]}
+                cursor="pointer" />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+
+      {/* Drill-down table */}
+      {activeGroup && (
+        <div className="mt-4 border-t border-white/5 pt-4" style={{ animation: 'fadeIn 200ms ease-out' }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-black text-indigo-400 uppercase tracking-widest">
+              {activeGroup} — Top {drillJobs.length} jobs
+            </p>
+            <button onClick={() => setActiveGroup(null)}
+              className="text-[10px] text-gray-600 hover:text-gray-400 font-bold uppercase tracking-widest">
+              ✕ Close
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[10px]">
+              <thead>
+                <tr className="text-gray-600 uppercase tracking-widest border-b border-white/5">
+                  <th className="text-left pb-2 font-black">Job #</th>
+                  <th className="text-left pb-2">Item</th>
+                  <th className="text-left pb-2">Qty</th>
+                  <th className="text-left pb-2">Thekedar</th>
+                  <th className="text-left pb-2">Step</th>
+                  <th className="text-right pb-2">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {drillJobs.map(j => {
+                  const step = getPendingStep(j);
+                  const done = step >= 7;
+                  return (
+                    <tr key={j.jobNo} className="hover:bg-white/5 transition-colors">
+                      <td className="py-2 font-black text-indigo-400">#{j.jobNo}</td>
+                      <td className="py-2 text-gray-300 max-w-[110px] truncate">{j.item}</td>
+                      <td className="py-2 font-bold text-violet-400">{(j.qty || 0).toLocaleString()}</td>
+                      <td className="py-2 text-gray-500 max-w-[80px] truncate">{j.s4Thekedar || '—'}</td>
+                      <td className="py-2">
+                        <span className="px-2 py-0.5 rounded-full bg-white/5 text-gray-400 font-bold">
+                          {done ? 'Done' : `S${step}`}
+                        </span>
+                      </td>
+                      <td className="py-2 text-right">
+                        <span className={cls('px-2 py-0.5 rounded-full text-[10px] font-black',
+                          done ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400')}>
+                          {done ? 'Complete' : 'Active'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
+
 
 // ─── Section 8: Activity Heatmap ──────────────────────────────────────────────
 
@@ -1809,10 +2045,8 @@ export default function AdminDashboard() {
                 </div>
                 <ThekedarPerformance jobs={jobs} />
                 <CuttingStats jobs={jobs} />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <ItemGroupChart jobs={jobs} />
-                  <ApprovalFlow   jobs={jobs} />
-                </div>
+                <ItemGroupChart jobs={jobs} />
+                <ApprovalFlow jobs={jobs} />
                 <ActivityHeatmap jobs={jobs} />
                 <BottleneckTable jobs={jobs} />
                 <RawDataExplorer jobs={jobs} />

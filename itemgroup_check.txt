@@ -1,0 +1,26 @@
+﻿Col 8 (item_group) filled: 697, empty: 5295
+
+Sample rows with EMPTY item_group:
+  Job #372: item=Over size, prog_by=NR
+  Job #869: item=None, prog_by=None
+  Job #870: item=None, prog_by=None
+  Job #871: item=None, prog_by=None
+  Job #872: item=None, prog_by=None
+  Job #873: item=None, prog_by=None
+  Job #874: item=None, prog_by=None
+  Job #875: item=None, prog_by=None
+  Job #876: item=None, prog_by=None
+  Job #877: item=None, prog_by=None
+
+Prog_by to Item Group mapping from filled rows:
+  Aline & Frock - Ashvin => {'Aline / Frock / Long Tops'}
+  Capri - Sanjay => {'Capri'}
+  Full Bottom Core  - Sourabh => {'Full Bottom', 'Tops / Tshirts'}
+  KPR => {'Aline / Frock / Long Tops', 'Tops / Tshirts', 'Capri', 'Skirts', 'Full Bottom', 'Sets', 'Shorts', 'Boys'}
+  KR => {'Tops / Tshirts', 'Aline / Frock / Long Tops', 'Capri', 'Skirts', 'Full Bottom', 'Sets', 'Shorts'}
+  NR => {'Aline / Frock / Long Tops', 'Shorts', 'Full Bottom', 'Sets', 'Tops / Tshirts', 'Boys'}
+  Sets - Ashvin => {'Aline / Frock / Long Tops', 'Sets', 'Tops / Tshirts'}
+  Shorts - Manohar => {'Shorts'}
+  Skirts - Ankit => {'Skirts'}
+  Tops Fancy & Denim - Bunty => {'Aline / Frock / Long Tops', 'Tops / Tshirts'}
+  Tops Hosiery - Naresh => {'Tops / Tshirts'}

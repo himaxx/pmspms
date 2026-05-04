@@ -15,8 +15,48 @@ import { STEP_PEOPLE } from '../utils/constants';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseDate(str) {
   if (!str) return null;
+  // If it's DD/MM/YYYY (Sheets format)
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [d, m, y] = str.split('/');
+    return new Date(Number(y), Number(m) - 1, Number(d));
+  }
   const d = new Date(str);
   return isNaN(d.getTime()) ? null : d;
+}
+
+/** Returns YYYY-MM-DD for any date string, adjusted to local timezone if it's an ISO string */
+function getLocalDay(dateStr) {
+  if (!dateStr) return null;
+  
+  // If it's already YYYY-MM-DD and not ISO
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+
+  // Handle DD/MM/YYYY from Sheets
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+    const [d, m, y] = dateStr.split('/');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+
+  // If the string contains a timezone indicator or 'T', we treat it as an absolute time
+  // and convert to local date. Otherwise, we assume it's already local.
+  const hasTZ = dateStr.includes('T') || dateStr.includes('Z') || /[+-]\d{2}:?\d{2}$/.test(dateStr);
+  
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/** Returns Today's date in YYYY-MM-DD local format */
+function getTodayLocal() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function fmtDate(str) {
@@ -26,12 +66,8 @@ function fmtDate(str) {
 }
 
 function isToday(str) {
-  const d = parseDate(str);
-  if (!d) return false;
-  const t = new Date();
-  return d.getDate() === t.getDate() &&
-    d.getMonth() === t.getMonth() &&
-    d.getFullYear() === t.getFullYear();
+  const d = getLocalDay(str);
+  return d === getTodayLocal();
 }
 
 function cls(...p) { return p.filter(Boolean).join(' '); }
@@ -375,12 +411,13 @@ function PullIndicator({ progress, isRefreshing }) {
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 function AajKeNaame({ jobs }) {
   const { t } = useLanguage();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(getTodayLocal());
 
   const naameRecords = useMemo(() => {
     return jobs.filter(j => {
+      // Step 4 "Naame" (Dispatch). Strictly use s4StartDate for daily reporting.
       if (!j.s4StartDate) return false;
-      return j.s4StartDate.slice(0, 10) === selectedDate;
+      return getLocalDay(j.s4StartDate) === selectedDate;
     }).sort((a, b) => b.jobNo - a.jobNo);
   }, [jobs, selectedDate]);
 
@@ -439,7 +476,7 @@ function AajKeNaame({ jobs }) {
 // ─── Requirements Component ──────────────────────────────────────────────────
 function Requirements({ jobs }) {
   const { t } = useLanguage();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(getTodayLocal());
   const [selectedPerson, setSelectedPerson] = useState('All');
 
   // Use fixed list from constants for filtering
@@ -450,8 +487,8 @@ function Requirements({ jobs }) {
   const requirementRecords = useMemo(() => {
     return jobs.filter(j => {
       if (!j.date) return false;
-      const jobDate = j.date.slice(0, 10);
-      const isDateMatch = jobDate === selectedDate;
+      const jobDay = getLocalDay(j.date);
+      const isDateMatch = jobDay === selectedDate;
       const isPersonMatch = selectedPerson === 'All' || 
                             j.progBy?.toLowerCase().trim() === selectedPerson.toLowerCase().trim();
       return isDateMatch && isPersonMatch;
@@ -526,6 +563,74 @@ function Requirements({ jobs }) {
             <span className="text-[11px] font-black text-gray-400 uppercase">{t('dashboard.totalRequirements')}</span>
             <span className="text-sm font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">
               {requirementRecords.reduce((acc, r) => acc + (Number(r.qty) || 0), 0)} {t('common.pcs')}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Aaj Ke Jama Component ──────────────────────────────────────────────────
+function AajKeJama({ jobs }) {
+  const { t } = useLanguage();
+  const [selectedDate, setSelectedDate] = useState(getTodayLocal());
+
+  const jamaRecords = useMemo(() => {
+    return jobs.filter(j => {
+      // Step 5 "Jama". Strictly use s5Actual for daily reporting.
+      if (!j.s5JamaQty || !j.s5Actual) return false;
+      return getLocalDay(j.s5Actual) === selectedDate;
+    }).sort((a, b) => b.jobNo - a.jobNo);
+  }, [jobs, selectedDate]);
+
+  return (
+    <div className="px-4 mt-8 pb-4">
+      <div className="flex flex-col gap-4 bg-white rounded-[2rem] border-2 border-gray-200 p-5 sm:p-6 shadow-md shadow-gray-100/50">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-xl font-black text-gray-900 leading-none">{t('dashboard.aajKeJama')}</h2>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{t('forms.jama')}</p>
+          </div>
+          <input 
+            type="date" 
+            value={selectedDate} 
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="w-full sm:w-auto text-xs font-bold border-2 border-gray-100 p-2.5 rounded-xl bg-gray-50 outline-none focus:border-indigo-400 transition-all"
+          />
+        </div>
+
+        <div className="space-y-3 mt-2">
+          {jamaRecords.length === 0 ? (
+            <div className="py-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
+              <span className="text-2xl opacity-50">📦</span>
+              <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-tight">{t('dashboard.noJama')}</p>
+            </div>
+          ) : (
+            jamaRecords.map(record => (
+              <div key={record.jobNo} className="flex items-center justify-between p-3.5 bg-gray-50/50 rounded-2xl border-2 border-gray-100 hover:border-indigo-100 transition-all group">
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black text-gray-400 leading-none uppercase">#{record.jobNo}</span>
+                    <span className="text-[9px] font-black text-green-500 bg-green-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">JAMA</span>
+                  </div>
+                  <span className="text-sm font-black text-gray-800 mt-1 truncate">{record.item}</span>
+                  <span className="text-[11px] font-bold text-indigo-600 mt-0.5">{record.s4Thekedar || 'Unknown'}</span>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-lg font-black text-gray-900 leading-none">{record.s5JamaQty || 0}</span>
+                  <span className="block text-[9px] font-black text-gray-400 uppercase">{t('dashboard.pieces')}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        
+        {jamaRecords.length > 0 && (
+          <div className="pt-2 border-t-2 border-gray-50 flex justify-between items-center px-1">
+            <span className="text-[11px] font-black text-gray-400 uppercase">{t('dashboard.totalJama')}</span>
+            <span className="text-sm font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">
+              {jamaRecords.reduce((acc, r) => acc + (Number(r.s5JamaQty) || 0), 0)} {t('common.pcs')}
             </span>
           </div>
         )}
@@ -678,7 +783,11 @@ export default function Dashboard() {
         </div>
 
         <div className="anim-slideUp" style={{ animationDelay: '300ms' }}>
+          {/* Requirements Section */}
           <Requirements jobs={jobs} />
+
+          {/* Aaj Ke Jama Section */}
+          <AajKeJama jobs={jobs} />
         </div>
 
         <div className="px-2 sm:px-4 mt-16 space-y-6 border-t-4 border-white pt-12 pb-10 bg-gray-50/50">

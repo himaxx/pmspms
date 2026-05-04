@@ -109,6 +109,7 @@ export const FMS_COLUMNS = {
   s4Delay:            33,
 
   // Step 5 — Finished Maal Jama
+  s5Actual:           32,
   s5LeadTimeHours:    35,
   s5JamaPlanned:      36,
   s5JobslipStatus:    37,

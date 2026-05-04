@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import Layout from './components/Layout';
 import SplashScreen from './components/SplashScreen';
 import AdminRoute from './components/AdminRoute';
@@ -36,9 +36,13 @@ function App() {
   // Mount real-time Supabase subscription once — auto-invalidates cache on any DB change
   useJobsRealtime();
 
+  const handleSplashFinish = useCallback(() => {
+    setShowSplash(false);
+  }, []);
+
   return (
     <>
-      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
 
       <Suspense fallback={<PageLoader />}>
         <Routes>
@@ -64,4 +68,5 @@ function App() {
 }
 
 export default App;
+
 

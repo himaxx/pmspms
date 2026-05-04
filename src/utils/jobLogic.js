@@ -3,10 +3,10 @@ import { workingHoursBetween } from './workingHours';
 // Delay thresholds mapped from existing business logic (previously in days)
 // Converted to working hours (9 hr/day):
 export const DELAY_THRESHOLDS_HOURS = {
-  2: 27,   // Pending Approval (3 days)
-  3: 18,   // Pending Cutting (2 days)
+  2: 63,   // Pending Approval (7 days)
+  3: 36,   // Pending Cutting (4 days)
   4: 18,   // Pending Naame (2 days)
-  5: 126,  // Pending Jama (14 days)
+  5: 126,  // Fallback for Pending Jama
   6: 27    // Pending Settle (3 days)
 };
 
@@ -66,13 +66,21 @@ export function isJobDelayed(job) {
     3: job.s2Actual,
     4: job.s3Actual || job.s2Actual, // Uses s2Actual if cutting was skipped
     5: job.s4StartDate, 
-    6: job.updatedAt || job.s4StartDate // Fallback if no specific s5 date is tracked
+    6: job.s5Actual || job.updatedAt || job.s4StartDate // Fallback if no specific s5 date is tracked
   };
   
   const d = parseDate(dateFields[step]);
   if (!d) return false;
 
-  const thresholdHours = DELAY_THRESHOLDS_HOURS[step] || 27; // Default 3 days
+  let thresholdHours = DELAY_THRESHOLDS_HOURS[step] || 27;
+
+  // Special case for Step 5: Pending Jama
+  // Uses Lead Time from Step 4 (entered in days, converted to 9-hr working days)
+  if (step === 5) {
+    const leadTimeDays = Number(job.s4LeadTime || 14); // Default to 14 days if missing
+    thresholdHours = leadTimeDays * 9;
+  }
+
   const hoursSpent = workingHoursBetween(d, new Date());
   
   return hoursSpent > thresholdHours;
@@ -99,7 +107,7 @@ export function getDaysInStep(job) {
     3: job.s2Actual,
     4: job.s3Actual || job.s2Actual,
     5: job.s4StartDate, 
-    6: job.updatedAt || job.s4StartDate
+    6: job.s5Actual || job.updatedAt || job.s4StartDate
   };
   const d = parseDate(dateFields[step]);
   if (!d) return null;

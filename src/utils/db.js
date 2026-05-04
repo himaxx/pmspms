@@ -182,10 +182,10 @@ export async function updateStep4(jobNo, { thekedarName, cutToPack, leadTime, cu
   const s4Planned  = existing?.s4_planned ?? null;
   const s4Delay    = calcDelay(s4Planned, s4Actual);
 
-  // leadTime provided in the form is in HOURS (for Jama planning)
-  // Note: s5_lead_time_hours may have been set to a prior default;
-  // the form's leadTime field here is the TAT in hours for Jama.
-  const leadTimeHours = Number(leadTime) || Number(existing?.s5_lead_time_hours) || null;
+  // leadTime provided in the form is in DAYS (for Jama planning)
+  // We convert it to working hours (9 per day) for the time engine.
+  const leadTimeDays = Number(leadTime) || 0;
+  const leadTimeHours = leadTimeDays * 9;
   const s5JamaPlanned = calcS5JamaPlanned(s4Actual, leadTimeHours);
 
   const { error } = await supabase
@@ -194,10 +194,10 @@ export async function updateStep4(jobNo, { thekedarName, cutToPack, leadTime, cu
       s4_start_date:       toISO(s4Actual),
       s4_thekedar:         thekedarName,
       s4_cut_to_pack:      cutToPack ? 'Yes' : 'No',
-      s4_lead_time:        Number(leadTime) || null,
+      s4_lead_time:        leadTimeDays || null,       // store days as entered
       s4_cutting_pcs:      Number(cuttingPcs) || null,
       s4_delay:            s4Delay > 0 ? s4Delay : null,
-      s5_lead_time_hours:  leadTimeHours,
+      s5_lead_time_hours:  leadTimeHours,              // store hours for legacy compatibility
       s5_jama_planned:     toISO(s5JamaPlanned),       // Jama planned deadline
     })
     .eq('job_no', String(jobNo).trim());
@@ -222,6 +222,7 @@ export async function updateStep5(jobNo, { jamaQty, pressHua }) {
     .from('jobs')
     .update({
       s5_jama_qty: Number(jamaQty) || null,
+      s5_actual:   toISO(s5Actual),
       s5_press:    pressHua ? 'Yes' : 'No',
       s5_status:   'Complete',
       s5_delay:    s5Delay > 0 ? s5Delay : null,      // working-hour delay

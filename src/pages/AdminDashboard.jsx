@@ -107,14 +107,14 @@ function bizHoursDiff(from, to) {
  * These are the SLA targets used to compute 'on-time' vs 'delayed'.
  */
 const STEP_TAT_HRS = {
-  // Step 1→2: Approval should happen same day = 9 business hours
-  s2: 9,
-  // Step 2→3: Cutting within 1 working day after approval
-  s3: 9,
-  // Step 3→4: Naame dispatch within 2 working days
+  // Step 1→2: Production Approval
+  s2: 63,
+  // Step 2→3: Inhouse Cutting
+  s3: 36,
+  // Step 3→4: Naame dispatch
   s4: 18,
-  // Step 4→5: Jama (depends on lead time, but standard = 3 working days)
-  s5: 27,
+  // Step 4→5: Jama (Dynamic target based on Lead Time days)
+  s5: 0, // Placeholder, calculated dynamically in heatmap
 };
 
 const STEP_NAMES = {
@@ -354,17 +354,30 @@ function DelayHeatmap({ jobs }) {
       { step: 'Naame→Jama',      from: 's4StartDate', to: 's5Actual',    sla: STEP_TAT_HRS.s5 },
     ];
     return steps.map((s, i) => {
-      const vals = jobs
-        .filter(j => j[s.from] && j[s.to])
-        .map(j => bizHoursDiff(j[s.from], j[s.to]));
-      const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-      const over = Math.max(0, avg - s.sla);
+      const stepJobs = jobs.filter(j => j[s.from] && j[s.to]);
+      const dataPoints = stepJobs.map(j => {
+        const actual = bizHoursDiff(j[s.from], j[s.to]);
+        // For Step 5, calculate SLA dynamically: Lead Time (days) * 9 hours
+        const sla = s.step === 'Naame→Jama' 
+          ? (Number(j.s4LeadTime) || 0) * 9 
+          : s.sla;
+        return { actual, sla };
+      });
+
+      const avgActual = dataPoints.length 
+        ? dataPoints.reduce((a, b) => a + b.actual, 0) / dataPoints.length 
+        : 0;
+      const avgSla = dataPoints.length 
+        ? dataPoints.reduce((a, b) => a + b.sla, 0) / dataPoints.length 
+        : s.sla;
+      const over = Math.max(0, avgActual - avgSla);
+
       return {
         step: s.step,
-        actual: Math.round(avg * 10) / 10,
-        sla: s.sla,
+        actual: Math.round(avgActual * 10) / 10,
+        sla: Math.round(avgSla * 10) / 10,
         over: Math.round(over * 10) / 10,
-        n: vals.length,
+        n: dataPoints.length,
         fill: STEP_COLORS[i + 1],
       };
     });
@@ -451,7 +464,7 @@ function ThekedarPerformance({ jobs }) {
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-white truncate leading-tight">{t.thekedar}</p>
               <p className="text-[10px] text-gray-500 mt-0.5">
-                {t.pieces.toLocaleString()} pcs · Avg lead {t.avgLead}h
+                {t.pieces.toLocaleString()} pcs · Avg lead {t.avgLead}d
               </p>
             </div>
             <div className="flex items-center gap-2">

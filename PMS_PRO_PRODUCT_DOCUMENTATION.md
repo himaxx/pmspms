@@ -400,10 +400,10 @@ This ensures that a job started on Saturday afternoon is not counted as "late" j
 
 | Step | Step Name | Max Allowed Time |
 |---|---|---|
-| Step 2 | Pending Approval | 27 working hours (≈ 3 working days) |
-| Step 3 | Pending Cutting | 18 working hours (≈ 2 working days) |
+| Step 2 | Pending Approval | 63 working hours (≈ 7 working days) |
+| Step 3 | Pending Cutting | 36 working hours (≈ 4 working days) |
 | Step 4 | Pending Naame | 18 working hours (≈ 2 working days) |
-| Step 5 | Pending Jama | 126 working hours (≈ 14 working days) |
+| Step 5 | Pending Jama | Based on Lead Time (Lead Time Days × 9) |
 | Step 6 | Pending Settle | 27 working hours (≈ 3 working days) |
 
 ### Visual Status Indicators
@@ -418,7 +418,7 @@ The system also automatically calculates when each step *should* complete based 
 - Step 2 should complete within **63 working hours** of job creation
 - Step 3 should complete within **36 working hours** of Step 2 completion
 - Step 4 should start within **18 working hours** of Step 3 completion
-- Step 5 (Jama) is calculated based on the **lead time entered by the production team** in Step 4
+- Step 5 (Jama) is calculated based on the **lead time (in days)** entered by the production team in Step 4. The system automatically converts these days into working hours (Lead Time × 9 hours).
 
 ---
 

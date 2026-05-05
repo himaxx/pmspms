@@ -10,7 +10,6 @@ import useAuthStore from './store/useAuthStore';
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Forms = lazy(() => import('./pages/Forms'));
 const Reports = lazy(() => import('./pages/Reports'));
-const FMS = lazy(() => import('./pages/FMS'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
@@ -51,7 +50,6 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="forms/*" element={<Forms />} />
             <Route path="reports/*" element={<Reports />} />
-            <Route path="fms/*" element={<FMS />} />
           </Route>
 
           {/* ── Admin routes ── */}

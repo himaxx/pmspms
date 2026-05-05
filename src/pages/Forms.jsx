@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { parseSets, formatSets } from '../utils/helpers';
 import { useNavigate, Routes, Route, useParams, Navigate } from 'react-router-dom';
 import { STEP_PEOPLE, STEP_LABELS, ITEM_GROUPS, SHEET_NAMES } from '../utils/constants';
-import { getJobFromFMS } from '../utils/db';
+import { getJobByNo } from '../utils/db';
 import JobCard from '../components/JobCard';
 import { JobCardSkeleton } from '../components/Skeleton';
 import StepBadge from '../components/StepBadge';
@@ -48,18 +48,28 @@ function FieldLabel({ children, required }) {
   );
 }
 
-function InputBase({ error, className, ...props }) {
+function InputBase({ error, className, suffix, ...props }) {
   return (
-    <input
-      className={cls(
-        'w-full rounded-xl border px-4 py-3 text-base text-gray-900 bg-white',
-        'placeholder:text-gray-400 outline-none transition-shadow',
-        'focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400',
-        error ? 'border-red-400 input-error' : 'border-gray-200',
-        className
+    <div className="relative">
+      <input
+        className={cls(
+          'w-full rounded-xl border px-4 py-3 text-base text-gray-900 bg-white',
+          'placeholder:text-gray-400 outline-none transition-shadow',
+          'focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400',
+          error ? 'border-red-400 input-error' : 'border-gray-200',
+          suffix ? 'pr-16' : '',
+          className
+        )}
+        {...props}
+      />
+      {suffix && (
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+          <span className="text-[10px] font-black text-indigo-400 bg-indigo-50 px-2 py-1 rounded-lg uppercase tracking-widest border border-indigo-100">
+            {suffix}
+          </span>
+        </div>
       )}
-      {...props}
-    />
+    </div>
   );
 }
 
@@ -675,7 +685,7 @@ function Step4Form({ job, onSuccess }) {
       [t('common.item')]: job.item,
       [t('forms.thekedarKarigar')]: form.thekedarName,
       [t('forms.cutToPack')]: form.cutToPack === true ? t('common.yes') : (form.cutToPack === false ? t('common.no') : t('forms.notSpecified')),
-      [t('forms.leadTimeHrs')]: form.leadTime,
+      [t('forms.leadTimeDays')]: form.leadTime,
       [t('forms.totalCuttingPieces')]: totalCutting,
       [t('forms.sizeDetails')]: formatSets(sets)
     });
@@ -714,9 +724,15 @@ function Step4Form({ job, onSuccess }) {
           onChange={(v) => setForm((p) => ({ ...p, cutToPack: v }))} />
       </div>
       <div>
-        <FieldLabel>{t('forms.leadTimeJama')}</FieldLabel>
-        <InputBase type="number" inputMode="numeric" placeholder={t('forms.leadTimePlaceholder')}
-          value={form.leadTime} onChange={set('leadTime')} />
+        <FieldLabel>{t('forms.leadTimeDays')}</FieldLabel>
+        <InputBase 
+          type="number" 
+          inputMode="numeric" 
+          placeholder={t('forms.leadTimePlaceholder')}
+          suffix={t('common.days') || 'Days'}
+          value={form.leadTime} 
+          onChange={set('leadTime')} 
+        />
         <p className="text-[10px] text-gray-400 mt-1 pl-1">
           {t('forms.leadTimeHelp')}
         </p>

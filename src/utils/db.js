@@ -56,7 +56,7 @@ export async function getAllJobs() {
 }
 
 // ─── 2. Get single job by job_no (Steps 2-6 form fetch) ──────────────────────
-export async function getJobFromFMS(jobNumber) {
+export async function getJobByNo(jobNumber) {
   const { data, error } = await supabase
     .from('jobs')
     .select('*')

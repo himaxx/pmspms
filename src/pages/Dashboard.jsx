@@ -11,43 +11,59 @@ import { useJobs } from '../hooks/useJobs';
 import useUIStore from '../store/useUIStore';
 import { useLanguage } from '../i18n/LanguageContext';
 import { STEP_PEOPLE } from '../utils/constants';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseDate(str) {
   if (!str) return null;
-  // If it's DD/MM/YYYY (Sheets format)
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
-    const [d, m, y] = str.split('/');
+  // If it's DD/MM/YYYY HH:mm:ss or DD/MM/YYYY
+  const dmyMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2}):(\d{1,2}))?$/);
+  if (dmyMatch) {
+    const [_, d, m, y, hh, mm, ss] = dmyMatch;
+    if (hh) {
+      return new Date(Number(y), Number(m) - 1, Number(d), Number(hh), Number(mm), Number(ss));
+    }
     return new Date(Number(y), Number(m) - 1, Number(d));
   }
   const d = new Date(str);
   return isNaN(d.getTime()) ? null : d;
 }
 
-/** Returns YYYY-MM-DD for any date string, adjusted to local timezone if it's an ISO string */
+// Helper to normalize dates for comparison (YYYY-MM-DD)
 function getLocalDay(dateStr) {
   if (!dateStr) return null;
   
-  // If it's already YYYY-MM-DD and not ISO
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  // Normalize dateStr to string
+  const str = String(dateStr).trim();
+  
+  // 1. Handle YYYY-MM-DD (already correct)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
 
-  // Handle DD/MM/YYYY from Sheets
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
-    const [d, m, y] = dateStr.split('/');
+  // 2. Handle DD/MM/YYYY or DD-MM-YYYY (with optional time)
+  const dmyMatch = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+  if (dmyMatch) {
+    const [_, d, m, y] = dmyMatch;
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   }
 
-  const d = new Date(dateStr);
+  // 3. Handle ISO strings (extract YYYY-MM-DD)
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return isoMatch[0];
+
+  const d = new Date(str);
   if (isNaN(d.getTime())) return null;
 
-  // If the string contains a timezone indicator or 'T', we treat it as an absolute time
-  // and convert to local date. Otherwise, we assume it's already local.
-  const hasTZ = dateStr.includes('T') || dateStr.includes('Z') || /[+-]\d{2}:?\d{2}$/.test(dateStr);
-  
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+/** Safely parse integers from messy strings like "500 pcs" or 500 */
+function safeInt(val) {
+  if (val === null || val === undefined) return 0;
+  const num = parseInt(val, 10);
+  return isNaN(num) ? 0 : num;
 }
 
 /** Returns Today's date in YYYY-MM-DD local format */
@@ -277,7 +293,7 @@ function JobDetailSheet({ job, onClose }) {
       date: fmtDate(job.s4StartDate), 
       plannedDate: fmtDate(job.s4Planned),
       person: job.s4Thekedar,       
-      extra: job.s4LeadTime ? `${t('common.lead')}: ${job.s4LeadTime} ${t('common.hrs')}` : null,
+      extra: job.s4LeadTime ? `${t('common.lead')}: ${job.s4LeadTime} ${t('productionReport.days')}` : null,
       isDelayed: (Number(job.s4Delay) || 0) > 0
     },
     { 
@@ -409,235 +425,328 @@ function PullIndicator({ progress, isRefreshing }) {
 }
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
-function AajKeNaame({ jobs }) {
-  const { t } = useLanguage();
-  const [selectedDate, setSelectedDate] = useState(getTodayLocal());
-
-  const naameRecords = useMemo(() => {
-    return jobs.filter(j => {
-      // Step 4 "Naame" (Dispatch). Strictly use s4StartDate for daily reporting.
-      if (!j.s4StartDate) return false;
-      return getLocalDay(j.s4StartDate) === selectedDate;
-    }).sort((a, b) => b.jobNo - a.jobNo);
-  }, [jobs, selectedDate]);
-
+// ─── Daily Activity Hub (Consolidated) ──────────────────────────────────────
+const ActivitySection = ({ title, subtitle, icon, count, children, isOpen, onToggle, colorClass }) => {
   return (
-    <div className="px-4 mt-8 pb-4">
-      <div className="flex flex-col gap-4 bg-white rounded-[2rem] border-2 border-gray-200 p-5 sm:p-6 shadow-md shadow-gray-100/50">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 className="text-xl font-black text-gray-900 leading-none">{t('dashboard.aajKeNaame')}</h2>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{t('dashboard.dispatchLogs')}</p>
+    <div className={cls('border-b last:border-b-0 border-gray-100 overflow-hidden', isOpen ? 'bg-white' : 'bg-transparent')}>
+      <button 
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-4 sm:p-5 active:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className={cls('w-10 h-10 rounded-2xl flex items-center justify-center text-lg shadow-sm', colorClass)}>
+            {icon}
           </div>
-          <input 
-            type="date" 
-            value={selectedDate} 
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full sm:w-auto text-xs font-bold border-2 border-gray-100 p-2.5 rounded-xl bg-gray-50 outline-none focus:border-indigo-400 transition-all"
-          />
+          <div className="text-left">
+            <h3 className="text-sm font-black text-gray-900 leading-tight uppercase tracking-tight">{title}</h3>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{subtitle}</p>
+          </div>
         </div>
-
-        <div className="space-y-3 mt-2">
-          {naameRecords.length === 0 ? (
-            <div className="py-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
-              <span className="text-2xl opacity-50">🚚</span>
-              <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-tight">{t('dashboard.noDispatch')}</p>
+        <div className="flex items-center gap-3">
+          <div className={cls('px-3 py-1 rounded-full text-[11px] font-black', colorClass)}>
+            {count}
+          </div>
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="text-gray-300"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+              <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z" clipRule="evenodd" />
+            </svg>
+          </motion.div>
+        </div>
+      </button>
+      
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="px-4 pb-5 pt-1 space-y-3">
+              {children}
             </div>
-          ) : (
-            naameRecords.map(record => (
-              <div key={record.jobNo} className="flex items-center justify-between p-3.5 bg-gray-50/50 rounded-2xl border-2 border-gray-100 hover:border-indigo-100 transition-all group">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-gray-400 leading-none uppercase">#{record.jobNo}</span>
-                  <span className="text-sm font-black text-gray-800 mt-1">{record.item}</span>
-                  <span className="text-[11px] font-bold text-indigo-600 mt-0.5">{record.s4Thekedar || 'Unknown Karigar'}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-lg font-black text-gray-900 leading-none">{record.s4CuttingPcs || 0}</span>
-                  <span className="block text-[9px] font-black text-gray-400 uppercase">{t('dashboard.pieces')}</span>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-        
-        {naameRecords.length > 0 && (
-          <div className="pt-2 border-t-2 border-gray-50 flex justify-between items-center px-1">
-            <span className="text-[11px] font-black text-gray-400 uppercase">{t('dashboard.totalDispatch')}</span>
-            <span className="text-sm font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">
-              {naameRecords.reduce((acc, r) => acc + (Number(r.s4CuttingPcs) || 0), 0)} {t('common.pcs')}
-            </span>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
-}
+};
 
-// ─── Requirements Component ──────────────────────────────────────────────────
-function Requirements({ jobs }) {
+function DailyActivityHub({ jobs }) {
   const { t } = useLanguage();
   const [selectedDate, setSelectedDate] = useState(getTodayLocal());
+  const [activeSection, setActiveSection] = useState(null); // 'naame', 'req', 'jama'
+  const [isExpanded, setIsExpanded] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState('All');
 
-  // Use fixed list from constants for filtering
-  const personNames = useMemo(() => {
-    return ['All', ...STEP_PEOPLE[1]];
-  }, []);
+  const personNames = useMemo(() => ['All', ...STEP_PEOPLE[1]], []);
 
-  const requirementRecords = useMemo(() => {
+  // Memoized data filtering
+  const naameRecords = useMemo(() => {
+    return jobs.filter(j => j.s4StartDate && getLocalDay(j.s4StartDate) === selectedDate)
+               .sort((a, b) => safeInt(b.jobNo) - safeInt(a.jobNo));
+  }, [jobs, selectedDate]);
+
+  const reqRecords = useMemo(() => {
     return jobs.filter(j => {
-      if (!j.date) return false;
-      const jobDay = getLocalDay(j.date);
-      const isDateMatch = jobDay === selectedDate;
-      const isPersonMatch = selectedPerson === 'All' || 
-                            j.progBy?.toLowerCase().trim() === selectedPerson.toLowerCase().trim();
-      return isDateMatch && isPersonMatch;
-    }).sort((a, b) => b.jobNo - a.jobNo); // Latest to oldest
+      if (!j.date || getLocalDay(j.date) !== selectedDate) return false;
+      if (selectedPerson === 'All') return true;
+      
+      const p = selectedPerson.toLowerCase();
+      const b = (j.progBy || '').toLowerCase();
+      return b.includes(p); // Fuzzy matching for descriptive names
+    }).sort((a, b) => safeInt(b.jobNo) - safeInt(a.jobNo));
   }, [jobs, selectedDate, selectedPerson]);
+
+  const jamaRecords = useMemo(() => {
+    return jobs.filter(j => j.s5JamaQty && j.s5Actual && getLocalDay(j.s5Actual) === selectedDate)
+               .sort((a, b) => safeInt(b.jobNo) - safeInt(a.jobNo));
+  }, [jobs, selectedDate]);
+
+  const totals = useMemo(() => ({
+    naame: naameRecords.reduce((acc, r) => acc + safeInt(r.s4CuttingPcs), 0),
+    req: reqRecords.reduce((acc, r) => acc + safeInt(r.qty), 0),
+    jama: jamaRecords.reduce((acc, r) => acc + safeInt(r.s5JamaQty), 0)
+  }), [naameRecords, reqRecords, jamaRecords]);
+
+  const totalActivities = naameRecords.length + reqRecords.length + jamaRecords.length;
 
   return (
     <div className="px-4 mt-8 pb-4">
-      <div className="flex flex-col gap-4 bg-white rounded-[2rem] border-2 border-gray-200 p-6 shadow-md shadow-gray-100/50">
-        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
-          <div>
-            <h2 className="text-xl font-black text-gray-900 leading-none">{t('dashboard.requirements')}</h2>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{t('dashboard.requirementLogs')}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <select 
-              value={selectedPerson}
-              onChange={(e) => setSelectedPerson(e.target.value)}
-              className="text-[11px] font-black text-indigo-600 bg-indigo-50 border-2 border-indigo-100 p-2 rounded-xl outline-none focus:border-indigo-400 transition-all appearance-none pr-8 relative"
-              style={{ 
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234f46e5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, 
-                backgroundRepeat: 'no-repeat', 
-                backgroundPosition: 'right 0.5rem center', 
-                backgroundSize: '1rem' 
-              }}
+      <div className={cls(
+        "bg-white rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden",
+        isExpanded ? "border-indigo-100 shadow-2xl shadow-indigo-100/50" : "border-gray-200 shadow-lg shadow-gray-100/50"
+      )}>
+        {/* Main Header / Toggle Trigger */}
+        <div className="p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-white flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-4 text-left group active:scale-95 transition-transform"
             >
-              {personNames.map(name => (
-                <option key={name} value={name}>{name === 'All' ? (t('common.all') || 'All') : name}</option>
-              ))}
-            </select>
+              <div className={cls(
+                "w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-all duration-500",
+                isExpanded ? "bg-indigo-600 shadow-indigo-200 rotate-0" : "bg-gray-800 shadow-gray-200 -rotate-6"
+              )}>
+                {isExpanded ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                    <path fillRule="evenodd" d="M11.47 7.72a.75.75 0 011.06 0l7.5 7.5a.75.75 0 11-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 01-1.06-1.06l7.5-7.5z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                    <path d="M12.75 12.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM7.5 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM8.25 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM9.75 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM10.5 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM12.75 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM14.25 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM15 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM16.5 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM15 12.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM16.5 13.5a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+                    <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3a.75.75 0 011.5 0v1.5h.75a2.25 2.25 0 012.25 2.25v13.5a2.25 2.25 0 01-2.25 2.25H5.25a2.25 2.25 0 01-2.25-2.25V6.75a2.25 2.25 0 012.25-2.25H6V3a.75.75 0 01.75-.75zm13.5 9V15h-16.5v-3.75h16.5zM3.75 19.5h16.5V16.5H3.75v3" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-gray-900 leading-none">{t('dashboard.dailyHub')}</h2>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className={cls(
+                    "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full",
+                    totalActivities > 0 ? "bg-indigo-50 text-indigo-600" : "bg-gray-100 text-gray-400"
+                  )}>
+                    {totalActivities} {t('common.action') || 'Activities'}
+                  </span>
+                  {!isExpanded && (
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      • {t('dashboard.todaySummary')}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
+            
             <input 
               type="date" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="text-xs font-bold border-2 border-gray-100 p-2 rounded-xl bg-gray-50 outline-none focus:border-indigo-400 transition-all"
+              className="text-xs font-black border-2 border-gray-100 px-3 py-2 rounded-xl bg-white outline-none focus:border-indigo-400 transition-all shadow-sm max-w-[130px]"
             />
           </div>
-        </div>
 
-        <div className="space-y-3 mt-2 max-h-[350px] overflow-y-auto pr-1 scrollbar-thin">
-          {requirementRecords.length === 0 ? (
-            <div className="py-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
-              <span className="text-2xl opacity-50">📋</span>
-              <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-tight">{t('dashboard.noRequirements')}</p>
-            </div>
-          ) : (
-            requirementRecords.map(record => (
-              <div key={record.jobNo} className="flex items-center justify-between p-3.5 bg-gray-50/50 rounded-2xl border-2 border-gray-100 hover:border-indigo-100 transition-all group">
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-black text-gray-400 leading-none uppercase">#{record.jobNo}</span>
-                    <span className="text-[9px] font-black text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">REQ</span>
-                  </div>
-                  <span className="text-sm font-black text-gray-800 mt-1 truncate">{record.item}</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[11px] font-bold text-gray-600">{record.progBy || 'Unknown'}</span>
-                    <span className="w-1 h-1 rounded-full bg-gray-300" />
-                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{record.itemGroup}</span>
-                  </div>
+          {/* Quick Summary Bar (Visible when collapsed) */}
+          {!isExpanded && totalActivities > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex gap-2 overflow-x-auto pb-1 no-scrollbar"
+            >
+              {totals.req > 0 && (
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50/50 rounded-xl shrink-0 border border-indigo-100/50">
+                  <span className="text-sm">📋</span>
+                  <span className="text-[11px] font-black text-indigo-700">{totals.req}</span>
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="text-lg font-black text-gray-900 leading-none">{record.qty || 0}</span>
-                  <span className="block text-[9px] font-black text-gray-400 uppercase">{t('dashboard.pieces')}</span>
+              )}
+              {totals.naame > 0 && (
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-amber-50/50 rounded-xl shrink-0 border border-amber-100/50">
+                  <span className="text-sm">🚚</span>
+                  <span className="text-[11px] font-black text-amber-700">{totals.naame}</span>
                 </div>
-              </div>
-            ))
+              )}
+              {totals.jama > 0 && (
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-green-50/50 rounded-xl shrink-0 border border-green-100/50">
+                  <span className="text-sm">📦</span>
+                  <span className="text-[11px] font-black text-green-700">{totals.jama}</span>
+                </div>
+              )}
+            </motion.div>
           )}
         </div>
-        
-        {requirementRecords.length > 0 && (
-          <div className="pt-2 border-t-2 border-gray-50 flex justify-between items-center px-1">
-            <span className="text-[11px] font-black text-gray-400 uppercase">{t('dashboard.totalRequirements')}</span>
-            <span className="text-sm font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">
-              {requirementRecords.reduce((acc, r) => acc + (Number(r.qty) || 0), 0)} {t('common.pcs')}
-            </span>
-          </div>
-        )}
+
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="divide-y-2 divide-gray-50"
+            >
+              {/* Aaj Ke Naame Section */}
+              <ActivitySection
+                title={t('dashboard.aajKeNaame')}
+                subtitle={t('dashboard.dispatchLogs')}
+                icon="🚚"
+                count={`${totals.naame} ${t('common.pcs')}`}
+                colorClass="bg-amber-50 text-amber-600"
+                isOpen={activeSection === 'naame'}
+                onToggle={() => setActiveSection(activeSection === 'naame' ? null : 'naame')}
+              >
+                {naameRecords.length === 0 ? (
+                  <div className="py-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
+                    <div className="text-2xl mb-2">🚚</div>
+                    <p className="text-xs font-bold text-gray-400 uppercase">{t('dashboard.noDispatch')}</p>
+                  </div>
+                ) : (
+                  <div className="max-h-[350px] overflow-y-auto scrollbar-thin pr-1 space-y-3">
+                    {naameRecords.map(record => (
+                      <div key={record.jobNo} className="flex items-center justify-between p-3.5 bg-white rounded-2xl border-2 border-gray-100 shadow-sm transition-transform active:scale-[0.98]">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-gray-400 uppercase">#{record.jobNo}</span>
+                          <span className="text-sm font-black text-gray-800 leading-tight">{record.item}</span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                             <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                             <span className="text-[11px] font-bold text-gray-500">{record.s4Thekedar || t('common.unknown')}</span>
+                          </div>
+                        </div>
+                        <div className="text-right bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-100">
+                          <span className="text-lg font-black text-amber-900 leading-none">{record.s4CuttingPcs || 0}</span>
+                          <span className="block text-[8px] font-black text-amber-600 uppercase tracking-tighter">{t('dashboard.pieces')}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ActivitySection>
+
+              {/* Requirements Section */}
+              <ActivitySection
+                title={t('dashboard.requirements')}
+                subtitle={t('dashboard.requirementLogs')}
+                icon="📋"
+                count={`${totals.req} ${t('common.pcs')}`}
+                colorClass="bg-indigo-50 text-indigo-600"
+                isOpen={activeSection === 'req'}
+                onToggle={() => setActiveSection(activeSection === 'req' ? null : 'req')}
+              >
+                {/* Person Filter for Requirements */}
+                <div className="flex justify-between items-center mb-4 px-1">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('common.filterBy') || 'Filter By'}</span>
+                  <div className="relative">
+                    <select 
+                      value={selectedPerson}
+                      onChange={(e) => setSelectedPerson(e.target.value)}
+                      className="text-[10px] font-black text-indigo-600 bg-white border-2 border-indigo-100 px-4 py-2 rounded-xl outline-none focus:border-indigo-400 transition-all appearance-none pr-8 shadow-sm"
+                      style={{ 
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234f46e5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, 
+                        backgroundRepeat: 'no-repeat', 
+                        backgroundPosition: 'right 0.6rem center', 
+                        backgroundSize: '0.7rem' 
+                      }}
+                    >
+                      {personNames.map(name => (
+                        <option key={name} value={name}>{name === 'All' ? (t('common.all') || 'All') : name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {reqRecords.length === 0 ? (
+                  <div className="py-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
+                    <div className="text-2xl mb-2">📋</div>
+                    <p className="text-xs font-bold text-gray-400 uppercase">{t('dashboard.noRequirements')}</p>
+                  </div>
+                ) : (
+                  <div className="max-h-[350px] overflow-y-auto scrollbar-thin pr-1 space-y-3">
+                    {reqRecords.map(record => (
+                      <div key={record.jobNo} className="flex items-center justify-between p-3.5 bg-white rounded-2xl border-2 border-gray-100 shadow-sm transition-transform active:scale-[0.98]">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-gray-400 uppercase">#{record.jobNo}</span>
+                          <span className="text-sm font-black text-gray-800 leading-tight">{record.item}</span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                             <span className="text-[11px] font-bold text-gray-500">{record.progBy || t('common.unknown')}</span>
+                          </div>
+                        </div>
+                        <div className="text-right bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100">
+                          <span className="text-lg font-black text-indigo-900 leading-none">{record.qty || 0}</span>
+                          <span className="block text-[8px] font-black text-indigo-600 uppercase tracking-tighter">{t('dashboard.pieces')}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ActivitySection>
+
+              {/* Aaj Ke Jama Section */}
+              <ActivitySection
+                title={t('dashboard.aajKeJama')}
+                subtitle={t('forms.jama')}
+                icon="📦"
+                count={`${totals.jama} ${t('common.pcs')}`}
+                colorClass="bg-green-50 text-green-600"
+                isOpen={activeSection === 'jama'}
+                onToggle={() => setActiveSection(activeSection === 'jama' ? null : 'jama')}
+              >
+                {jamaRecords.length === 0 ? (
+                  <div className="py-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
+                    <div className="text-2xl mb-2">📦</div>
+                    <p className="text-xs font-bold text-gray-400 uppercase">{t('dashboard.noJama')}</p>
+                  </div>
+                ) : (
+                  <div className="max-h-[350px] overflow-y-auto scrollbar-thin pr-1 space-y-3">
+                    {jamaRecords.map(record => (
+                      <div key={record.jobNo} className="flex items-center justify-between p-3.5 bg-white rounded-2xl border-2 border-gray-100 shadow-sm transition-transform active:scale-[0.98]">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-gray-400 uppercase">#{record.jobNo}</span>
+                          <span className="text-sm font-black text-gray-800 leading-tight">{record.item}</span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                             <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                             <span className="text-[11px] font-bold text-gray-500">{record.s4Thekedar || t('common.unknown')}</span>
+                          </div>
+                        </div>
+                        <div className="text-right bg-green-50 px-3 py-1.5 rounded-xl border border-green-100">
+                          <span className="text-lg font-black text-green-900 leading-none">{record.s5JamaQty || 0}</span>
+                          <span className="block text-[8px] font-black text-green-600 uppercase tracking-tighter">{t('dashboard.pieces')}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ActivitySection>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
 
-// ─── Aaj Ke Jama Component ──────────────────────────────────────────────────
-function AajKeJama({ jobs }) {
-  const { t } = useLanguage();
-  const [selectedDate, setSelectedDate] = useState(getTodayLocal());
-
-  const jamaRecords = useMemo(() => {
-    return jobs.filter(j => {
-      // Step 5 "Jama". Strictly use s5Actual for daily reporting.
-      if (!j.s5JamaQty || !j.s5Actual) return false;
-      return getLocalDay(j.s5Actual) === selectedDate;
-    }).sort((a, b) => b.jobNo - a.jobNo);
-  }, [jobs, selectedDate]);
-
-  return (
-    <div className="px-4 mt-8 pb-4">
-      <div className="flex flex-col gap-4 bg-white rounded-[2rem] border-2 border-gray-200 p-5 sm:p-6 shadow-md shadow-gray-100/50">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 className="text-xl font-black text-gray-900 leading-none">{t('dashboard.aajKeJama')}</h2>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">{t('forms.jama')}</p>
-          </div>
-          <input 
-            type="date" 
-            value={selectedDate} 
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full sm:w-auto text-xs font-bold border-2 border-gray-100 p-2.5 rounded-xl bg-gray-50 outline-none focus:border-indigo-400 transition-all"
-          />
-        </div>
-
-        <div className="space-y-3 mt-2">
-          {jamaRecords.length === 0 ? (
-            <div className="py-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
-              <span className="text-2xl opacity-50">📦</span>
-              <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-tight">{t('dashboard.noJama')}</p>
-            </div>
-          ) : (
-            jamaRecords.map(record => (
-              <div key={record.jobNo} className="flex items-center justify-between p-3.5 bg-gray-50/50 rounded-2xl border-2 border-gray-100 hover:border-indigo-100 transition-all group">
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-black text-gray-400 leading-none uppercase">#{record.jobNo}</span>
-                    <span className="text-[9px] font-black text-green-500 bg-green-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">JAMA</span>
-                  </div>
-                  <span className="text-sm font-black text-gray-800 mt-1 truncate">{record.item}</span>
-                  <span className="text-[11px] font-bold text-indigo-600 mt-0.5">{record.s4Thekedar || 'Unknown'}</span>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-lg font-black text-gray-900 leading-none">{record.s5JamaQty || 0}</span>
-                  <span className="block text-[9px] font-black text-gray-400 uppercase">{t('dashboard.pieces')}</span>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-        
-        {jamaRecords.length > 0 && (
-          <div className="pt-2 border-t-2 border-gray-50 flex justify-between items-center px-1">
-            <span className="text-[11px] font-black text-gray-400 uppercase">{t('dashboard.totalJama')}</span>
-            <span className="text-sm font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">
-              {jamaRecords.reduce((acc, r) => acc + (Number(r.s5JamaQty) || 0), 0)} {t('common.pcs')}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const { t } = useLanguage();
@@ -779,15 +888,7 @@ export default function Dashboard() {
         </div>
 
         <div className="anim-slideUp" style={{ animationDelay: '200ms' }}>
-          <AajKeNaame jobs={jobs} />
-        </div>
-
-        <div className="anim-slideUp" style={{ animationDelay: '300ms' }}>
-          {/* Requirements Section */}
-          <Requirements jobs={jobs} />
-
-          {/* Aaj Ke Jama Section */}
-          <AajKeJama jobs={jobs} />
+          <DailyActivityHub jobs={jobs} />
         </div>
 
         <div className="px-2 sm:px-4 mt-16 space-y-6 border-t-4 border-white pt-12 pb-10 bg-gray-50/50">
@@ -931,28 +1032,46 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* List Results */}
-            <div className="space-y-4 px-1 pb-10">
-              {loading ? (
-                [1, 2, 3, 4, 5].map(i => <JobCardSkeleton key={i} />)
-              ) : filtered.length === 0 ? (
-                <div className="py-24 text-center bg-white rounded-[3rem] border-2 border-dashed border-gray-200 shadow-inner">
-                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-gray-100">
-                    <span className="text-4xl opacity-40">🔍</span>
-                  </div>
-                  <h3 className="text-lg font-black text-gray-900 tracking-tight">{t('dashboard.noResults')}</h3>
-                  <p className="text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest">{t('dashboard.tryAdjustingFilters')}</p>
+            {/* List Results - Now contained in a scrollable area with premium gradient fade */}
+            <div className="relative group">
+              {/* Top Premium Gradient Fade & Glow Effects - Sharper Line */}
+              <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-gray-50 via-gray-50/70 to-transparent pointer-events-none z-10 rounded-t-[3rem]" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-indigo-500/80 to-transparent z-20 shadow-[0_0_4px_rgba(79,70,229,0.4)]" />
+
+              <div className="max-h-[550px] overflow-y-auto px-1 pt-8 pb-12 scrollbar-thin scroll-smooth pr-2">
+                <div className="space-y-4">
+                  {loading ? (
+                    [1, 2, 3, 4, 5].map(i => <JobCardSkeleton key={i} />)
+                  ) : filtered.length === 0 ? (
+                    <div className="py-24 text-center bg-white rounded-[3rem] border-2 border-dashed border-gray-200 shadow-inner">
+                      <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-gray-100">
+                        <span className="text-4xl opacity-40">🔍</span>
+                      </div>
+                      <h3 className="text-lg font-black text-gray-900 tracking-tight">{t('dashboard.noResults')}</h3>
+                      <p className="text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest">{t('dashboard.tryAdjustingFilters')}</p>
+                    </div>
+                  ) : (
+                    <div className={cls(
+                      'grid gap-4',
+                      viewMode === 'compact' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 lg:grid-cols-2'
+                    )}>
+                      {filtered.map(j => (
+                        <JobRowCard key={j.jobNo} job={j} onClick={setSelectedJob} viewMode={viewMode} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className={cls(
-                  'grid gap-4',
-                  viewMode === 'compact' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 lg:grid-cols-2'
-                )}>
-                  {filtered.map(j => (
-                    <JobRowCard key={j.jobNo} job={j} onClick={setSelectedJob} viewMode={viewMode} />
-                  ))}
-                </div>
-              )}
+              </div>
+              
+              {/* Bottom Premium Gradient Fade & Glow Effects - Increased Intensity & Coverage */}
+              <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-gray-50 via-gray-50/80 to-transparent pointer-events-none z-10 rounded-b-[3rem]" />
+              
+              {/* Decorative Glows - Higher Intensity */}
+              <div className="absolute -bottom-8 left-1/4 w-1/2 h-16 bg-indigo-500/20 blur-[60px] rounded-full pointer-events-none z-0" />
+              <div className="absolute -bottom-8 right-1/4 w-1/2 h-16 bg-violet-500/20 blur-[60px] rounded-full pointer-events-none z-0" />
+              
+              {/* Sharp Accent Line - Increased Intensity */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-indigo-600/60 to-transparent z-20 shadow-[0_0_20px_rgba(79,70,229,0.5)]" />
             </div>
           </div>
         </div>

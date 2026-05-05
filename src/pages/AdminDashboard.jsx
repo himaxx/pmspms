@@ -1431,7 +1431,7 @@ const STEP_FIELDS = {
   4: [
     { key: 's4Thekedar',    label: 'Thekedar Name',          type: 'text',     dbCol: 's4_thekedar' },
     { key: 's4CutToPack',   label: 'Cut to Pack?',           type: 'yesno',    dbCol: 's4_cut_to_pack' },
-    { key: 's4LeadTime',    label: 'Lead Time (hrs)',        type: 'number',   dbCol: 's4_lead_time' },
+    { key: 's4LeadTime',    label: 'Lead Time (Days)',       type: 'number',   dbCol: 's4_lead_time' },
     { key: 's4CuttingPcs',  label: 'Cutting Pieces',        type: 'number',   dbCol: 's4_cutting_pcs' },
     { key: 's4StartDate',   label: 'Start Date',            type: 'datetime', dbCol: 's4_start_date' },
   ],

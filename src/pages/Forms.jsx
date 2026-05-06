@@ -419,13 +419,44 @@ function Step1Form({ onSuccess }) {
         
         {sets.map((s, i) => (
           <div key={i} className="flex gap-3 items-start anim-slideUp">
-            <div className="flex-1">
-              <InputBase 
-                placeholder={t('common.size')} 
-                value={s.size} 
-                onChange={(e) => updateSet(i, 'size', e.target.value)}
-                error={errors.sets?.[i]?.size}
-              />
+            <div className="flex-1 flex flex-col gap-2">
+              <SelectBase 
+                value={s.sizeDropdown || ''}
+                onChange={(e) => {
+                   const val = e.target.value;
+                   const newSets = [...sets];
+                   newSets[i].sizeDropdown = val;
+                   if (val !== 'Other') {
+                       newSets[i].size = val;
+                   } else {
+                       newSets[i].size = newSets[i].sizeText || '';
+                   }
+                   setSets(newSets);
+                }}
+                error={errors.sets?.[i]?.size && !s.sizeDropdown}
+              >
+                <option value="">{t('forms.selectSize') || 'Select Size'}</option>
+                <option value="22/32">22/32</option>
+                <option value="22/36">22/36</option>
+                <option value="26/36">26/36</option>
+                <option value="32/40">32/40</option>
+                <option value="34/38">34/38</option>
+                <option value="Other">Other</option>
+              </SelectBase>
+              {s.sizeDropdown === 'Other' && (
+                  <InputBase 
+                    placeholder="Enter custom size" 
+                    value={s.sizeText || ''} 
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        const newSets = [...sets];
+                        newSets[i].sizeText = val;
+                        newSets[i].size = val;
+                        setSets(newSets);
+                    }}
+                    error={errors.sets?.[i]?.size && s.sizeDropdown === 'Other'}
+                  />
+              )}
             </div>
             <div className="flex-1">
               <InputBase 

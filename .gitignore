@@ -13,3 +13,5 @@ yarn-error.log*
 .agents
 scratch
 "service accounts keys.json" 
+"service accounts keys.json" 
+"vercel_ready_key.txt" 

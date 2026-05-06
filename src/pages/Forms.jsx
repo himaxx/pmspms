@@ -6,7 +6,7 @@ import { getJobByNo } from '../utils/db';
 import JobCard from '../components/JobCard';
 import { JobCardSkeleton } from '../components/Skeleton';
 import StepBadge from '../components/StepBadge';
-import { getPendingStep as detectStep } from '../utils/jobLogic';
+import { getPendingStep as detectStep, getJamaTrail, getCumulativeJama, getDesiredQty, isJamaComplete, JAMA_SETTLE_THRESHOLD } from '../utils/jobLogic';
 import { useJobs, useCreateJob, useUpdateStep2, useUpdateStep3, useUpdateStep4, useUpdateStep5, useUpdateStep6 } from '../hooks/useJobs';
 import { useMasterData } from '../hooks/useMasterData';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -768,34 +768,45 @@ function Step4Form({ job, onSuccess }) {
   );
 }
 
-// ─── Step 5 Form ─────────────────────────────────────────────────────────────
+// ─── Step 5 Form — Multi-trail Jama ──────────────────────────────────────────
 function Step5Form({ job, onSuccess }) {
   const { t } = useLanguage();
-  const [form, setForm] = useState({ 
-    jamaQty: job.s5JamaQty || '', 
-    pressHua: job.s5Press ? (job.s5Press === 'Yes') : null 
-  });
+  const [form, setForm] = useState({ jamaQty: '', pressHua: null });
   const [confirmData, setConfirmData] = useState(null);
 
-  const updateStep5Mutation = useUpdateStep5();
-  const loading = updateStep5Mutation.isPending;
-  const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
+  const addJamaMutation = useUpdateStep5();
+  const loading = addJamaMutation.isPending;
+
+  // Derived values
+  const trail      = getJamaTrail(job);
+  const cumJama    = getCumulativeJama(job);
+  const desired    = getDesiredQty(job);
+  const difference = desired - cumJama;
+  const newEntry   = Number(form.jamaQty) || 0;
+  const afterNew   = cumJama + newEntry;
+  const willSettle = desired > 0 && Math.abs(desired - afterNew) <= JAMA_SETTLE_THRESHOLD;
+  const isInhouse  = String(job.s2Inhouse || '').toLowerCase() === 'yes';
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (!form.jamaQty) return alert('Jama Quantity is required!');
-
+    if (!form.jamaQty || Number(form.jamaQty) <= 0)
+      return alert('Jama Quantity must be greater than 0!');
     setConfirmData({
-      [t('common.jobNo')]: job.jobNo,
-      [t('common.item')]: job.item,
-      [t('forms.jamaQty')]: form.jamaQty,
-      [t('forms.pressHua')]: form.pressHua === true ? '✅ ' + t('common.yes') : (form.pressHua === false ? '❌ ' + t('common.no') : t('forms.notSpecified'))
+      [t('common.jobNo')]:    job.jobNo,
+      [t('common.item')]:    job.item,
+      'Jama Entry #':        trail.length + 1,
+      'This Entry Qty':      form.jamaQty,
+      'Cumulative After':    afterNew,
+      'Desired Qty':         desired,
+      'Difference':          desired - afterNew,
+      'Will Auto-Settle?':   willSettle ? '✅ Yes — within 15 pcs' : '❌ No — more jama expected',
+      'Press Hua?':          form.pressHua === true ? '✅ Yes' : form.pressHua === false ? '❌ No' : 'Not specified',
     });
   }
 
   async function executeSubmit() {
     try {
-      await updateStep5Mutation.mutateAsync({
+      await addJamaMutation.mutateAsync({
         jobNo:    job.jobNo,
         jamaQty:  form.jamaQty,
         pressHua: form.pressHua,
@@ -806,28 +817,173 @@ function Step5Form({ job, onSuccess }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 anim-slideUp">
-      <div>
-        <FieldLabel required>{t('forms.jamaQty')}</FieldLabel>
-        <InputBase type="number" inputMode="numeric" placeholder="0"
-          value={form.jamaQty} onChange={set('jamaQty')} />
-      </div>
-      <div>
-        <FieldLabel>{t('forms.pressHuaYaNahi')}</FieldLabel>
-        <YesNoToggle value={form.pressHua}
-          onChange={(v) => setForm((p) => ({ ...p, pressHua: v }))}
-          yesLabel={'✅ ' + t('forms.pressHuaLabel')} noLabel={'❌ ' + t('forms.pressNahiLabel')} />
-      </div>
-      <SubmitButton loading={loading} />
+    <div className="space-y-5 anim-slideUp">
 
-      <ConfirmationPopup 
-        title={t('forms.confirmJama')} 
-        details={confirmData} 
-        onConfirm={executeSubmit} 
-        onCancel={() => setConfirmData(null)} 
-        loading={loading} 
-      />
-    </form>
+      {/* ── Context Panel ── */}
+      <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Jama Status</span>
+          <span className={cls(
+            'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter',
+            isJamaComplete(job) ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+          )}>
+            {isJamaComplete(job) ? '✓ Ready to Settle' : `${trail.length} Jama${trail.length !== 1 ? 's' : ''} Done`}
+          </span>
+        </div>
+
+        {/* Qty breakdown */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <p className="text-[9px] font-black text-gray-400 uppercase">Desired</p>
+            <p className="text-lg font-black text-gray-900">{desired || '—'}</p>
+            <p className="text-[9px] text-gray-400">{isInhouse ? 'Cut Pcs' : 'Req Qty'}</p>
+          </div>
+          <div className="border-x border-gray-100">
+            <p className="text-[9px] font-black text-gray-400 uppercase">Jama'd</p>
+            <p className="text-lg font-black text-indigo-600">{cumJama}</p>
+            <p className="text-[9px] text-gray-400">{trail.length} entr{trail.length === 1 ? 'y' : 'ies'}</p>
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-gray-400 uppercase">Balance</p>
+            <p className={cls('text-lg font-black', difference <= 0 ? 'text-green-600' : difference <= JAMA_SETTLE_THRESHOLD ? 'text-amber-500' : 'text-red-500')}>
+              {difference}
+            </p>
+            <p className="text-[9px] text-gray-400">remaining</p>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        {desired > 0 && (
+          <div className="space-y-1">
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className={cls('h-full rounded-full transition-all duration-500',
+                  cumJama >= desired ? 'bg-green-500' : 'bg-indigo-500')}
+                style={{ width: `${Math.min(100, (cumJama / desired) * 100)}%` }}
+              />
+            </div>
+            <p className="text-[9px] text-gray-400 text-right font-bold">
+              {Math.round((cumJama / desired) * 100)}% of desired
+            </p>
+          </div>
+        )}
+
+        {/* Auto-settle notice */}
+        {isJamaComplete(job) && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-3 flex items-start gap-2">
+            <span className="text-lg">✅</span>
+            <div>
+              <p className="text-xs font-black text-green-800">Ready for Settle</p>
+              <p className="text-[10px] text-green-700 mt-0.5">
+                Difference is within {JAMA_SETTLE_THRESHOLD} pcs — this job will auto-advance to Step 6 (Settle).
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Jama Trail ── */}
+      {trail.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Jama Trail</p>
+          {trail.map((entry, i) => {
+            const entryDate = entry.date ? new Date(entry.date).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+            return (
+              <div key={i} className="flex items-center justify-between bg-white rounded-2xl border-2 border-indigo-50 p-3.5 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black shrink-0">
+                    {i + 1}
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-gray-900">{entry.qty} pcs</p>
+                    <p className="text-[10px] text-gray-400 font-medium">{entryDate}</p>
+                    {entry.pressHua && (
+                      <span className="text-[9px] font-black text-green-600">✅ Press Hogyi</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase">Entry {i + 1}</p>
+                  <p className="text-[10px] font-black text-indigo-600">
+                    Total: {trail.slice(0, i + 1).reduce((s, e) => s + (Number(e.qty) || 0), 0)}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── New Jama Entry Form ── */}
+      {!isJamaComplete(job) && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
+            {trail.length === 0 ? 'First Jama Entry' : `Add Jama Entry #${trail.length + 1}`}
+          </p>
+
+          {/* Preview of what will happen after this entry */}
+          {newEntry > 0 && (
+            <div className={cls(
+              'rounded-2xl p-3 border-2 text-center',
+              willSettle ? 'bg-green-50 border-green-200' : 'bg-indigo-50 border-indigo-100'
+            )}>
+              <p className="text-[10px] font-black uppercase tracking-wider"
+                 style={{ color: willSettle ? '#166534' : '#4f46e5' }}>
+                {willSettle ? '✅ Will auto-advance to Settle' : `Still ${desired - afterNew} pcs short after this`}
+              </p>
+            </div>
+          )}
+
+          <div>
+            <FieldLabel required>{t('forms.jamaQty')}</FieldLabel>
+            <InputBase
+              type="number" inputMode="numeric" placeholder="Enter pieces received…"
+              value={form.jamaQty}
+              onChange={(e) => setForm(p => ({ ...p, jamaQty: e.target.value }))}
+            />
+            {difference > 0 && (
+              <button
+                type="button"
+                onClick={() => setForm(p => ({ ...p, jamaQty: String(difference) }))}
+                className="mt-1.5 text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+              >
+                Fill remaining ({difference} pcs)
+              </button>
+            )}
+          </div>
+
+          <div>
+            <FieldLabel>{t('forms.pressHuaYaNahi')}</FieldLabel>
+            <YesNoToggle
+              value={form.pressHua}
+              onChange={(v) => setForm(p => ({ ...p, pressHua: v }))}
+              yesLabel={'✅ Press Hogyi'} noLabel={'❌ Press Nahi Huyi'}
+            />
+          </div>
+
+          <SubmitButton loading={loading} label={trail.length === 0 ? t('forms.submitEntry') : `Submit Jama #${trail.length + 1}`} />
+
+          <ConfirmationPopup
+            title={`Confirm Jama #${trail.length + 1}`}
+            details={confirmData}
+            onConfirm={executeSubmit}
+            onCancel={() => setConfirmData(null)}
+            loading={loading}
+          />
+        </form>
+      )}
+
+      {/* If jama is complete, show settle prompt */}
+      {isJamaComplete(job) && (
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-5 text-center space-y-2">
+          <p className="text-2xl">🎉</p>
+          <p className="text-sm font-black text-amber-900">Jama Complete!</p>
+          <p className="text-xs text-amber-700 font-medium">
+            Difference is ≤{JAMA_SETTLE_THRESHOLD} pcs. This job has auto-advanced to Step 6 (Settle).
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -845,10 +1001,11 @@ function Step6Form({ job, onSuccess }) {
   const loading = updateStep6Mutation.isPending;
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
-  const reqQty = Number(job.qty || 0);
-  const jamaQty = Number(job.s5JamaQty || 0);
+  const reqQty    = Number(job.qty || 0);
+  const desired   = getDesiredQty(job);   // in-house = cut pcs, open = req qty
+  const jamaQty   = getCumulativeJama(job);
   const curSettle = Number(form.settleQty || 0);
-  const balance = reqQty - jamaQty - curSettle;
+  const balance   = desired - jamaQty - curSettle;
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -894,17 +1051,19 @@ function Step6Form({ job, onSuccess }) {
         
         <div className="grid grid-cols-3 gap-2">
            <div className="text-center">
-              <p className="text-[9px] font-black text-gray-400 uppercase">{t('common.requirement')}</p>
-              <p className="text-sm font-black text-gray-900">{reqQty}</p>
+              <p className="text-[9px] font-black text-gray-400 uppercase">Desired</p>
+              <p className="text-sm font-black text-gray-900">{desired}</p>
+              <p className="text-[8px] text-gray-400">{String(job.s2Inhouse || '').toLowerCase() === 'yes' ? 'Cut Pcs' : 'Req Qty'}</p>
            </div>
            <div className="text-center border-x border-gray-100">
               <p className="text-[9px] font-black text-gray-400 uppercase">{t('common.jama')}</p>
               <p className="text-sm font-black text-indigo-600">{jamaQty}</p>
+              <p className="text-[8px] text-gray-400">{getJamaTrail(job).length} entries</p>
            </div>
            <div className="text-center">
               <p className="text-[9px] font-black text-gray-400 uppercase">{t('common.balance')}</p>
-              <p className={cls("text-sm font-black", balance <= 0 ? "text-green-600" : "text-red-500")}>
-                {reqQty - jamaQty}
+              <p className={cls("text-sm font-black", (desired - jamaQty) <= 0 ? "text-green-600" : "text-red-500")}>
+                {desired - jamaQty}
               </p>
            </div>
         </div>
@@ -917,9 +1076,9 @@ function Step6Form({ job, onSuccess }) {
               </p>
            </div>
            {balance > 0 && (
-             <button 
+             <button
                type="button"
-               onClick={() => setForm(p => ({ ...p, settleQty: (reqQty - jamaQty).toString() }))}
+               onClick={() => setForm(p => ({ ...p, settleQty: (desired - jamaQty).toString() }))}
                className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
              >
                {t('forms.settleAll')}

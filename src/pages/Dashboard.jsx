@@ -5,7 +5,7 @@ import { JobCardSkeleton } from '../components/Skeleton';
 import AnalyticsHub from '../components/AnalyticsHub';
 import { useToast, ToastContainer } from '../components/Toast';
 import usePullToRefresh from '../hooks/usePullToRefresh';
-import { getPendingStep as detectStep, isJobDelayed as isDelayed, getJobStatus } from '../utils/jobLogic';
+import { getPendingStep as detectStep, isJobDelayed as isDelayed, getJobStatus, getJamaTrail, getCumulativeJama, getDesiredQty, JAMA_SETTLE_THRESHOLD } from '../utils/jobLogic';
 import JobManagement from '../components/JobManagement';
 import { useJobs } from '../hooks/useJobs';
 import useUIStore from '../store/useUIStore';
@@ -103,31 +103,53 @@ const JobRowCard = React.memo(({ job, onClick, viewMode = 'comfortable' }) => {
   const step   = detectStep(job);
   const status = getJobStatus(job);
   const isCompact = viewMode === 'compact';
+  const pressHogyi = Boolean(job.s5JamaQty); // Jama step done
+  const contractor  = job.s4Thekedar || job.s3CuttingPerson || null;
+  const jobDate     = fmtDate(job.date);
 
   return (
     <button type="button" onClick={() => onClick(job)}
       className={cls(
-        'w-full text-left anim-slideUp bg-white rounded-[1.25rem] border-2 border-gray-200 shadow-md flex items-center transition-all hover:shadow-lg hover:border-indigo-200 active:scale-[0.98] btn-press',
-        isCompact ? 'p-2 sm:p-2.5 gap-2 sm:gap-3' : 'p-3.5 sm:p-4 gap-3 sm:gap-4'
+        'w-full text-left anim-slideUp bg-white rounded-[1.25rem] border-2 shadow-md flex flex-col transition-all hover:shadow-lg active:scale-[0.98] btn-press',
+        pressHogyi ? 'border-green-200 hover:border-green-300' : 'border-gray-200 hover:border-indigo-200',
+        isCompact ? 'p-2.5 sm:p-3 gap-1.5' : 'p-3.5 sm:p-4 gap-2'
       )}>
-      <div className="flex flex-col gap-1 shrink-0">
-        <span className={cls('font-bold text-gray-800', isCompact ? 'text-[10px]' : 'text-xs')}>#{job.jobNo}</span>
-        <StepBadge step={step} size={isCompact ? "xs" : "sm"} />
+      {/* Top Row: Job No + Step Badge + Status */}
+      <div className="flex items-center justify-between w-full gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={cls('font-black text-gray-700', isCompact ? 'text-[10px]' : 'text-xs')}>#{job.jobNo}</span>
+          <StepBadge step={step} size={isCompact ? 'xs' : 'sm'} />
+          {pressHogyi && (
+            <span className="inline-flex items-center gap-0.5 bg-green-100 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide ring-1 ring-green-200">
+              ✅ Press Hogyi
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col items-end shrink-0">
+          <StatusDot status={status} />
+          {!isCompact && (
+            <>
+              {status === 'late'     && <span className="text-[9px] font-bold text-red-500   uppercase mt-0.5">{t('dashboard.late')}</span>}
+              {status === 'complete' && <span className="text-[9px] font-bold text-green-600 uppercase mt-0.5">{t('dashboard.complete')}</span>}
+            </>
+          )}
+        </div>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className={cls('font-semibold text-gray-900 truncate', isCompact ? 'text-xs' : 'text-sm')}>{job.item || '—'}</p>
-        <p className={cls('text-gray-400 mt-0.5 flex gap-2 flex-wrap', isCompact ? 'text-[10px]' : 'text-[11px]')}>
-          {job.size && <span>{job.size}</span>}
-          {job.qty  && <span className="font-medium text-gray-600">{job.qty} pcs</span>}
-        </p>
-      </div>
-      <div className="flex flex-col items-end gap-1 shrink-0">
-        <StatusDot status={status} />
-        {!isCompact && (
-          <>
-            {status === 'late'     && <span className="text-[9px] font-bold text-red-500   uppercase">{t('dashboard.late')}</span>}
-            {status === 'complete' && <span className="text-[9px] font-bold text-green-600 uppercase">{t('dashboard.complete')}</span>}
-          </>
+
+      {/* Item Name */}
+      <p className={cls('font-semibold text-gray-900 truncate w-full', isCompact ? 'text-xs' : 'text-sm')}>{job.item || '—'}</p>
+
+      {/* Details Row */}
+      <div className={cls('flex items-center gap-2 flex-wrap w-full', isCompact ? 'text-[9px]' : 'text-[10px]')}>
+        {job.size && <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md font-bold">{job.size}</span>}
+        {job.qty  && <span className="font-medium text-gray-600">{job.qty} pcs</span>}
+        {!isCompact && contractor && (
+          <span className="flex items-center gap-1 text-gray-400 font-medium">
+            <span className="text-[8px]">👤</span>{contractor}
+          </span>
+        )}
+        {!isCompact && jobDate && (
+          <span className="ml-auto text-gray-400 font-medium">{jobDate}</span>
         )}
       </div>
     </button>
@@ -243,6 +265,54 @@ function TimelineRow({ step, title, done, active, date, plannedDate, person, ext
   );
 }
 
+// ─── Jama Trail Panel (shown in Job Detail Sheet) ────────────────────────────
+function JamaTrailPanel({ job }) {
+  const trail   = getJamaTrail(job);
+  const desired = getDesiredQty(job);
+  const total   = getCumulativeJama(job);
+  if (trail.length === 0) return null;
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-100"
+         style={{ animation: 'slideUp 400ms cubic-bezier(0.22,1,0.36,1) both', animationDelay: '450ms' }}>
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+        Jama Trail ({trail.length} {trail.length === 1 ? 'entry' : 'entries'})
+      </p>
+      {desired > 0 && (
+        <div className="mb-3 space-y-1">
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className={total >= desired ? 'h-full bg-green-500 rounded-full' : 'h-full bg-indigo-500 rounded-full'}
+              style={{ width: Math.min(100, (total / desired) * 100) + '%', transition: 'width 600ms ease' }}
+            />
+          </div>
+          <p className="text-[9px] text-gray-400 font-bold text-right">{total} / {desired} pcs ({Math.round((total / desired) * 100)}%)</p>
+        </div>
+      )}
+      <div className="space-y-2">
+        {trail.map(function(entry, i) {
+          const d = entry.date
+            ? new Date(entry.date).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+            : '—';
+          const runTotal = trail.slice(0, i + 1).reduce(function(s, e) { return s + (Number(e.qty) || 0); }, 0);
+          return (
+            <div key={i} className="flex items-center gap-3 bg-indigo-50/50 rounded-xl p-3 border border-indigo-100/50">
+              <div className="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">{i + 1}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-black text-gray-900">{entry.qty} pcs {entry.pressHua ? '· ✅ Press Hogyi' : ''}</p>
+                <p className="text-[9px] text-gray-400">{d}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[9px] text-gray-400">Running</p>
+                <p className="text-xs font-black text-indigo-700">{runTotal}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Job Detail Bottom Sheet ──────────────────────────────────────────────────
 function JobDetailSheet({ job, onClose }) {
   const { t } = useLanguage();
@@ -255,6 +325,11 @@ function JobDetailSheet({ job, onClose }) {
   const timeDelay = String(job.s5Delay ?? '').trim();
   const hasDelay  = timeDelay && timeDelay !== '0' && timeDelay !== '';
   const currentStep = detectStep(job);
+  const fmtDate = (s) => {
+    if (!s) return null;
+    const d = new Date(s);
+    return isNaN(d) ? s : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' });
+  };
 
   const STEPS = [
     { 
@@ -299,11 +374,17 @@ function JobDetailSheet({ job, onClose }) {
     { 
       step: 5, 
       title: t('steps.5'), 
-      done: Boolean(job.s5JamaQty),   
-      date: fmtDate(job.updatedAt), 
+      done: getCumulativeJama(job) > 0,
+      date: fmtDate(job.s5Actual), 
       plannedDate: fmtDate(job.s5JamaPlanned),
       person: null,                 
-      extra: job.s5JamaQty ? `Jama: ${job.s5JamaQty} ${t('common.pcs')}` : null,
+      extra: (() => {
+        const trail = getJamaTrail(job);
+        const cum   = getCumulativeJama(job);
+        if (trail.length > 1) return `${trail.length} Jamas: ${cum} pcs total`;
+        if (cum > 0)          return `Jama: ${cum} pcs`;
+        return null;
+      })(),
       isDelayed: (Number(job.s5Delay) || 0) > 0
     },
     { 
@@ -372,6 +453,9 @@ function JobDetailSheet({ job, onClose }) {
               />
             ))}
           </div>
+          {/* Jama Trail */}
+          <JamaTrailPanel job={job} />
+
           <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-3"
                style={{ animation: 'slideUp 400ms cubic-bezier(0.22,1,0.36,1) both', animationDelay: '500ms' }}>
             <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
@@ -721,18 +805,48 @@ function DailyActivityHub({ jobs }) {
                 ) : (
                   <div className="max-h-[350px] overflow-y-auto scrollbar-thin pr-1 space-y-3">
                     {jamaRecords.map(record => (
-                      <div key={record.jobNo} className="flex items-center justify-between p-3.5 bg-white rounded-2xl border-2 border-gray-100 shadow-sm transition-transform active:scale-[0.98]">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-gray-400 uppercase">#{record.jobNo}</span>
-                          <span className="text-sm font-black text-gray-800 leading-tight">{record.item}</span>
-                          <div className="flex items-center gap-1.5 mt-1">
-                             <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                             <span className="text-[11px] font-bold text-gray-500">{record.s4Thekedar || t('common.unknown')}</span>
+                      <div key={record.jobNo} className="p-3.5 bg-white rounded-2xl border-2 border-green-100 shadow-sm transition-transform active:scale-[0.98]">
+                        {/* Header Row */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[10px] font-black text-gray-400 uppercase">#{record.jobNo}</span>
+                              {/* Press Hogyi Badge */}
+                              <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ring-1 ring-green-200">
+                                ✅ Press Hogyi
+                              </span>
+                            </div>
+                            <span className="text-sm font-black text-gray-800 leading-tight mt-0.5 truncate">{record.item}</span>
+                            {/* Size & Qty */}
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              {record.size && <span className="text-[10px] font-bold text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded-md">{record.size}</span>}
+                              {record.qty  && <span className="text-[10px] font-bold text-indigo-600">Qty: {record.qty}</span>}
+                            </div>
+                            {/* Thekedar */}
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
+                              <span className="text-[11px] font-bold text-gray-500">{record.s4Thekedar || t('common.unknown')}</span>
+                            </div>
+                          </div>
+                          {/* Jama Qty Badge */}
+                          <div className="text-right bg-green-50 px-3 py-2 rounded-xl border border-green-100 shrink-0">
+                            <span className="text-lg font-black text-green-900 leading-none">{record.s5JamaQty || 0}</span>
+                            <span className="block text-[8px] font-black text-green-600 uppercase tracking-tighter">{t('dashboard.pieces')}</span>
                           </div>
                         </div>
-                        <div className="text-right bg-green-50 px-3 py-1.5 rounded-xl border border-green-100">
-                          <span className="text-lg font-black text-green-900 leading-none">{record.s5JamaQty || 0}</span>
-                          <span className="block text-[8px] font-black text-green-600 uppercase tracking-tighter">{t('dashboard.pieces')}</span>
+                        {/* Footer: Date + Balance */}
+                        <div className="mt-2.5 pt-2 border-t border-gray-50 flex items-center justify-between gap-2">
+                          {record.s5Actual && (
+                            <span className="text-[10px] font-bold text-gray-400">📅 {fmtDate(record.s5Actual)}</span>
+                          )}
+                          {record.s5Balance != null && record.s5Balance !== '' && (
+                            <span className={cls(
+                              'text-[10px] font-black px-2 py-0.5 rounded-full',
+                              Number(record.s5Balance) === 0 ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-700'
+                            )}>
+                              {Number(record.s5Balance) === 0 ? '✓ Pura Jama' : `Balance: ${record.s5Balance}`}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1032,13 +1146,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* List Results - Now contained in a scrollable area with premium gradient fade */}
-            <div className="relative group">
-              {/* Top Premium Gradient Fade & Glow Effects - Sharper Line */}
-              <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-gray-50 via-gray-50/70 to-transparent pointer-events-none z-10 rounded-t-[3rem]" />
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-indigo-500/80 to-transparent z-20 shadow-[0_0_4px_rgba(79,70,229,0.4)]" />
-
-              <div className="max-h-[550px] overflow-y-auto px-1 pt-8 pb-12 scrollbar-thin scroll-smooth pr-2">
+            <div>
+              <div className="max-h-[650px] overflow-y-auto px-1 pt-0 pb-6 scrollbar-thin scroll-smooth pr-2">
                 <div className="space-y-4">
                   {loading ? (
                     [1, 2, 3, 4, 5].map(i => <JobCardSkeleton key={i} />)
@@ -1062,17 +1171,8 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
-              
-              {/* Bottom Premium Gradient Fade & Glow Effects - Increased Intensity & Coverage */}
-              <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-gray-50 via-gray-50/80 to-transparent pointer-events-none z-10 rounded-b-[3rem]" />
-              
-              {/* Decorative Glows - Higher Intensity */}
-              <div className="absolute -bottom-8 left-1/4 w-1/2 h-16 bg-indigo-500/20 blur-[60px] rounded-full pointer-events-none z-0" />
-              <div className="absolute -bottom-8 right-1/4 w-1/2 h-16 bg-violet-500/20 blur-[60px] rounded-full pointer-events-none z-0" />
-              
-              {/* Sharp Accent Line - Increased Intensity */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-indigo-600/60 to-transparent z-20 shadow-[0_0_20px_rgba(79,70,229,0.5)]" />
             </div>
+
           </div>
         </div>
 

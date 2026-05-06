@@ -206,31 +206,68 @@ export async function updateStep4(jobNo, { thekedarName, cutToPack, leadTime, cu
   fetchAndSync(jobNo);
 }
 
-// ─── 7. Update step 5 — Finished Maal Jama ───────────────────────────────────
-export async function updateStep5(jobNo, { jamaQty, pressHua }) {
-  const { data: existing } = await supabase
+// ─── 7a. Add a Jama entry — Multi-trail Finished Maal Jama ───────────────────
+/**
+ * addJamaEntry — appends a new Jama entry to s5_jama_trail (JSON array).
+ * Also updates s5_jama_qty to cumulative total for backward compatibility.
+ * s5_actual is always updated to the latest submission time.
+ */
+export async function addJamaEntry(jobNo, { jamaQty, pressHua }) {
+  // Fetch existing trail + planned date
+  const { data: existing, error: fetchErr } = await supabase
     .from('jobs')
-    .select('s5_jama_planned')
+    .select('s5_jama_trail, s5_jama_planned, s5_jama_qty')
     .eq('job_no', String(jobNo).trim())
     .maybeSingle();
 
-  const s5Actual    = new Date();
-  const s5Planned   = existing?.s5_jama_planned ?? null;
-  const s5Delay     = calcDelay(s5Planned, s5Actual);
+  if (fetchErr) throw new Error(`addJamaEntry fetch: ${fetchErr.message}`);
+
+  // Parse existing trail
+  let trail = [];
+  if (existing?.s5_jama_trail) {
+    try {
+      const parsed = typeof existing.s5_jama_trail === 'string'
+        ? JSON.parse(existing.s5_jama_trail)
+        : existing.s5_jama_trail;
+      if (Array.isArray(parsed)) trail = parsed;
+    } catch { trail = []; }
+  }
+
+  const now = new Date();
+  // Append new entry
+  trail.push({
+    qty:      Number(jamaQty) || 0,
+    date:     toISO(now),
+    pressHua: pressHua ? true : false,
+    entryNo:  trail.length + 1,
+  });
+
+  // Cumulative total for backward-compat
+  const cumulativeQty = trail.reduce((sum, e) => sum + (Number(e.qty) || 0), 0);
+
+  // Delay from planned date
+  const s5Planned = existing?.s5_jama_planned ?? null;
+  const s5Delay   = calcDelay(s5Planned, now);
 
   const { error } = await supabase
     .from('jobs')
     .update({
-      s5_jama_qty: Number(jamaQty) || null,
-      s5_actual:   toISO(s5Actual),
-      s5_press:    pressHua ? 'Yes' : 'No',
-      s5_status:   'Complete',
-      s5_delay:    s5Delay > 0 ? s5Delay : null,      // working-hour delay
+      s5_jama_trail: JSON.stringify(trail),
+      s5_jama_qty:   cumulativeQty,            // cumulative — backward compat
+      s5_actual:     toISO(now),               // always latest jama time
+      s5_press:      pressHua ? 'Yes' : 'No',
+      s5_status:     'Complete',
+      s5_delay:      s5Delay > 0 ? s5Delay : null,
     })
     .eq('job_no', String(jobNo).trim());
 
-  if (error) throw new Error(`updateStep5: ${error.message}`);
+  if (error) throw new Error(`addJamaEntry: ${error.message}`);
   fetchAndSync(jobNo);
+}
+
+// ─── 7b. Legacy updateStep5 (keep for backward-compat, delegates to addJamaEntry)
+export async function updateStep5(jobNo, data) {
+  return addJamaEntry(jobNo, data);
 }
 
 // ─── 8. Update step 6 — Settle ───────────────────────────────────────────────

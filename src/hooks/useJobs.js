@@ -20,6 +20,7 @@ import {
   updateStep3,
   updateStep4,
   updateStep5,
+  addJamaEntry,
   updateStep6,
   adminUpdateJob,
 } from '../utils/db';
@@ -146,17 +147,21 @@ export function useUpdateStep4() {
   );
 }
 
-/** Step 5 — Finished Maal Jama */
+/** Step 5 — Add a Jama entry (multi-trail) */
 export function useUpdateStep5() {
   return useStepMutation(
-    ({ jobNo, ...data }) => updateStep5(jobNo, data),
+    ({ jobNo, ...data }) => addJamaEntry(jobNo, data),
     ({ jobNo, jamaQty, pressHua }) => ({
-      s5JamaQty: Number(jamaQty) || null,
+      // Optimistic: bump s5JamaQty (cumulative handled on server; this is approximate)
+      s5JamaQty: jamaQty,
       s5Press:   pressHua ? 'Yes' : 'No',
       s5Status:  'Complete',
     })
   );
 }
+
+/** Alias: useAddJamaEntry — same as useUpdateStep5, explicit name for clarity */
+export const useAddJamaEntry = useUpdateStep5;
 
 /** Step 6 — Settle */
 export function useUpdateStep6() {

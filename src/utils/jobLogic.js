@@ -10,6 +10,63 @@ export const DELAY_THRESHOLDS_HOURS = {
   6: 27    // Pending Settle (3 days)
 };
 
+/** Threshold (pcs): if |desiredQty - cumulativeJama| ≤ this, auto-advance to Settle */
+export const JAMA_SETTLE_THRESHOLD = 15;
+
+/**
+ * Parses the jama trail stored as a JSON string in s5JamaTrail.
+ * Each entry: { qty: number, date: string (ISO), pressHua: boolean }
+ * @returns {Array<{qty:number, date:string, pressHua:boolean}>}
+ */
+export function getJamaTrail(job) {
+  if (!job) return [];
+  const raw = job.s5JamaTrail;
+  if (!raw) return [];
+  try {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Returns the cumulative Jama quantity across all trail entries */
+export function getCumulativeJama(job) {
+  const trail = getJamaTrail(job);
+  if (trail.length > 0) {
+    return trail.reduce((sum, e) => sum + (Number(e.qty) || 0), 0);
+  }
+  // Fallback to legacy s5JamaQty field for backward compatibility
+  return Number(job?.s5JamaQty || 0);
+}
+
+/**
+ * Returns the target (desired) quantity for this job:
+ * - In-house cutting (s2Inhouse=Yes): target = actual cut pieces (s3DukanCutting)
+ * - Open cutting (s2Inhouse=No):      target = original requirement (qty)
+ */
+export function getDesiredQty(job) {
+  if (!job) return 0;
+  const isInhouse = String(job.s2Inhouse || '').trim().toLowerCase() === 'yes';
+  if (isInhouse) {
+    // Use the cutting quantity from step 3 if available, else step 4 cutting pcs
+    return Number(job.s3DukanCutting || job.s4CuttingPcs || job.qty || 0);
+  }
+  // Open cutting: thekedar delivers to original requirement
+  return Number(job.qty || 0);
+}
+
+/**
+ * Returns true if this job's cumulative Jama is within JAMA_SETTLE_THRESHOLD
+ * of the desired quantity — meaning it should be advanced to Settle.
+ */
+export function isJamaComplete(job) {
+  const desired = getDesiredQty(job);
+  const jama    = getCumulativeJama(job);
+  if (jama === 0) return false; // No jama at all yet
+  return Math.abs(desired - jama) <= JAMA_SETTLE_THRESHOLD;
+}
+
 const s = (val) => (val !== null && val !== undefined && String(val).trim()) ? String(val).trim() : '';
 
 const isYes = (v) => v === true || String(v).trim().toLowerCase() === 'yes';
@@ -19,21 +76,30 @@ const isYes = (v) => v === true || String(v).trim().toLowerCase() === 'yes';
  * 2: Pending Approval
  * 3: Pending Inhouse Cutting
  * 4: Pending Naame (In Production)
- * 5: Pending Jama
+ * 5: Pending Jama  (multi-trail, advances to 6 when within JAMA_SETTLE_THRESHOLD)
  * 6: Pending Settle
  * 7: Done (Completed or Rejected)
  */
 export function getPendingStep(job) {
   if (!job) return 1;
-  const jamaQty   = Number(job.s5JamaQty || 0);
   const settleQty = Number(job.s6SettleQty || 0);
   const reqQty    = Number(job.qty || 0);
+  const desired   = getDesiredQty(job);
+  const cumJama   = getCumulativeJama(job);
 
-  // Step 7: Done (Requires both Jama AND Settle entries, and total accounted >= Requirement)
-  if (s(job.s5JamaQty) && s(job.s6SettleQty) && (jamaQty + settleQty >= reqQty)) return 7; 
-  
-  if (s(job.s5JamaQty) || s(job.s5Status).toLowerCase() === 'complete' || s(job.s6SettleQty)) return 6;
-  if (s(job.s4StartDate)) return 5;
+  // Step 7: Done — settle exists and total (jama+settle) >= requirement
+  if (s(job.s6SettleQty) && (cumJama + settleQty >= reqQty)) return 7;
+
+  // Step 6: Settle — jama is within threshold of desired (auto-advance) OR explicitly settled
+  if (s(job.s6SettleQty)) return 6;
+  if (cumJama > 0 && isJamaComplete(job)) return 6; // auto-advance to settle
+
+  // Step 5: Jama pending — in production (naame) but jama not yet complete
+  if (s(job.s4StartDate)) {
+    // If some jama exists but not yet complete, stay at step 5 for more jama
+    return 5;
+  }
+
   if (s(job.s3Actual) || s(job.s3DukanCutting)) return 4;
   if (s(job.s2Actual)) {
     if (isYes(job.s2YesNo)) {

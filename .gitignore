@@ -12,3 +12,4 @@ yarn-error.log*
 .agent
 .agents
 scratch
+"service accounts keys.json" 

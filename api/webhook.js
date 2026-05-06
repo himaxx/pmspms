@@ -6,31 +6,43 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const SPREADSHEET_ID = process.env.VITE_SHEET_ID;
 
-// Define the schema for our 6 sub-sheets
+// Define the schema for our 6 sub-sheets with exact headers and filtering logic
 const SHEETS_CONFIG = [
     {
         name: 'New Requirements',
-        columns: ['job_no', 'date', 'prog_by', 'item', 'item_group', 'size', 'qty', 'reason', 'special_instruction']
+        headers: ['Timestamp', 'Manual Job Number', 'Your Name', 'Item Name', 'Sizes', 'Quantity', 'Order Ka Maal hai Ya Refill ka?', 'Koi Special Instructions', 'Item Group'],
+        columns: ['date', 'job_no', 'prog_by', 'item', 'size', 'qty', 'reason', 'special_instruction', 'item_group'],
+        filter: (job) => job.date != null
     },
     {
         name: 'Production Approval',
-        columns: ['job_no', 'item', 's2_planned', 's2_actual', 's2_yes_no', 's2_instructions', 's2_inhouse', 's2_delay', 's2_approver']
+        headers: ['Timestamp', 'Manual Job Number', 'Ye Maal Production pe bhejna hai kya ?', 'Maal in house katega'],
+        columns: ['s2_actual', 'job_no', 's2_yes_no', 's2_inhouse'],
+        filter: (job) => job.s2_actual != null || job.s2_yes_no != null
     },
     {
         name: 'Inhouse Cutting',
-        columns: ['job_no', 'item', 's3_planned', 's3_actual', 's3_dukan_cutting', 's3_size_details', 's3_cutting_person', 's3_delay']
+        headers: ['Timestamp', 'Manual Job Number', 'Actual Cutting Pieces', 'Size Wise Details', 'Cutting Person'],
+        columns: ['s3_actual', 'job_no', 's3_dukan_cutting', 's3_size_details', 's3_cutting_person'],
+        filter: (job) => job.s3_actual != null || job.s3_dukan_cutting != null
     },
     {
         name: 'Naame',
-        columns: ['job_no', 'item', 's4_planned', 's4_start_date', 's4_thekedar', 's4_cutting_pcs', 's4_cut_to_pack', 's4_lead_time', 's4_delay', 's5_jama_planned']
+        headers: ['Timestamp', 'Manual Job Number', 'Thekedat/Karigar Name', 'Cut To Pack', 'Maal approx kitne din me jama hoga?', 'Cutting Pieces', 'Size wise details'],
+        columns: ['s4_start_date', 'job_no', 's4_thekedar', 's4_cut_to_pack', 's4_lead_time', 's4_cutting_pcs', 'size'],
+        filter: (job) => job.s4_start_date != null || job.s4_thekedar != null
     },
     {
         name: 'Jama',
-        columns: ['job_no', 'item', 's5_actual', 's5_jama_qty', 's5_press', 's5_status', 's5_delay', 's5_jama_trail']
+        headers: ['Timestamp', 'Manual Job Number', 'Jama Quantity', 'Maal Press Hoke Jama Hua ya Nahi'],
+        columns: ['s5_actual', 'job_no', 's5_jama_qty', 's5_press'],
+        filter: (job) => job.s5_actual != null || job.s5_jama_qty != null
     },
     {
         name: 'Settle',
-        columns: ['job_no', 'item', 's6_settle_qty', 's6_reason', 's6_name']
+        headers: ['Timestamp', 'Manual Job Number', 'Settle Quantity', 'Reason', 'Your Name'],
+        columns: ['s5_actual', 'job_no', 's6_settle_qty', 's6_reason', 's6_name'], // DB doesn't store a separate timestamp for settle, so we fallback to s5_actual or empty
+        filter: (job) => job.s6_name != null || job.s6_settle_qty != null
     }
 ];
 
@@ -79,7 +91,7 @@ export default async function handler(req, res) {
                 spreadsheetId: SPREADSHEET_ID,
                 range: `${config.name}!A1`,
                 valueInputOption: 'USER_ENTERED',
-                requestBody: { values: [config.columns] }
+                requestBody: { values: [config.headers] }
             });
         }
 
@@ -93,7 +105,9 @@ export default async function handler(req, res) {
 
         // 3. Clear and rewrite data for each sheet
         for (const config of SHEETS_CONFIG) {
-            const rows = jobs.map(job => config.columns.map(col => formatValue(job[col])));
+            const rows = jobs
+                .filter(config.filter)
+                .map(job => config.columns.map(col => formatValue(job[col])));
             if (rows.length === 0) continue;
 
             await sheetsApi.spreadsheets.values.clear({

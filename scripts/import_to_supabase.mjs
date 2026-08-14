@@ -16,25 +16,30 @@ import { createClient } from '@supabase/supabase-js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// ─── Load .env.local ────────────────────────────────────────────────
-const envPath = resolve(__dirname, '..', '.env.local');
-const env = Object.fromEntries(
-  readFileSync(envPath, 'utf-8')
-    .split('\n')
-    .filter(l => l.includes('=') && !l.startsWith('#'))
-    .map(l => {
-      const idx = l.indexOf('=');
-      const key = l.slice(0, idx).trim();
-      const val = l.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
-      return [key, val];
-    })
-);
+// ─── Load .env / .env.local ─────────────────────────────────────────
+function loadEnv() {
+  const envMap = {};
+  for (const name of ['.env', '.env.local']) {
+    const envPath = resolve(__dirname, '..', name);
+    try {
+      const content = readFileSync(envPath, 'utf-8');
+      content.split('\n').filter(l => l.includes('=') && !l.startsWith('#')).forEach(l => {
+        const idx = l.indexOf('=');
+        const key = l.slice(0, idx).trim();
+        const val = l.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+        envMap[key] = val;
+      });
+    } catch {}
+  }
+  return { ...envMap, ...process.env };
+}
 
+const env = loadEnv();
 const SUPABASE_URL = env['VITE_SUPABASE_URL'];
 const SUPABASE_KEY = env['VITE_SUPABASE_ANON_KEY'];
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env.local');
+  console.error('❌ Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env');
   process.exit(1);
 }
 

@@ -46,13 +46,34 @@ async function fetchAndSync(jobNo) {
 
 // ─── 1. Get all jobs (Dashboard, Reports) ────────────────────────────────────
 export async function getAllJobs() {
-  const { data, error } = await supabase
-    .from('jobs')
-    .select('*')
-    .order('job_no', { ascending: false });
+  let allRows = [];
+  let from = 0;
+  const step = 1000;
 
-  if (error) throw new Error(`getAllJobs: ${error.message}`);
-  return (data ?? []).map(snakeToCamel).filter(Boolean);
+  while (true) {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .order('id', { ascending: false })
+      .range(from, from + step - 1);
+
+    if (error) throw new Error(`getAllJobs: ${error.message}`);
+    if (!data || data.length === 0) break;
+
+    allRows.push(...data);
+    if (data.length < step) break;
+    from += step;
+  }
+
+  // Sort by numeric job_no descending for clean UI ordering
+  allRows.sort((a, b) => {
+    const numA = parseInt(a.job_no, 10);
+    const numB = parseInt(b.job_no, 10);
+    if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+    return String(b.job_no || '').localeCompare(String(a.job_no || ''));
+  });
+
+  return allRows.map(snakeToCamel).filter(Boolean);
 }
 
 // ─── 2. Get single job by job_no (Steps 2-6 form fetch) ──────────────────────
@@ -287,26 +308,30 @@ export async function updateStep6(jobNo, { settleQty, reason, yourName }) {
 
 // ─── 9. Suggest next job number ──────────────────────────────────────────────
 export async function getNextJobNo() {
-  // Fetch all job numbers to find the true max integer
-  // (Since job_no is text, string sorting wouldn't work for numeric values)
-  const { data, error } = await supabase
-    .from('jobs')
-    .select('job_no');
-
-  if (error) throw new Error(`getNextJobNo: ${error.message}`);
-  
   let maxJobNo = 0;
-  if (data && data.length > 0) {
+  let from = 0;
+  const step = 1000;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('job_no')
+      .range(from, from + step - 1);
+
+    if (error) throw new Error(`getNextJobNo: ${error.message}`);
+    if (!data || data.length === 0) break;
+
     data.forEach(j => {
-      // Allow for purely numeric job numbers like "494"
       const num = parseInt(j.job_no, 10);
       if (!isNaN(num) && num > maxJobNo) {
-         maxJobNo = num;
+        maxJobNo = num;
       }
     });
+
+    if (data.length < step) break;
+    from += step;
   }
 
-  // If no numeric job numbers exist, default to 1, else max + 1
   const newJobNo = maxJobNo > 0 ? maxJobNo + 1 : 1;
   return String(newJobNo);
 }

@@ -38,5 +38,6 @@ persistQueryClient({
   queryClient,
   persister,
   maxAge: 1000 * 60 * 60 * 24, // 24 hours
+  buster: 'v2_2079_jobs_all_records',
 });
 

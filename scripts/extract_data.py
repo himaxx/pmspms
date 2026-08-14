@@ -8,7 +8,9 @@ from openpyxl import load_workbook
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-EXCEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'PMS FORM RESPONSES.xlsx')
+EXCEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'PMS FORM RESPONSES (1).xlsx')
+if not os.path.exists(EXCEL_PATH):
+    EXCEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'PMS FORM RESPONSES.xlsx')
 
 # FMS Column mapping (Row 4 = headers, data starts Row 5)
 FMS_COL = {
@@ -75,6 +77,21 @@ NUM_COLS = {
     's5_lead_time_hours', 's5_balance', 's5_jama_qty', 's5_given_qty',
     's6_settle_qty',
 }
+
+# Boolean columns (Postgres boolean)
+BOOL_COLS = {'s2_yes_no', 's2_inhouse', 's4_cut_to_pack', 's5_press'}
+
+
+def safe_bool(v):
+    if v is None: return None
+    if isinstance(v, bool): return v
+    s = str(v).strip().lower()
+    if not s: return None
+    if s in ('yes', 'y', 'true', '1', '1.0'): return True
+    if s in ('no', 'n', 'false', '0', '0.0'): return False
+    if 'yes' in s or 'hogyi' in s or '✅' in s or 'ha' in s: return True
+    if 'no' in s or 'nahi' in s: return False
+    return None
 
 
 def safe_str(v):
@@ -224,6 +241,8 @@ def extract_fms(wb):
                 record[col_name] = safe_iso(val)
             elif col_name in NUM_COLS:
                 record[col_name] = safe_int(val)
+            elif col_name in BOOL_COLS:
+                record[col_name] = safe_bool(val)
             elif col_name == 'item_group':
                 record[col_name] = normalize_item_group(val)
             elif col_name == 's4_thekedar':
@@ -277,7 +296,7 @@ def enrich_from_step_sheets(wb, jobs):
             jama_totals[jno] = jama_totals.get(jno, 0) + qty
         press = safe_str(row[3]) if len(row) > 3 else None
         if press:
-            press_status[jno] = 'Yes' if '✅' in press or 'Hogyi' in str(press) else 'No'
+            press_status[jno] = safe_bool(press)
 
     updated_jama = 0
     for jno, total in jama_totals.items():
@@ -335,8 +354,8 @@ def enrich_from_step_sheets(wb, jobs):
             thekedar = normalize_thekedar(safe_str(row[2]))
             if thekedar: jobs[jno]['s4_thekedar'] = thekedar
         if jobs[jno].get('s4_cut_to_pack') is None:
-            ctp = safe_str(row[3])
-            if ctp: jobs[jno]['s4_cut_to_pack'] = ctp
+            ctp = safe_bool(row[3])
+            if ctp is not None: jobs[jno]['s4_cut_to_pack'] = ctp
         if jobs[jno].get('s4_lead_time') is None:
             lt = safe_int(row[4])
             if lt: jobs[jno]['s4_lead_time'] = lt
